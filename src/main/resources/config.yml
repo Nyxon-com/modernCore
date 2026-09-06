@@ -11,6 +11,7 @@ modules:
   worlds: true
   homes: true
   warps: true
+  players: true
 
 commands:
   root: valary
@@ -40,6 +41,23 @@ commands:
   delwarp-aliases: []
   warps: warps
   warps-aliases: []
+  msg: msg
+  msg-aliases:
+    - tell
+    - whisper
+    - w
+    - m
+  reply: r
+  reply-aliases:
+    - reply
+  socialspy: socialspy
+  socialspy-aliases:
+    - ss
+  nick: nick
+  nick-aliases:
+    - nickname
+  fly: fly
+  fly-aliases: []
 
 permissions:
   admin: valary.admin
@@ -56,12 +74,21 @@ permissions:
   warp-others: valary.warp.others
   setwarp: valary.warp.set
   delwarp: valary.warp.delete
+  msg: valary.msg
+  socialspy: valary.socialspy
+  nick: valary.nick
+  nick-color: valary.nick.color
+  nick-others: valary.nick.others
+  fly: valary.fly
+  fly-others: valary.fly.others
 
 sounds:
   teleport-success: ENTITY_ENDERMAN_TELEPORT
   spawn-set: BLOCK_NOTE_BLOCK_PLING
   command-denied: ENTITY_VILLAGER_NO
   reload-success: ENTITY_PLAYER_LEVELUP
+  msg-send: ENTITY_EXPERIENCE_ORB_PICKUP
+  msg-receive: ENTITY_EXPERIENCE_ORB_PICKUP
 
 delays:
   command-cooldown-millis: 250

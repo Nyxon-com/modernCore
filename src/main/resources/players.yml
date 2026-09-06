@@ -1,0 +1,19 @@
+# =============================================================================
+# Player utilities stile CMI: join/quit, nick, msg, fly.
+# =============================================================================
+
+join-quit:
+  enabled: true
+
+nick:
+  max-length: 32
+  change-tablist: true
+  blocked-words: []
+
+msg:
+  allow-self: false
+  socialspy: true
+
+fly:
+  persist: true
+  start-flying: true

@@ -48,6 +48,9 @@ public final class CommandService {
             if (enabled("warps")) {
                 new WarpsCommands(this.plugin).register(registrar);
             }
+            if (enabled("players")) {
+                new PlayersCommands(this.plugin).register(registrar);
+            }
         });
     }
 

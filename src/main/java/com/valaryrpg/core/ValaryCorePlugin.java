@@ -6,6 +6,7 @@ import com.valaryrpg.core.economy.EconomyService;
 import com.valaryrpg.core.message.MessageService;
 import com.valaryrpg.core.module.ModuleManager;
 import com.valaryrpg.core.module.homes.HomesModule;
+import com.valaryrpg.core.module.players.PlayersModule;
 import com.valaryrpg.core.module.warps.WarpsModule;
 import com.valaryrpg.core.module.worlds.WorldsModule;
 import com.valaryrpg.core.storage.StorageManager;
@@ -49,6 +50,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
         this.modules.register(new WorldsModule(this));
         this.modules.register(new HomesModule(this));
         this.modules.register(new WarpsModule(this));
+        this.modules.register(new PlayersModule(this));
         this.modules.enableAll();
 
         this.commands = new CommandService(this);

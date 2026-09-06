@@ -30,6 +30,10 @@ permissions:
       valary.warp.others: true
       valary.warp.set: true
       valary.warp.delete: true
+      valary.socialspy: true
+      valary.nick.others: true
+      valary.nick.color: true
+      valary.fly.others: true
   valary.reload:
     description: Ricarica i file di configurazione
     default: op
@@ -80,4 +84,25 @@ permissions:
     default: op
   valary.warp.delete:
     description: Usa /delwarp
+    default: op
+  valary.msg:
+    description: Usa /msg e /r
+    default: true
+  valary.socialspy:
+    description: Usa /socialspy
+    default: op
+  valary.nick:
+    description: Usa /nick
+    default: true
+  valary.nick.color:
+    description: Colori MiniMessage nel nick
+    default: op
+  valary.nick.others:
+    description: /nick <player> <nick>
+    default: op
+  valary.fly:
+    description: Usa /fly
+    default: op
+  valary.fly.others:
+    description: /fly <player> [on|off]
     default: op

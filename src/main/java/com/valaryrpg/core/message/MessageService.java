@@ -31,6 +31,14 @@ public final class MessageService {
         audience.sendMessage(component(key, placeholders));
     }
 
+    public Component deserialize(String miniMessage) {
+        return this.miniMessage.deserialize(miniMessage == null ? "" : miniMessage);
+    }
+
+    public String escape(String text) {
+        return this.miniMessage.escapeTags(text == null ? "" : text);
+    }
+
     public Component component(String key, Map<String, String> placeholders) {
         String raw = this.plugin.configs().messages().getString(key, "<red>Messaggio mancante: " + key);
         String prefix = this.plugin.configs().root().getString("plugin.prefix", "");

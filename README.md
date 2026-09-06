@@ -17,6 +17,7 @@ Repository: https://github.com/Nyxon-com/ValaryRPGcore
 - Modulo mondi: spawn per mondo (`/spawn`, `/setspawn`) e lock meteo (`/weatherlock`)
 - Home: `/sethome`, `/home`, `/delhome`, `/homes` (SQL, limiti per gruppo)
 - Warp: `/setwarp`, `/warp <nomewarp>`, `/warp <nomewarp> <player>`, `/delwarp`, `/warps`
+- Player (stile CMI): join/quit MiniMessage, `/nick`, `/msg`, `/r`, `/socialspy`, `/fly` persistente
 
 ---
 

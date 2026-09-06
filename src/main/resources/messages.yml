@@ -59,3 +59,40 @@ weather:
   unlocked: "{prefix} <green>Meteo di <white>{world}</white> sbloccato."
   usage: "{prefix} <gray>Uso: <white>/{label} <clear|rain|thunder|unlock> [mondo]</white>"
   invalid-type: "{prefix} <red>Tipo meteo non valido. Usa: clear, rain, thunder, unlock."
+
+join-quit:
+  join: "<dark_gray>[<green>+<dark_gray>] <gray>{displayname}"
+  first-join: "<dark_gray>[<gold>+<dark_gray>] <yellow>{displayname} <gray>è entrato per la prima volta."
+  quit: "<dark_gray>[<red>-<dark_gray>] <gray>{displayname}"
+
+nick:
+  current: "{prefix} <gray>Nickname attuale: {nick}"
+  none: "{prefix} <gray>Non hai un nickname. Usa <white>/nick <nome></white>."
+  set: "{prefix} <green>Nickname di <white>{player}</white> impostato a {nick}<green>."
+  set-by-staff: "{prefix} <gray>{player} ti ha impostato il nickname {nick}<gray>."
+  cleared: "{prefix} <green>Nickname di <white>{player}</white> rimosso."
+  cleared-by-staff: "{prefix} <gray>{player} ti ha rimosso il nickname."
+  invalid: "{prefix} <red>Nickname non valido."
+  too-long: "{prefix} <red>Nickname troppo lungo (max {max} caratteri visibili)."
+  blocked: "{prefix} <red>Questo nickname contiene parole non permesse."
+
+msg:
+  usage: "{prefix} <gray>Uso: <white>/{label} <player> <messaggio></white>"
+  reply-usage: "{prefix} <gray>Uso: <white>/{label} <messaggio></white>"
+  to-sender: "<gray>[<white>Tu <dark_gray>→ <white>{target}<gray>] <white>{message}"
+  to-target: "<gray>[<white>{player} <dark_gray>→ <white>Te<gray>] <white>{message}"
+  spy: "<dark_gray>[SS] <gray>{player} <dark_gray>→ <gray>{target}<dark_gray>: <white>{message}"
+  self: "{prefix} <red>Non puoi scriverti da solo."
+  no-reply: "{prefix} <red>Non hai messaggi a cui rispondere."
+  reply-offline: "{prefix} <red>Il giocatore non è più online."
+  spy-on: "{prefix} <green>SocialSpy attivato."
+  spy-off: "{prefix} <yellow>SocialSpy disattivato."
+
+fly:
+  enabled: "{prefix} <green>Volo attivato."
+  disabled: "{prefix} <yellow>Volo disattivato."
+  enabled-for: "{prefix} <green>Volo attivato per <white>{player}</white>."
+  disabled-for: "{prefix} <yellow>Volo disattivato per <white>{player}</white>."
+  enabled-by: "{prefix} <gray>Il volo ti è stato attivato da <white>{player}</white>."
+  disabled-by: "{prefix} <gray>Il volo ti è stato disattivato da <white>{player}</white>."
+  usage: "{prefix} <gray>Uso da console: <white>/{label} <player> [on|off]</white>"
