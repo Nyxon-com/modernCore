@@ -34,7 +34,7 @@ public final class PlayersListener implements Listener {
         this.messages = messages;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         String ip = ipOf(player);
@@ -55,7 +55,7 @@ public final class PlayersListener implements Listener {
         event.joinMessage(blank(key) ? null : message);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         this.messages.unload(player.getUniqueId());

@@ -35,7 +35,7 @@ tasks {
             "version" to version,
             "description" to project.description
         )
-        filesMatching("plugin.yml") {
+        filesMatching(listOf("plugin.yml", "paper-plugin.yml")) {
             expand(props)
         }
         filteringCharset = "UTF-8"

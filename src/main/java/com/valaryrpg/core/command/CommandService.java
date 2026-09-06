@@ -51,6 +51,12 @@ public final class CommandService {
             if (enabled("players")) {
                 new PlayersCommands(this.plugin).register(registrar);
             }
+            if (enabled("moderation")) {
+                new ModerationCommands(this.plugin).register(registrar);
+            }
+            if (enabled("mechanics")) {
+                new MechanicsCommands(this.plugin).register(registrar);
+            }
         });
     }
 

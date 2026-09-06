@@ -2,11 +2,14 @@ package com.valaryrpg.core.module.players;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.storage.StorageException;
+import com.valaryrpg.core.storage.StoredLocation;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -70,8 +73,88 @@ public final class PlayerDataRepository {
         updateFlag(uuid, "fly", fly);
     }
 
-    public void updateSocialSpy(UUID uuid, boolean enabled) {
-        updateFlag(uuid, "social_spy", enabled);
+    public List<String> namesByIp(String ip) {
+        if (ip == null || ip.isBlank()) {
+            return List.of();
+        }
+        String sql = "SELECT name FROM " + table() + " WHERE last_ip = ? ORDER BY last_join DESC";
+        List<String> names = new ArrayList<>();
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, ip);
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    names.add(result.getString("name"));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Lettura dupeip fallita.", exception);
+        }
+        return names;
+    }
+
+    public String lastIp(UUID uuid) {
+        return find(uuid).map(PlayerProfile::lastIp).orElse("");
+    }
+
+    public void updateVanish(UUID uuid, boolean vanished) {
+        updateFlag(uuid, "vanished", vanished);
+    }
+
+    public boolean vanished(UUID uuid) {
+        String sql = "SELECT vanished FROM " + table() + " WHERE uuid = ?";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next() && result.getInt("vanished") == 1;
+            }
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    public void saveDeath(UUID uuid, String world, double x, double y, double z, float yaw, float pitch, long at) {
+        String sql = "UPDATE " + table() + " SET death_world=?, death_x=?, death_y=?, death_z=?, death_yaw=?, death_pitch=?, death_at=? WHERE uuid=?";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, world);
+            statement.setDouble(2, x);
+            statement.setDouble(3, y);
+            statement.setDouble(4, z);
+            statement.setFloat(5, yaw);
+            statement.setFloat(6, pitch);
+            statement.setLong(7, at);
+            statement.setString(8, uuid.toString());
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Salvataggio morte fallito.", exception);
+        }
+    }
+
+    public Optional<StoredLocation> lastDeath(UUID uuid) {
+        String sql = "SELECT death_world, death_x, death_y, death_z, death_yaw, death_pitch FROM " + table() + " WHERE uuid = ? AND death_world IS NOT NULL";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) {
+                    return Optional.empty();
+                }
+                return Optional.of(new StoredLocation(
+                        uuid,
+                        "death",
+                        result.getString("death_world"),
+                        result.getDouble("death_x"),
+                        result.getDouble("death_y"),
+                        result.getDouble("death_z"),
+                        result.getFloat("death_yaw"),
+                        result.getFloat("death_pitch")
+                ));
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Lettura morte fallita.", exception);
+        }
     }
 
     private void updateColumn(UUID uuid, String column, String value) {

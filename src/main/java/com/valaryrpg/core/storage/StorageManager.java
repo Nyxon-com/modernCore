@@ -139,6 +139,32 @@ public final class StorageManager {
                     + "last_join BIGINT NOT NULL,"
                     + "last_ip VARCHAR(45) NOT NULL DEFAULT ''"
                     + ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS " + table("punishments") + " ("
+                    + (this.type == DatabaseType.SQLITE
+                    ? "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    : "id INT NOT NULL AUTO_INCREMENT,")
+                    + "type VARCHAR(16) NOT NULL,"
+                    + "target_uuid VARCHAR(36),"
+                    + "target_name VARCHAR(64) NOT NULL,"
+                    + "target_ip VARCHAR(45) NOT NULL DEFAULT '',"
+                    + "staff VARCHAR(64) NOT NULL,"
+                    + "reason VARCHAR(512) NOT NULL,"
+                    + "created_at BIGINT NOT NULL,"
+                    + "expires_at BIGINT,"
+                    + "active INTEGER NOT NULL DEFAULT 1"
+                    + (this.type == DatabaseType.SQLITE ? ")" : ", PRIMARY KEY (id))"));
+            try {
+                statement.execute("ALTER TABLE " + table("players") + " ADD COLUMN vanished INTEGER NOT NULL DEFAULT 0");
+            } catch (SQLException ignored) {
+                // colonna già presente
+            }
+            addColumn(statement, table("players"), "death_world VARCHAR(64)");
+            addColumn(statement, table("players"), "death_x DOUBLE");
+            addColumn(statement, table("players"), "death_y DOUBLE");
+            addColumn(statement, table("players"), "death_z DOUBLE");
+            addColumn(statement, table("players"), "death_yaw FLOAT");
+            addColumn(statement, table("players"), "death_pitch FLOAT");
+            addColumn(statement, table("players"), "death_at BIGINT");
         } catch (SQLException exception) {
             throw new StorageException("Migrazione schema fallita.", exception);
         }
@@ -149,14 +175,22 @@ public final class StorageManager {
         try (Connection connection = connection();
              PreparedStatement statement = connection.prepareStatement(upsert)) {
             statement.setString(1, "schema_version");
-            statement.setString(2, "3");
+            statement.setString(2, "5");
             statement.executeUpdate();
         } catch (SQLException exception) {
             throw new StorageException("Scrittura versione schema fallita.", exception);
         }
     }
 
+    private void addColumn(Statement statement, String table, String definition) {
+        try {
+            statement.execute("ALTER TABLE " + table + " ADD COLUMN " + definition);
+        } catch (SQLException ignored) {
+            // colonna già presente
+        }
+    }
+
     private int currentVersion() {
-        return 3;
+        return 5;
     }
 }

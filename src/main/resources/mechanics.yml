@@ -1,0 +1,78 @@
+# =============================================================================
+# Utility: LimitY, lore item a terra, morti, long-jump, portali item.
+# =============================================================================
+
+limity:
+  enabled: true
+  check-interval-ticks: 10
+  # Mondi senza sezione = nessun limite.
+  worlds:
+    world:
+      min: -64
+      max: 320
+    world_nether:
+      min: 0
+      max: 127
+
+ground-items:
+  enabled: true
+  show-name: true
+  show-lore: true
+  max-lore-lines: 4
+  name-format: "<white>{name} <gray>x{amount}"
+  lore-format: "<dark_gray>{line}"
+  background: 1073741824
+  see-through: true
+  line-width: 200
+
+copycoord:
+  decimals: 1
+
+checkdeath:
+  teleport: false
+
+long-jump:
+  enabled: true
+  cooldown-millis: 800
+  sound: ENTITY_WIND_CHARGE_WIND_BURST
+  plates:
+    gold:
+      material: LIGHT_WEIGHTED_PRESSURE_PLATE
+      use-player-direction: true
+      horizontal: 2.4
+      vertical: 0.85
+      worlds: []
+    iron:
+      material: HEAVY_WEIGHTED_PRESSURE_PLATE
+      use-player-direction: true
+      horizontal: 1.6
+      vertical: 0.55
+      worlds: []
+
+portals:
+  example:
+    enabled: false
+    world: world
+    pos1:
+      x: 0
+      y: 64
+      z: 0
+    pos2:
+      x: 2
+      y: 66
+      z: 2
+    destination:
+      world: world
+      x: 100.5
+      y: 64.0
+      z: 100.5
+      yaw: 0.0
+      pitch: 0.0
+    item:
+      material: ENDER_PEARL
+      mmoitem-type: ""
+      mmoitem-id: ""
+      consume: true
+      amount: 1
+    permission: ""
+    warmup-seconds: 0

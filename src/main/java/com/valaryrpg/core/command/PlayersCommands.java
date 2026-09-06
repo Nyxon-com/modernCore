@@ -36,38 +36,11 @@ final class PlayersCommands {
     }
 
     void register(Commands registrar) {
-        registrar.register(msgCommand(), "Messaggio privato", aliases("commands.msg-aliases"));
+        registrar.register(VanillaCommandOverrides.privateMessage("m"), "Messaggio privato Valary", List.of());
         registrar.register(replyCommand(), "Rispondi all'ultimo messaggio privato", aliases("commands.reply-aliases"));
         registrar.register(socialSpyCommand(), "Spia i messaggi privati", aliases("commands.socialspy-aliases"));
         registrar.register(nickCommand(), "Imposta un nickname MiniMessage", aliases("commands.nick-aliases"));
         registrar.register(flyCommand(), "Attiva o disattiva il volo", aliases("commands.fly-aliases"));
-    }
-
-    private LiteralCommandNode<CommandSourceStack> msgCommand() {
-        String name = string("commands.msg", "msg");
-        return Commands.literal(name)
-                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "msg"))
-                .executes(ctx -> {
-                    this.plugin.messages().send(ctx.getSource().getSender(), "msg.usage", Map.of("label", name));
-                    return Command.SINGLE_SUCCESS;
-                })
-                .then(Commands.argument("player", StringArgumentType.word())
-                        .suggests((ctx, builder) -> {
-                            OnlinePlayers.suggest(builder);
-                            return builder.buildFuture();
-                        })
-                        .then(Commands.argument("message", StringArgumentType.greedyString())
-                                .executes(ctx -> {
-                                    String playerName = StringArgumentType.getString(ctx, "player");
-                                    Player target = OnlinePlayers.exact(playerName);
-                                    if (target == null) {
-                                        this.plugin.messages().send(ctx.getSource().getSender(), "general.player-not-found", Map.of("target", playerName));
-                                        return 0;
-                                    }
-                                    messages().send(ctx.getSource().getSender(), target, StringArgumentType.getString(ctx, "message"));
-                                    return Command.SINGLE_SUCCESS;
-                                })))
-                .build();
     }
 
     private LiteralCommandNode<CommandSourceStack> replyCommand() {

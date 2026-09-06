@@ -12,6 +12,8 @@ modules:
   homes: true
   warps: true
   players: true
+  moderation: true
+  mechanics: true
 
 commands:
   root: valary
@@ -43,9 +45,7 @@ commands:
   warps-aliases: []
   msg: msg
   msg-aliases:
-    - tell
     - whisper
-    - w
     - m
   reply: r
   reply-aliases:
@@ -58,6 +58,40 @@ commands:
     - nickname
   fly: fly
   fly-aliases: []
+  kick: kick
+  ban: ban
+  banlist: banlist
+  unban: unban
+  unban-aliases: []
+  ipban: ipban
+  ipban-aliases: []
+  mute: mute
+  mute-aliases: []
+  unmute: unmute
+  unmute-aliases: []
+  warn: warn
+  warn-aliases: []
+  warnings: warnings
+  warnings-aliases: []
+  dupeip: dupeip
+  dupeip-aliases: []
+  vanish: vanish
+  vanish-aliases:
+    - v
+  vanishedit: vanishedit
+  vanishedit-aliases: []
+  invsee: invsee
+  invsee-aliases:
+    - inv
+  limity: limity
+  limity-aliases: []
+  checkdeath: checkdeath
+  checkdeath-aliases:
+    - death
+  copycoord: copycoord
+  copycoord-aliases:
+    - coords
+    - getpos
 
 permissions:
   admin: valary.admin
@@ -81,6 +115,27 @@ permissions:
   nick-others: valary.nick.others
   fly: valary.fly
   fly-others: valary.fly.others
+  kick: valary.kick
+  ban: valary.ban
+  banlist: valary.banlist
+  unban: valary.unban
+  ipban: valary.ipban
+  mute: valary.mute
+  unmute: valary.unmute
+  warn: valary.warn
+  warnings: valary.warnings
+  dupeip: valary.dupeip
+  vanish: valary.vanish
+  vanish-others: valary.vanish.others
+  vanish-see: valary.vanish.see
+  vanishedit: valary.vanishedit
+  invsee: valary.invsee
+  limity: valary.limity
+  limity-bypass: valary.limity.bypass
+  checkdeath: valary.checkdeath
+  checkdeath-others: valary.checkdeath.others
+  copycoord: valary.copycoord
+  copycoord-others: valary.copycoord.others
 
 sounds:
   teleport-success: ENTITY_ENDERMAN_TELEPORT

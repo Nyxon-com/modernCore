@@ -1,0 +1,30 @@
+# =============================================================================
+# Moderazione stile CMI. I comandi kick/ban/ban-ip/banlist/pardon sostituiscono i vanilla.
+# =============================================================================
+
+kick:
+  default-reason: Kicked from the server
+ban:
+  default-reason: Banned from the server
+ipban:
+  default-reason: IP banned
+mute:
+  default-reason: Muted
+  blocked-commands:
+    - msg
+    - tell
+    - w
+    - r
+    - reply
+    - whisper
+    - m
+    - me
+warn:
+  default-reason: Warning
+  max-listed: 10
+vanish:
+  hide-from-tab: true
+  fake-join-quit: false
+  night-vision: true
+  no-pickup: true
+  silent-join: true

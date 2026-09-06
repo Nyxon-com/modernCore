@@ -96,3 +96,76 @@ fly:
   enabled-by: "{prefix} <gray>Il volo ti è stato attivato da <white>{player}</white>."
   disabled-by: "{prefix} <gray>Il volo ti è stato disattivato da <white>{player}</white>."
   usage: "{prefix} <gray>Uso da console: <white>/{label} <player> [on|off]</white>"
+
+moderation:
+  kick-usage: "{prefix} <gray>Uso: <white>/{label} <player> [motivo]</white>"
+  kick-staff: "{prefix} <yellow>{player} è stato kickato. <gray>({reason})"
+  kick-screen: "<red>Sei stato kickato.\n<gray>{reason}"
+  ban-usage: "{prefix} <gray>Uso: <white>/{label} <player> [durata] [motivo]</white>"
+  ban-staff: "{prefix} <red>{player} bannato per <white>{duration}</white>. <gray>({reason})"
+  ban-screen: "<red>Sei bannato.\n<gray>{reason}\n<dark_gray>{duration}"
+  ipban-usage: "{prefix} <gray>Uso: <white>/{label} <player|ip> [durata] [motivo]</white>"
+  ipban-staff: "{prefix} <red>IP <white>{ip}</white> ({target}) bannato per <white>{duration}</white>."
+  ipban-screen: "<red>Il tuo IP è bannato.\n<gray>{reason}\n<dark_gray>{duration}"
+  unban-usage: "{prefix} <gray>Uso: <white>/{label} <player|ip></white>"
+  unban-staff: "{prefix} <green>{player} sbannato."
+  unban-missing: "{prefix} <red>Nessun ban attivo per <white>{player}</white>."
+  banlist-empty: "{prefix} <gray>Nessun ban attivo."
+  banlist: "{prefix} <gray>Ban: <white>{bans}</white>\n{prefix} <gray>IP: <white>{ips}</white>"
+  mute-usage: "{prefix} <gray>Uso: <white>/{label} <player> [durata] [motivo]</white>"
+  mute-staff: "{prefix} <yellow>{player} mutato per <white>{duration}</white>. <gray>({reason})"
+  mute-target: "{prefix} <red>Sei stato mutato. <gray>{reason} <dark_gray>({duration})"
+  mute-blocked: "{prefix} <red>Sei mutato. <gray>{reason} <dark_gray>({duration})"
+  mute-command: "{prefix} <red>Non puoi usare questo comando mentre sei mutato."
+  unmute-usage: "{prefix} <gray>Uso: <white>/{label} <player></white>"
+  unmute-staff: "{prefix} <green>{player} smutato."
+  unmute-missing: "{prefix} <red>{player} non è mutato."
+  warn-usage: "{prefix} <gray>Uso: <white>/{label} <player> [motivo]</white>"
+  warn-staff: "{prefix} <yellow>Warn a {player}. <gray>({reason})"
+  warn-target: "{prefix} <red>Hai ricevuto un warn da {staff}. <gray>{reason}"
+  warnings-usage: "{prefix} <gray>Uso: <white>/{label} <player></white>"
+  warnings-empty: "{prefix} <gray>{player} non ha warn."
+  warnings-header: "{prefix} <gray>Warn di {player}: <white>{count}</white>"
+  warnings-line: "{prefix} <dark_gray>-</dark_gray> <white>{reason}</white> <gray>da {staff}"
+  dupeip-usage: "{prefix} <gray>Uso: <white>/{label} <player|ip></white>"
+  dupeip-missing: "{prefix} <red>Nessun IP noto per <white>{player}</white>."
+  dupeip: "{prefix} <gray>Account su <white>{ip}</white>: <white>{players}</white>"
+
+vanish:
+  usage: "{prefix} <gray>Uso da console: <white>/vanish <player></white>"
+  enabled-for: "{prefix} <green>Vanish attivato per <white>{player}</white>."
+  disabled-for: "{prefix} <yellow>Vanish disattivato per <white>{player}</white>."
+  enabled-by: "{prefix} <gray>Sei stato messo in vanish da <white>{player}</white>."
+  disabled-by: "{prefix} <gray>Il vanish ti è stato rimosso da <white>{player}</white>."
+  edit-usage: "{prefix} <gray>Uso: <white>/{label} <nightvision|pickup></white>"
+  edit-on: "{prefix} <green>Vanish flag <white>{flag}</white> attiva."
+  edit-off: "{prefix} <yellow>Vanish flag <white>{flag}</white> disattiva."
+  edit-unknown: "{prefix} <red>Flag sconosciuta. Usa nightvision o pickup."
+
+invsee:
+  usage: "{prefix} <gray>Uso: <white>/{label} <player></white>"
+  title: "<dark_gray>Invsee <white>{player}"
+
+limity:
+  usage: "{prefix} <gray>Uso: <white>/limity</white> oppure <white>/limity <min> <max> [mondo]</white>"
+  current: "{prefix} <gray>LimitY di <white>{world}</white>: <white>{range}</white>"
+  none: "{prefix} <gray>Nessun LimitY per <white>{world}</white>."
+  set: "{prefix} <green>LimitY di <white>{world}</white> impostato a <white>{min}</white> → <white>{max}</white>."
+  blocked: "{prefix} <red>Sei fuori dal limite Y di <white>{world}</white> <gray>({min} → {max})."
+
+checkdeath:
+  usage: "{prefix} <gray>Uso: <white>/checkdeath [player]</white>"
+  missing: "{prefix} <gray>Nessuna morte registrata per <white>{player}</white>."
+  found: "{prefix} <gray>Ultima morte di <white>{player}</white>: <white>{world}</white> <aqua>{coords}</aqua> <dark_gray>(click per copiare)"
+
+copycoord:
+  usage: "{prefix} <gray>Uso da console: <white>/copycoord <player></white>"
+  copied: "{prefix} <gray>Coordinate di <white>{player}</white>: <aqua>{coords}</aqua> <dark_gray>(click per copiare)"
+  hover: "<gray>Click per copiare"
+
+portals:
+  used: "{prefix} <gray>Portale <white>{portal}</white>."
+  need-item: "{prefix} <red>Ti manca l'oggetto per usare il portale <white>{portal}</white>."
+  no-permission: "{prefix} <red>Non puoi usare il portale <white>{portal}</white>."
+  invalid-destination: "{prefix} <red>Destinazione del portale <white>{portal}</white> non valida."
+  warmup: "{prefix} <gray>Portale <white>{portal}</white> tra <white>{seconds}</white>s."

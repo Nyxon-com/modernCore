@@ -1,0 +1,211 @@
+name: ValaryRPG-Core
+version: '${version}'
+main: com.valaryrpg.core.ValaryCorePlugin
+bootstrapper: com.valaryrpg.core.ValaryBootstrap
+api-version: '1.21'
+description: '${description}'
+authors:
+  - ValaryRPG
+website: https://github.com/Nyxon-com/ValaryRPGcore
+folia-supported: false
+dependencies:
+  server:
+    Vault:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    CoinsEngine:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    ExcellentEconomy:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    MMOItems:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    MythicLib:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    Multiverse-Core:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    PlaceholderAPI:
+      required: false
+      load: BEFORE
+      join-classpath: true
+permissions:
+  valary.admin:
+    description: Accesso completo alle funzioni di amministrazione
+    default: op
+    children:
+      valary.reload: true
+      valary.spawn.others: true
+      valary.setspawn: true
+      valary.weather.lock: true
+      valary.home.unlimited: true
+      valary.warp.others: true
+      valary.warp.set: true
+      valary.warp.delete: true
+      valary.socialspy: true
+      valary.nick.others: true
+      valary.nick.color: true
+      valary.fly.others: true
+      valary.kick: true
+      valary.ban: true
+      valary.banlist: true
+      valary.unban: true
+      valary.ipban: true
+      valary.mute: true
+      valary.unmute: true
+      valary.warn: true
+      valary.warnings: true
+      valary.dupeip: true
+      valary.vanish: true
+      valary.vanish.others: true
+      valary.vanish.see: true
+      valary.vanishedit: true
+      valary.invsee: true
+      valary.limity: true
+      valary.limity.bypass: true
+      valary.checkdeath.others: true
+      valary.copycoord.others: true
+  valary.reload:
+    description: Ricarica i file di configurazione
+    default: op
+  valary.spawn:
+    description: Teletrasporto allo spawn del mondo
+    default: true
+  valary.spawn.others:
+    description: Teletrasporta altri giocatori allo spawn
+    default: op
+  valary.setspawn:
+    description: Imposta lo spawn del mondo corrente
+    default: op
+  valary.weather.lock:
+    description: Blocca o sblocca il meteo di un mondo
+    default: op
+  valary.home:
+    description: Usa /home e /homes
+    default: true
+  valary.home.set:
+    description: Usa /sethome
+    default: true
+  valary.home.delete:
+    description: Usa /delhome
+    default: true
+  valary.home.unlimited:
+    description: Home senza limite numerico
+    default: op
+  valary.home.limit.default:
+    description: Limite home del gruppo default
+    default: true
+  valary.home.limit.vip:
+    description: Limite home del gruppo vip
+    default: false
+  valary.home.limit.mvp:
+    description: Limite home del gruppo mvp
+    default: false
+  valary.home.limit.staff:
+    description: Limite home del gruppo staff
+    default: op
+  valary.warp:
+    description: Usa /warp e /warps
+    default: true
+  valary.warp.others:
+    description: /warp <nomewarp> <player>
+    default: op
+  valary.warp.set:
+    description: Usa /setwarp
+    default: op
+  valary.warp.delete:
+    description: Usa /delwarp
+    default: op
+  valary.msg:
+    description: Usa /msg e /r
+    default: true
+  valary.socialspy:
+    description: Usa /socialspy
+    default: op
+  valary.nick:
+    description: Usa /nick
+    default: true
+  valary.nick.color:
+    description: Colori MiniMessage nel nick
+    default: op
+  valary.nick.others:
+    description: /nick <player> <nick>
+    default: op
+  valary.fly:
+    description: Usa /fly
+    default: op
+  valary.fly.others:
+    description: /fly <player> [on|off]
+    default: op
+  valary.kick:
+    description: Usa /kick
+    default: op
+  valary.ban:
+    description: Usa /ban
+    default: op
+  valary.banlist:
+    description: Usa /banlist
+    default: op
+  valary.unban:
+    description: Usa /unban e /pardon
+    default: op
+  valary.ipban:
+    description: Usa /ipban e /ban-ip
+    default: op
+  valary.mute:
+    description: Usa /mute
+    default: op
+  valary.unmute:
+    description: Usa /unmute
+    default: op
+  valary.warn:
+    description: Usa /warn
+    default: op
+  valary.warnings:
+    description: Usa /warnings
+    default: op
+  valary.dupeip:
+    description: Usa /dupeip
+    default: op
+  valary.vanish:
+    description: Usa /vanish
+    default: op
+  valary.vanish.others:
+    description: /vanish <player>
+    default: op
+  valary.vanish.see:
+    description: Vede i giocatori in vanish
+    default: op
+  valary.vanishedit:
+    description: Usa /vanishedit
+    default: op
+  valary.invsee:
+    description: Usa /invsee
+    default: op
+  valary.limity:
+    description: Usa /limity
+    default: op
+  valary.limity.bypass:
+    description: Ignora il limite Y
+    default: op
+  valary.checkdeath:
+    description: Usa /checkdeath
+    default: true
+  valary.checkdeath.others:
+    description: /checkdeath <player>
+    default: op
+  valary.copycoord:
+    description: Usa /copycoord
+    default: true
+  valary.copycoord.others:
+    description: /copycoord <player>
+    default: op

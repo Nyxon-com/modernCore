@@ -13,7 +13,10 @@ public final class Sounds {
     }
 
     public static void play(ValaryCorePlugin plugin, Player player, String key) {
-        String raw = plugin.configs().root().getString("sounds." + key);
+        playRaw(plugin, player, plugin.configs().root().getString("sounds." + key), key);
+    }
+
+    public static void playRaw(ValaryCorePlugin plugin, Player player, String raw, String debugKey) {
         if (raw == null || raw.isBlank()) {
             return;
         }
@@ -21,7 +24,7 @@ public final class Sounds {
             Sound sound = Sound.valueOf(raw);
             player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
         } catch (IllegalArgumentException exception) {
-            plugin.getLogger().warning("Suono sconosciuto in sounds." + key + ": " + raw);
+            plugin.getLogger().warning("Suono sconosciuto in " + debugKey + ": " + raw);
         }
     }
 }

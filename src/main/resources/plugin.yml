@@ -34,6 +34,25 @@ permissions:
       valary.nick.others: true
       valary.nick.color: true
       valary.fly.others: true
+      valary.kick: true
+      valary.ban: true
+      valary.banlist: true
+      valary.unban: true
+      valary.ipban: true
+      valary.mute: true
+      valary.unmute: true
+      valary.warn: true
+      valary.warnings: true
+      valary.dupeip: true
+      valary.vanish: true
+      valary.vanish.others: true
+      valary.vanish.see: true
+      valary.vanishedit: true
+      valary.invsee: true
+      valary.limity: true
+      valary.limity.bypass: true
+      valary.checkdeath.others: true
+      valary.copycoord.others: true
   valary.reload:
     description: Ricarica i file di configurazione
     default: op
@@ -105,4 +124,67 @@ permissions:
     default: op
   valary.fly.others:
     description: /fly <player> [on|off]
+    default: op
+  valary.kick:
+    description: Usa /kick
+    default: op
+  valary.ban:
+    description: Usa /ban
+    default: op
+  valary.banlist:
+    description: Usa /banlist
+    default: op
+  valary.unban:
+    description: Usa /unban e /pardon
+    default: op
+  valary.ipban:
+    description: Usa /ipban e /ban-ip
+    default: op
+  valary.mute:
+    description: Usa /mute
+    default: op
+  valary.unmute:
+    description: Usa /unmute
+    default: op
+  valary.warn:
+    description: Usa /warn
+    default: op
+  valary.warnings:
+    description: Usa /warnings
+    default: op
+  valary.dupeip:
+    description: Usa /dupeip
+    default: op
+  valary.vanish:
+    description: Usa /vanish
+    default: op
+  valary.vanish.others:
+    description: /vanish <player>
+    default: op
+  valary.vanish.see:
+    description: Vede i giocatori in vanish
+    default: op
+  valary.vanishedit:
+    description: Usa /vanishedit
+    default: op
+  valary.invsee:
+    description: Usa /invsee
+    default: op
+  valary.limity:
+    description: Usa /limity
+    default: op
+  valary.limity.bypass:
+    description: Ignora il limite Y
+    default: op
+  valary.checkdeath:
+    description: Usa /checkdeath
+    default: true
+  valary.checkdeath.others:
+    description: /checkdeath <player>
+    default: op
+  valary.copycoord:
+    description: Usa /copycoord
+    default: true
+  valary.copycoord.others:
+    description: /copycoord <player>
     default: op
