@@ -5,6 +5,8 @@ import com.valaryrpg.core.config.ConfigManager;
 import com.valaryrpg.core.economy.EconomyService;
 import com.valaryrpg.core.message.MessageService;
 import com.valaryrpg.core.module.ModuleManager;
+import com.valaryrpg.core.module.homes.HomesModule;
+import com.valaryrpg.core.module.warps.WarpsModule;
 import com.valaryrpg.core.module.worlds.WorldsModule;
 import com.valaryrpg.core.storage.StorageManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,6 +47,8 @@ public final class ValaryCorePlugin extends JavaPlugin {
 
         this.modules = new ModuleManager(this);
         this.modules.register(new WorldsModule(this));
+        this.modules.register(new HomesModule(this));
+        this.modules.register(new WarpsModule(this));
         this.modules.enableAll();
 
         this.commands = new CommandService(this);

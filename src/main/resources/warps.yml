@@ -1,0 +1,18 @@
+# =============================================================================
+# Warp di server (non per-player). I punti stanno in questo file.
+# =============================================================================
+
+settings:
+  max-name-length: 16
+  warmup-seconds: 3
+  cancel-on-move: true
+
+warps: {}
+# esempio:
+#   spawnshop:
+#     world: world
+#     x: 0.5
+#     y: 64.0
+#     z: 0.5
+#     yaw: 0.0
+#     pitch: 0.0

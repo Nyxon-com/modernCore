@@ -9,6 +9,8 @@ plugin:
 
 modules:
   worlds: true
+  homes: true
+  warps: true
 
 commands:
   root: valary
@@ -22,6 +24,22 @@ commands:
   weatherlock: weatherlock
   weatherlock-aliases:
     - wlock
+  home: home
+  home-aliases: []
+  sethome: sethome
+  sethome-aliases: []
+  delhome: delhome
+  delhome-aliases: []
+  homes: homes
+  homes-aliases: []
+  warp: warp
+  warp-aliases: []
+  setwarp: setwarp
+  setwarp-aliases: []
+  delwarp: delwarp
+  delwarp-aliases: []
+  warps: warps
+  warps-aliases: []
 
 permissions:
   admin: valary.admin
@@ -30,6 +48,14 @@ permissions:
   spawn-others: valary.spawn.others
   setspawn: valary.setspawn
   weatherlock: valary.weather.lock
+  home: valary.home
+  sethome: valary.home.set
+  delhome: valary.home.delete
+  home-unlimited: valary.home.unlimited
+  warp: valary.warp
+  warp-others: valary.warp.others
+  setwarp: valary.warp.set
+  delwarp: valary.warp.delete
 
 sounds:
   teleport-success: ENTITY_ENDERMAN_TELEPORT

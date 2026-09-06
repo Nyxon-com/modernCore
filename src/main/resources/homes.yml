@@ -1,0 +1,20 @@
+# =============================================================================
+# Home: dati posizione su SQL, qui solo limiti e comportamento.
+# Il gruppo si assegna con il permesso: {permission-prefix}{group}
+# Esempio: valary.home.limit.vip  ->  limits.groups.vip
+# =============================================================================
+
+settings:
+  default-name: home
+  max-name-length: 16
+  warmup-seconds: 3
+  cancel-on-move: true
+
+limits:
+  default: 1
+  permission-prefix: valary.home.limit.
+  groups:
+    default: 1
+    vip: 3
+    mvp: 8
+    staff: -1

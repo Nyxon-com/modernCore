@@ -45,7 +45,7 @@ public final class StorageManager {
 
         this.dataSource = new HikariDataSource(hikari);
         migrate();
-        this.plugin.getLogger().info("Storage connesso (" + this.type + ").");
+        this.plugin.getLogger().info("Storage connesso (" + this.type + ", schema " + currentVersion() + ").");
     }
 
     public Connection connection() throws SQLException {
@@ -118,6 +118,17 @@ public final class StorageManager {
         try (Connection connection = connection();
              Statement statement = connection.createStatement()) {
             statement.execute(create);
+            statement.execute("CREATE TABLE IF NOT EXISTS " + table("homes") + " ("
+                    + "uuid VARCHAR(36) NOT NULL,"
+                    + "name VARCHAR(32) NOT NULL,"
+                    + "world VARCHAR(64) NOT NULL,"
+                    + "x DOUBLE NOT NULL,"
+                    + "y DOUBLE NOT NULL,"
+                    + "z DOUBLE NOT NULL,"
+                    + "yaw FLOAT NOT NULL,"
+                    + "pitch FLOAT NOT NULL,"
+                    + "PRIMARY KEY (uuid, name)"
+                    + ")");
         } catch (SQLException exception) {
             throw new StorageException("Migrazione schema fallita.", exception);
         }
@@ -128,10 +139,14 @@ public final class StorageManager {
         try (Connection connection = connection();
              PreparedStatement statement = connection.prepareStatement(upsert)) {
             statement.setString(1, "schema_version");
-            statement.setString(2, "1");
+            statement.setString(2, "2");
             statement.executeUpdate();
         } catch (SQLException exception) {
             throw new StorageException("Scrittura versione schema fallita.", exception);
         }
+    }
+
+    private int currentVersion() {
+        return 2;
     }
 }

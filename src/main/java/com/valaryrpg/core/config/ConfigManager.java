@@ -13,6 +13,8 @@ public final class ConfigManager {
     private YamlFile messages;
     private YamlFile storage;
     private YamlFile worlds;
+    private YamlFile homes;
+    private YamlFile warps;
 
     public ConfigManager(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -23,6 +25,8 @@ public final class ConfigManager {
         this.messages = load("messages.yml");
         this.storage = load("storage.yml");
         this.worlds = load("worlds.yml");
+        this.homes = load("homes.yml");
+        this.warps = load("warps.yml");
         this.plugin.getLogger().info("Configurazioni caricate.");
     }
 
@@ -42,8 +46,20 @@ public final class ConfigManager {
         return this.worlds.config();
     }
 
+    public FileConfiguration homes() {
+        return this.homes.config();
+    }
+
+    public FileConfiguration warps() {
+        return this.warps.config();
+    }
+
     public void saveWorlds() {
         this.worlds.save();
+    }
+
+    public void saveWarps() {
+        this.warps.save();
     }
 
     private YamlFile load(String fileName) {

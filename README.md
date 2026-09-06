@@ -15,6 +15,8 @@ Repository: https://github.com/Nyxon-com/ValaryRPGcore
 - Storage configurabile: **SQLite / MySQL / MariaDB** (HikariCP)
 - Hook economy **Vault** (CoinsEngine / ExcellentEconomy come provider)
 - Modulo mondi: spawn per mondo (`/spawn`, `/setspawn`) e lock meteo (`/weatherlock`)
+- Home: `/sethome`, `/home`, `/delhome`, `/homes` (SQL, limiti per gruppo)
+- Warp: `/setwarp`, `/warp [player]`, `/delwarp`, `/warps`
 
 ---
 

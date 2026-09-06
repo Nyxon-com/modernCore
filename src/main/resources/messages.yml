@@ -25,6 +25,34 @@ spawn:
   warmup: "{prefix} <gray>Teletrasporto tra <white>{seconds}</white>s. Non muoverti."
   cancelled-move: "{prefix} <red>Teletrasporto annullato: ti sei mosso."
 
+teleport:
+  warmup: "{prefix} <gray>Teletrasporto tra <white>{seconds}</white>s. Non muoverti."
+  cancelled-move: "{prefix} <red>Teletrasporto annullato: ti sei mosso."
+
+homes:
+  set: "{prefix} <green>Home <white>{home}</white> impostata in <white>{world}</white> <gray>({x}, {y}, {z})."
+  teleported: "{prefix} <gray>Sei arrivato alla home <white>{home}</white>."
+  deleted: "{prefix} <green>Home <white>{home}</white> eliminata."
+  not-found: "{prefix} <red>Non hai una home chiamata <white>{home}</white>."
+  invalid-name: "{prefix} <red>Nome home non valido. Usa lettere, numeri e underscore."
+  limit-reached: "{prefix} <red>Hai raggiunto il limite di <white>{limit}</white> home."
+  list: "{prefix} <gray>Home ({count}): <white>{homes}</white>"
+  list-empty: "{prefix} <gray>Non hai ancora nessuna home. Usa <white>/sethome</white>."
+
+warps:
+  usage: "{prefix} <gray>Uso: <white>/{label} <nome></white> oppure <white>/{label} <nome> <player></white>"
+  set-usage: "{prefix} <gray>Uso: <white>/{label} <nome></white>"
+  del-usage: "{prefix} <gray>Uso: <white>/{label} <nome></white>"
+  set: "{prefix} <green>Warp <white>{warp}</white> impostato in <white>{world}</white>."
+  teleported: "{prefix} <gray>Sei arrivato al warp <white>{warp}</white>."
+  teleported-other: "{prefix} <gray>Hai teletrasportato <white>{target}</white> al warp <white>{warp}</white>."
+  teleported-by-staff: "{prefix} <gray>Sei stato portato al warp <white>{warp}</white> da <white>{player}</white>."
+  deleted: "{prefix} <green>Warp <white>{warp}</white> eliminato."
+  not-found: "{prefix} <red>Il warp <white>{warp}</white> non esiste."
+  invalid-name: "{prefix} <red>Nome warp non valido. Usa lettere, numeri e underscore."
+  list: "{prefix} <gray>Warp ({count}): <white>{warps}</white>"
+  list-empty: "{prefix} <gray>Nessun warp configurato. Usa <white>/setwarp</white>."
+
 weather:
   locked: "{prefix} <green>Meteo di <white>{world}</white> bloccato su <white>{weather}</white>."
   unlocked: "{prefix} <green>Meteo di <white>{world}</white> sbloccato."

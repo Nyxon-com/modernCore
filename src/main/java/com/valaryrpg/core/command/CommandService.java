@@ -37,10 +37,16 @@ public final class CommandService {
         this.plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands registrar = event.registrar();
             registrar.register(rootCommand(), "Comandi amministrativi ValaryRPG-Core", aliases("commands.root-aliases"));
-            if (this.plugin.modules() != null && this.plugin.modules().isEnabled("worlds")) {
+            if (enabled("worlds")) {
                 registrar.register(spawnCommand(), "Teletrasporto allo spawn del mondo", aliases("commands.spawn-aliases"));
                 registrar.register(setSpawnCommand(), "Imposta lo spawn del mondo corrente", aliases("commands.setspawn-aliases"));
                 registrar.register(weatherLockCommand(), "Blocca o sblocca il meteo di un mondo", aliases("commands.weatherlock-aliases"));
+            }
+            if (enabled("homes")) {
+                new HomesCommands(this.plugin).register(registrar);
+            }
+            if (enabled("warps")) {
+                new WarpsCommands(this.plugin).register(registrar);
             }
         });
     }
@@ -193,6 +199,10 @@ public final class CommandService {
                 "weather", lock.name().toLowerCase(Locale.ROOT)
         ));
         return Command.SINGLE_SUCCESS;
+    }
+
+    private boolean enabled(String moduleId) {
+        return this.plugin.modules() != null && this.plugin.modules().isEnabled(moduleId);
     }
 
     private WorldsModule worlds() {

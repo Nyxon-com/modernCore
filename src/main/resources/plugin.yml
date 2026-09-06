@@ -26,6 +26,10 @@ permissions:
       valary.spawn.others: true
       valary.setspawn: true
       valary.weather.lock: true
+      valary.home.unlimited: true
+      valary.warp.others: true
+      valary.warp.set: true
+      valary.warp.delete: true
   valary.reload:
     description: Ricarica i file di configurazione
     default: op
@@ -40,4 +44,40 @@ permissions:
     default: op
   valary.weather.lock:
     description: Blocca o sblocca il meteo di un mondo
+    default: op
+  valary.home:
+    description: Usa /home e /homes
+    default: true
+  valary.home.set:
+    description: Usa /sethome
+    default: true
+  valary.home.delete:
+    description: Usa /delhome
+    default: true
+  valary.home.unlimited:
+    description: Home senza limite numerico
+    default: op
+  valary.home.limit.default:
+    description: Limite home del gruppo default
+    default: true
+  valary.home.limit.vip:
+    description: Limite home del gruppo vip
+    default: false
+  valary.home.limit.mvp:
+    description: Limite home del gruppo mvp
+    default: false
+  valary.home.limit.staff:
+    description: Limite home del gruppo staff
+    default: op
+  valary.warp:
+    description: Usa /warp e /warps
+    default: true
+  valary.warp.others:
+    description: /warp <nome> <player>
+    default: op
+  valary.warp.set:
+    description: Usa /setwarp
+    default: op
+  valary.warp.delete:
+    description: Usa /delwarp
     default: op
