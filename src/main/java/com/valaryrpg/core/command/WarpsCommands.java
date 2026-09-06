@@ -9,12 +9,12 @@ import com.valaryrpg.core.module.warps.WarpsModule;
 import com.valaryrpg.core.util.Perms;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 final class WarpsCommands {
@@ -40,7 +40,7 @@ final class WarpsCommands {
                     this.plugin.messages().send(ctx.getSource().getSender(), "warps.usage", Map.of("label", name));
                     return Command.SINGLE_SUCCESS;
                 })
-                .then(Commands.argument("name", StringArgumentType.word())
+                .then(Commands.argument("nomewarp", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             String remaining = builder.getRemainingLowerCase();
                             for (String warp : warps().names()) {
@@ -50,19 +50,23 @@ final class WarpsCommands {
                             }
                             return builder.buildFuture();
                         })
-                        .executes(ctx -> teleportSelf(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "name")))
-                        .then(Commands.argument("target", ArgumentTypes.player())
+                        .executes(ctx -> teleportSelf(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "nomewarp")))
+                        .then(Commands.argument("player", StringArgumentType.word())
                                 .requires(stack -> Perms.has(this.plugin, stack.getSender(), "warp-others"))
-                                .executes(ctx -> {
-                                    PlayerSelectorArgumentResolver resolver = ctx.getArgument("target", PlayerSelectorArgumentResolver.class);
-                                    List<Player> players = resolver.resolve(ctx.getSource());
-                                    if (players.isEmpty()) {
-                                        this.plugin.messages().send(ctx.getSource().getSender(), "general.player-not-found", Map.of("target", "?"));
-                                        return 0;
+                                .suggests((ctx, builder) -> {
+                                    String remaining = builder.getRemainingLowerCase();
+                                    for (Player online : Bukkit.getOnlinePlayers()) {
+                                        if (online.getName().toLowerCase(Locale.ROOT).startsWith(remaining)) {
+                                            builder.suggest(online.getName());
+                                        }
                                     }
-                                    warps().teleport(ctx.getSource().getSender(), players.getFirst(), StringArgumentType.getString(ctx, "name"));
-                                    return Command.SINGLE_SUCCESS;
-                                })))
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> teleportOther(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "nomewarp"),
+                                        StringArgumentType.getString(ctx, "player")
+                                ))))
                 .build();
     }
 
@@ -125,10 +129,20 @@ final class WarpsCommands {
 
     private int teleportSelf(CommandSender sender, String warpName) {
         if (!(sender instanceof Player player)) {
-            this.plugin.messages().send(sender, "general.player-only");
+            this.plugin.messages().send(sender, "warps.usage-console", Map.of("label", string("commands.warp", "warp")));
             return 0;
         }
         warps().teleport(player, player, warpName);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int teleportOther(CommandSender sender, String warpName, String playerName) {
+        Player target = Bukkit.getPlayerExact(playerName);
+        if (target == null) {
+            this.plugin.messages().send(sender, "general.player-not-found", Map.of("target", playerName));
+            return 0;
+        }
+        warps().teleport(sender, target, warpName);
         return Command.SINGLE_SUCCESS;
     }
 

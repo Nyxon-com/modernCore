@@ -16,7 +16,7 @@ Repository: https://github.com/Nyxon-com/ValaryRPGcore
 - Hook economy **Vault** (CoinsEngine / ExcellentEconomy come provider)
 - Modulo mondi: spawn per mondo (`/spawn`, `/setspawn`) e lock meteo (`/weatherlock`)
 - Home: `/sethome`, `/home`, `/delhome`, `/homes` (SQL, limiti per gruppo)
-- Warp: `/setwarp`, `/warp [player]`, `/delwarp`, `/warps`
+- Warp: `/setwarp`, `/warp <nomewarp>`, `/warp <nomewarp> <player>`, `/delwarp`, `/warps`
 
 ---
 
@@ -28,7 +28,7 @@ Repository: https://github.com/Nyxon-com/ValaryRPGcore
 
 ### 2. Sistemi di Spostamento (`/home`, `/warp`, `/spawn`)
 - `/sethome`, `/home`, `/delhome` con permessi granulari e limiti per gruppo
-- `/warp <nome>` e `/warp <nomewarp> <player>` da console o con permesso
+- `/warp <nomewarp>` e `/warp <nomewarp> <player>` da console o con permesso
 
 ### 3. Gestione Giocatori e Comunicazione
 - Join/quit MiniMessage

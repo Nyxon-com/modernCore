@@ -73,7 +73,7 @@ permissions:
     description: Usa /warp e /warps
     default: true
   valary.warp.others:
-    description: /warp <nome> <player>
+    description: /warp <nomewarp> <player>
     default: op
   valary.warp.set:
     description: Usa /setwarp

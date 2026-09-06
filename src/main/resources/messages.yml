@@ -40,7 +40,8 @@ homes:
   list-empty: "{prefix} <gray>Non hai ancora nessuna home. Usa <white>/sethome</white>."
 
 warps:
-  usage: "{prefix} <gray>Uso: <white>/{label} <nome></white> oppure <white>/{label} <nome> <player></white>"
+  usage: "{prefix} <gray>Uso: <white>/{label} <nomewarp></white> oppure <white>/{label} <nomewarp> <player></white>"
+  usage-console: "{prefix} <gray>Uso da console: <white>/{label} <nomewarp> <player></white>"
   set-usage: "{prefix} <gray>Uso: <white>/{label} <nome></white>"
   del-usage: "{prefix} <gray>Uso: <white>/{label} <nome></white>"
   set: "{prefix} <green>Warp <white>{warp}</white> impostato in <white>{world}</white>."
