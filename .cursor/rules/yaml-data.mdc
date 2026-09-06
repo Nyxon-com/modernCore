@@ -1,0 +1,13 @@
+---
+description: YAML data-driven — chiavi complete, merge-safe, nessun valore magico nel codice
+globs: "**/*.{yml,yaml}"
+alwaysApply: false
+---
+
+# YAML
+
+Ogni comportamento nuovo = chiave nel file del modulo (`kits.yml`, `prices.yml`, `mechanics.yml`, …) **e** messaggio in `messages.yml` **e** permesso/comando in `config.yml` se è un comando.
+
+- Default in italiano MiniMessage. Placeholder `{player}` `{prefix}` ecc.
+- GUI: `rows`, `slot`, `fill-material`, suoni, cooldown nel YAML del modulo.
+- Non lasciare liste vuote obbligatorie senza esempio commentato. Chiavi nuove devono mergeare (`YamlFile.mergeMissingKeys`).

@@ -20,6 +20,8 @@ Repository: https://github.com/Nyxon-com/ValaryRPGcore
 - Player (stile CMI): join/quit MiniMessage, `/nick`, `/msg` `/tell` `/w` (override vanilla), `/r`, `/socialspy`, `/fly`
 - Moderazione (override vanilla): `/kick`, `/ban [durata]`, `/banlist`, `/pardon`, `/ipban`, `/mute`, `/warn`, `/dupeip`, `/vanish`, `/vanishedit`, `/invsee`
 - Utility: `/limity`, `/checkdeath`, `/copycoord`, lore sugli item a terra, long-jump su pressure plate, portali item/MMOItems
+- Kit GUI (`/kit`, `/kits`) + kit first-join + MMOItems via comando YAML
+- Sell GUI (`/sell`) con prezzi in `prices.yml` (Vault)
 
 ---
 

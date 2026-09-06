@@ -1,5 +1,7 @@
 # =============================================================================
-# Player utilities stile CMI: join/quit, nick, msg, fly.
+# Player: join/quit MiniMessage (messages.yml join-quit.*), nick, msg, fly.
+# nick.blocked-words: sottostringhe case-insensitive. max-length = caratteri visibili.
+# fly.persist: salva su SQL. start-flying: se persist=on, vola subito al login.
 # =============================================================================
 
 join-quit:

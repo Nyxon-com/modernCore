@@ -22,9 +22,11 @@ import java.util.Map;
 final class MechanicsCommands {
 
     private final ValaryCorePlugin plugin;
+    private final CommandSettings settings;
 
     MechanicsCommands(ValaryCorePlugin plugin) {
         this.plugin = plugin;
+        this.settings = new CommandSettings(plugin);
     }
 
     void register(Commands registrar) {
@@ -159,11 +161,10 @@ final class MechanicsCommands {
     }
 
     private String string(String path, String fallback) {
-        String value = this.plugin.configs().root().getString(path, fallback);
-        return value == null || value.isBlank() ? fallback : value;
+        return this.settings.name(path, fallback);
     }
 
     private List<String> aliases(String path) {
-        return this.plugin.configs().root().getStringList(path);
+        return this.settings.aliases(path);
     }
 }

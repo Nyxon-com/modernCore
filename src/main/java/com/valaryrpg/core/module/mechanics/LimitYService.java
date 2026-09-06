@@ -11,10 +11,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class LimitYService {
 
     private final ValaryCorePlugin plugin;
+    private final Map<UUID, Long> lastNotify = new ConcurrentHashMap<>();
     private BukkitTask task;
 
     public LimitYService(ValaryCorePlugin plugin) {
@@ -74,11 +77,17 @@ public final class LimitYService {
                 destination = world.getSpawnLocation();
             }
             player.teleport(destination);
-            this.plugin.messages().send(player, "limity.blocked", Map.of(
-                    "min", String.valueOf(bounds.min),
-                    "max", String.valueOf(bounds.max),
-                    "world", world.getName()
-            ));
+            long now = System.currentTimeMillis();
+            long cooldown = this.plugin.configs().mechanics().getLong("limity.notify-cooldown-millis", 3000L);
+            Long last = this.lastNotify.get(player.getUniqueId());
+            if (last == null || now - last >= cooldown) {
+                this.lastNotify.put(player.getUniqueId(), now);
+                this.plugin.messages().send(player, "limity.blocked", Map.of(
+                        "min", String.valueOf(bounds.min),
+                        "max", String.valueOf(bounds.max),
+                        "world", world.getName()
+                ));
+            }
         }
     }
 

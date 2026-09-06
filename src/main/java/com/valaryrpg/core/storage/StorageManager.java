@@ -165,6 +165,12 @@ public final class StorageManager {
             addColumn(statement, table("players"), "death_yaw FLOAT");
             addColumn(statement, table("players"), "death_pitch FLOAT");
             addColumn(statement, table("players"), "death_at BIGINT");
+            statement.execute("CREATE TABLE IF NOT EXISTS " + table("kit_claims") + " ("
+                    + "uuid VARCHAR(36) NOT NULL,"
+                    + "kit VARCHAR(32) NOT NULL,"
+                    + "claimed_at BIGINT NOT NULL,"
+                    + "PRIMARY KEY (uuid, kit)"
+                    + ")");
         } catch (SQLException exception) {
             throw new StorageException("Migrazione schema fallita.", exception);
         }
@@ -175,7 +181,7 @@ public final class StorageManager {
         try (Connection connection = connection();
              PreparedStatement statement = connection.prepareStatement(upsert)) {
             statement.setString(1, "schema_version");
-            statement.setString(2, "5");
+            statement.setString(2, "6");
             statement.executeUpdate();
         } catch (SQLException exception) {
             throw new StorageException("Scrittura versione schema fallita.", exception);
@@ -191,6 +197,6 @@ public final class StorageManager {
     }
 
     private int currentVersion() {
-        return 5;
+        return 6;
     }
 }

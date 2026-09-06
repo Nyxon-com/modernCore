@@ -1,0 +1,70 @@
+# =============================================================================
+# /sell — prezzi + GUI stile CommandPanels
+# =============================================================================
+#
+# GUI:
+#   deposit-slots   slot in cui il player METTE gli item da vendere (range "0-44")
+#                   Non mettere bottoni dentro questo range: verrebbero svuotati
+#   slots           bottoni fissi (filler, conferma, chiudi, comandi)
+#   action          confirm | close | command | filler | deposit
+#
+# Icone slot: stessi campi dei kit (material, mmoitem-type/id, name, lore, glow,
+# custom-model-data, skull-owner, commands, click-sound). Vedi kits.yml.
+#
+# Prezzi vanilla:  worth.<MATERIAL>  (nome Bukkit, es. DIAMOND, COOKED_BEEF)
+# Prezzi MMOItems: mmoitems.<TYPE>.<ID>
+#   TYPE = tipo MMOItems (SWORD, ARMOR, CONSUMABLE, TOOL, ...)
+#   ID   = id interno (quello in /mi give)
+#   Esempio: un'arma SWORD chiamata STEEL_SWORD vale 40:
+#     mmoitems:
+#       SWORD.STEEL_SWORD: 40.0
+#       CONSUMABLE.HEALTH_POTION: 5.5
+#
+# Item senza prezzo tornano in inventario. multiplier scala tutti i prezzi.
+# =============================================================================
+
+settings:
+  sell-on-close: false
+  multiplier: 1.0
+
+gui:
+  title: "<dark_gray>Sell"
+  rows: 6
+  open-sound: UI_BUTTON_CLICK
+  deposit-slots: "0-44"
+  fill:
+    enabled: true
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<black>"
+    lore: []
+  slots:
+    "45-52":
+      action: filler
+      material: GRAY_STAINED_GLASS_PANE
+      name: "<black>"
+      lore: []
+    53:
+      action: confirm
+      material: LIME_STAINED_GLASS_PANE
+      name: "<green>Conferma vendita"
+      lore:
+        - "<gray>Click per vendere gli item"
+      glow: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands:
+        - "[close]"
+
+worth:
+  BREAD: 0.5
+  COOKED_BEEF: 1.5
+  IRON_INGOT: 4.0
+  GOLD_INGOT: 8.0
+  DIAMOND: 25.0
+  EMERALD: 18.0
+  COBBLESTONE: 0.1
+  OAK_LOG: 0.8
+
+# TYPE.ID MMOItems -> prezzo unitario (l'amount dello stack viene moltiplicato)
+mmoitems:
+  # SWORD.STEEL_SWORD: 40.0
+  # CONSUMABLE.HEALTH_POTION: 5.0

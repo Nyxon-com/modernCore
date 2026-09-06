@@ -1,0 +1,112 @@
+# =============================================================================
+# Kit — dati ricompensa + GUI stile CommandPanels
+# =============================================================================
+#
+# GUI (sezione gui):
+#   title          MiniMessage. Placeholder: {player}
+#   rows           1-6
+#   open-sound     suono Bukkit (es. UI_BUTTON_CLICK) o vuoto
+#   fill           item che riempie gli slot vuoti (stessi campi di uno slot)
+#   slots          mappa slot -> bottone. Chiavi: "11" oppure "18-26" oppure "0,8,17"
+#
+# Campi di uno slot:
+#   action              kit | close | command | none
+#   kit                 id del kit (solo se action: kit)
+#   material            materiale vanilla (IRON_SWORD). Fallback se MMOItems assente
+#   mmoitem-type        tipo MMOItems (SWORD, CONSUMABLE, ARMOR, ...)
+#   mmoitem-id          id interno MMOItems (es. STEEL_SWORD)
+#   name / lore         MiniMessage. {player} = chi apre
+#   amount              1-64
+#   custom-model-data   0 = disattivo
+#   glow / enchanted    glow finto
+#   hide-flags          nasconde attributi/enchants
+#   skull-owner         nick per PLAYER_HEAD
+#   click-sound         suono al click
+#   commands            lista click extra:
+#     - "[close]"
+#     - "[console] say {player} ha preso un kit"
+#     - "[player] warp spawn"
+#     - "[sound] UI_BUTTON_CLICK"
+#     - "[message] <green>Fatto"
+#
+# Kit (sezione kits.<id>): contenuto dato al claim, NON il layout GUI.
+#   cooldown-seconds    0 = nessuno. Persistito su SQL
+#   permission          vuoto = tutti. Es. valary.kit.daily
+#   first-join          true = candidabile come kit welcome (vedi settings)
+#   items               lista:
+#     - material: BREAD
+#       amount: 16
+#     - mmoitem-type: SWORD
+#       mmoitem-id: STARTER_BLADE
+#       amount: 1
+#   commands            eseguiti da console al claim. {player} = nick
+#
+# settings.mmoitems-give  comando se getItem() reflection fallisce
+# =============================================================================
+
+settings:
+  first-join-kit: starter
+  first-join-delay-ticks: 20
+  mmoitems-give: "mi give {player} {type} {id} {amount}"
+
+gui:
+  title: "<dark_gray>Kit <white>{player}"
+  rows: 3
+  open-sound: UI_BUTTON_CLICK
+  fill:
+    enabled: true
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<black>"
+    lore: []
+  slots:
+    11:
+      action: kit
+      kit: starter
+      material: IRON_SWORD
+      # mmoitem-type: SWORD
+      # mmoitem-id: STARTER_BLADE
+      name: "<green>Starter"
+      lore:
+        - "<gray>Kit di benvenuto"
+        - "<dark_gray>Click per ritirare"
+      glow: false
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
+    13:
+      action: kit
+      kit: daily
+      material: GOLD_INGOT
+      name: "<gold>Daily"
+      lore:
+        - "<gray>Ricompensa giornaliera"
+      commands: []
+    26:
+      action: close
+      material: BARRIER
+      name: "<red>Chiudi"
+      commands:
+        - "[close]"
+
+kits:
+  starter:
+    cooldown-seconds: 86400
+    permission: ""
+    first-join: true
+    items:
+      - material: BREAD
+        amount: 16
+      - material: WOODEN_SWORD
+        amount: 1
+      # - mmoitem-type: SWORD
+      #   mmoitem-id: STARTER_BLADE
+      #   amount: 1
+    commands: []
+    # - "eco give {player} 50"
+  daily:
+    cooldown-seconds: 86400
+    permission: valary.kit.daily
+    first-join: false
+    items:
+      - material: COOKED_BEEF
+        amount: 8
+    commands: []

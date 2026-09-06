@@ -2,6 +2,7 @@ package com.valaryrpg.core.module.moderation;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.players.PlayerDataRepository;
+import com.valaryrpg.core.util.Tasks;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -46,7 +47,8 @@ public final class VanishService {
 
     public void set(Player target, boolean enabled, CommandSender initiator) {
         apply(target, enabled, true);
-        this.players.updateVanish(target.getUniqueId(), enabled);
+        UUID uuid = target.getUniqueId();
+        Tasks.async(this.plugin, () -> this.players.updateVanish(uuid, enabled));
         boolean self = initiator instanceof Player player && player.getUniqueId().equals(target.getUniqueId());
         this.plugin.messages().send(initiator, enabled ? "vanish.enabled-for" : "vanish.disabled-for", Map.of("player", target.getName()));
         if (!self) {

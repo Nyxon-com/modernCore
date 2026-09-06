@@ -169,3 +169,21 @@ portals:
   no-permission: "{prefix} <red>Non puoi usare il portale <white>{portal}</white>."
   invalid-destination: "{prefix} <red>Destinazione del portale <white>{portal}</white> non valida."
   warmup: "{prefix} <gray>Portale <white>{portal}</white> tra <white>{seconds}</white>s."
+
+kits:
+  gui-title: "<dark_gray>Kit"
+  usage: "{prefix} <gray>Uso: <white>/{label} [kit] [player]</white>"
+  usage-console: "{prefix} <gray>Uso da console: <white>/kit <kit> <player></white>"
+  unknown: "{prefix} <red>Kit <white>{kit}</white> inesistente."
+  no-permission: "{prefix} <red>Non puoi prendere il kit <white>{kit}</white>."
+  cooldown: "{prefix} <red>Kit <white>{kit}</white> tra <white>{seconds}</white>s."
+  received: "{prefix} <green>Hai ricevuto il kit <white>{kit}</white>."
+  given: "{prefix} <green>Kit <white>{kit}</white> dato a <white>{player}</white>."
+
+sell:
+  gui-title: "<dark_gray>Sell"
+  confirm: "<green>Conferma vendita"
+  no-economy: "{prefix} <red>Economy non disponibile (Vault)."
+  empty: "{prefix} <gray>Nessun oggetto vendibile."
+  failed: "{prefix} <red>Transazione economy fallita."
+  sold: "{prefix} <green>Venduti <white>{amount}</white> item per <white>{money}</white>."

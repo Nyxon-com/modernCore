@@ -4,8 +4,8 @@ import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.storage.StoredLocation;
 import com.valaryrpg.core.util.Perms;
 import com.valaryrpg.core.util.Sounds;
+import com.valaryrpg.core.util.Tasks;
 import com.valaryrpg.core.util.Teleports;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -164,21 +164,11 @@ public final class HomeService {
     }
 
     private void async(Runnable task) {
-        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
-            try {
-                task.run();
-            } catch (Exception exception) {
-                this.plugin.getLogger().warning("Errore home: " + exception.getMessage());
-            }
-        });
+        Tasks.async(this.plugin, task);
     }
 
     private void sync(Runnable task) {
-        if (Bukkit.isPrimaryThread()) {
-            task.run();
-            return;
-        }
-        Bukkit.getScheduler().runTask(this.plugin, task);
+        Tasks.sync(this.plugin, task);
     }
 
     private static String worldName(Location location) {

@@ -28,9 +28,11 @@ import java.util.Map;
 public final class CommandService {
 
     private final ValaryCorePlugin plugin;
+    private final CommandSettings settings;
 
     public CommandService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
+        this.settings = new CommandSettings(plugin);
     }
 
     public void register() {
@@ -56,6 +58,12 @@ public final class CommandService {
             }
             if (enabled("mechanics")) {
                 new MechanicsCommands(this.plugin).register(registrar);
+            }
+            if (enabled("kits")) {
+                new KitsCommands(this.plugin).register(registrar);
+            }
+            if (enabled("sell")) {
+                new SellCommands(this.plugin).register(registrar);
             }
         });
     }
@@ -219,11 +227,10 @@ public final class CommandService {
     }
 
     private String string(String path, String fallback) {
-        String value = this.plugin.configs().root().getString(path, fallback);
-        return value == null || value.isBlank() ? fallback : value;
+        return this.settings.name(path, fallback);
     }
 
     private List<String> aliases(String path) {
-        return this.plugin.configs().root().getStringList(path);
+        return this.settings.aliases(path);
     }
 }

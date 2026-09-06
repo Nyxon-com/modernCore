@@ -1,6 +1,8 @@
 # =============================================================================
-# ValaryRPG-Core - Configurazione principale
-# Tutti i valori (permessi, comandi, delay, suoni) vivono qui: zero hardcoding.
+# ValaryRPG-Core — config principale (comandi, permessi, moduli, suoni)
+# I testi stanno in messages.yml. I layout GUI in kits.yml / prices.yml / moderation.yml
+# Disattiva un modulo con false: non registra comandi/eventi.
+# Permessi: cambia il nodo qui, non nel Java. Alias comandi: liste sotto commands.*
 # =============================================================================
 
 plugin:
@@ -14,6 +16,8 @@ modules:
   players: true
   moderation: true
   mechanics: true
+  kits: true
+  sell: true
 
 commands:
   root: valary
@@ -92,6 +96,12 @@ commands:
   copycoord-aliases:
     - coords
     - getpos
+  kit: kit
+  kit-aliases: []
+  kits: kits
+  kits-aliases: []
+  sell: sell
+  sell-aliases: []
 
 permissions:
   admin: valary.admin
@@ -136,6 +146,10 @@ permissions:
   checkdeath-others: valary.checkdeath.others
   copycoord: valary.copycoord
   copycoord-others: valary.copycoord.others
+  kit: valary.kit
+  kit-others: valary.kit.others
+  kit-bypass: valary.kit.bypass
+  sell: valary.sell
 
 sounds:
   teleport-success: ENTITY_ENDERMAN_TELEPORT

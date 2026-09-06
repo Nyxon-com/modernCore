@@ -73,11 +73,13 @@ public final class ModerationListener implements Listener {
             label = label.substring(label.indexOf(':') + 1);
         }
         List<String> blocked = this.plugin.configs().moderation().getStringList("mute.blocked-commands");
-        if (!blocked.contains(label)) {
-            return;
+        for (int i = 0; i < blocked.size(); i++) {
+            if (label.equals(blocked.get(i).toLowerCase(Locale.ROOT))) {
+                event.setCancelled(true);
+                this.plugin.messages().send(event.getPlayer(), "moderation.mute-command");
+                return;
+            }
         }
-        event.setCancelled(true);
-        this.plugin.messages().send(event.getPlayer(), "moderation.mute-command");
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -96,6 +98,7 @@ public final class ModerationListener implements Listener {
             event.quitMessage(null);
         }
         this.vanish.unload(event.getPlayer().getUniqueId());
+        this.moderation.forgetMute(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -110,7 +113,7 @@ public final class ModerationListener implements Listener {
         if (!(event.getInventory().getHolder() instanceof InvseeService.Holder holder)) {
             return;
         }
-        if (InvseeService.filler(event.getRawSlot())) {
+        if (this.invsee.filler(event.getRawSlot())) {
             event.setCancelled(true);
             return;
         }
@@ -122,7 +125,7 @@ public final class ModerationListener implements Listener {
         if (!(event.getInventory().getHolder() instanceof InvseeService.Holder holder)) {
             return;
         }
-        if (event.getRawSlots().stream().anyMatch(InvseeService::filler)) {
+        if (event.getRawSlots().stream().anyMatch(this.invsee::filler)) {
             event.setCancelled(true);
             return;
         }

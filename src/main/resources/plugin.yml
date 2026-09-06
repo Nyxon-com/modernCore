@@ -53,6 +53,8 @@ permissions:
       valary.limity.bypass: true
       valary.checkdeath.others: true
       valary.copycoord.others: true
+      valary.kit.others: true
+      valary.kit.bypass: true
   valary.reload:
     description: Ricarica i file di configurazione
     default: op
@@ -188,3 +190,18 @@ permissions:
   valary.copycoord.others:
     description: /copycoord <player>
     default: op
+  valary.kit:
+    description: Usa /kit e /kits
+    default: true
+  valary.kit.others:
+    description: /kit <kit> <player>
+    default: op
+  valary.kit.bypass:
+    description: Ignora cooldown kit
+    default: op
+  valary.kit.daily:
+    description: Kit daily
+    default: true
+  valary.sell:
+    description: Usa /sell
+    default: true

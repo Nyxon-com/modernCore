@@ -18,6 +18,8 @@ public final class ConfigManager {
     private YamlFile players;
     private YamlFile moderation;
     private YamlFile mechanics;
+    private YamlFile kits;
+    private YamlFile prices;
 
     public ConfigManager(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -33,6 +35,8 @@ public final class ConfigManager {
         this.players = load("players.yml");
         this.moderation = load("moderation.yml");
         this.mechanics = load("mechanics.yml");
+        this.kits = load("kits.yml");
+        this.prices = load("prices.yml");
         this.plugin.getLogger().info("Configurazioni caricate.");
     }
 
@@ -70,6 +74,14 @@ public final class ConfigManager {
 
     public FileConfiguration mechanics() {
         return this.mechanics.config();
+    }
+
+    public FileConfiguration kits() {
+        return this.kits.config();
+    }
+
+    public FileConfiguration prices() {
+        return this.prices.config();
     }
 
     public void saveWorlds() {

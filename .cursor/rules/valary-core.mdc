@@ -1,0 +1,23 @@
+---
+description: Standard ValaryRPG-Core — Paper 1.21.11, data-driven, leggero per 100+ player
+alwaysApply: true
+---
+
+# ValaryRPG-Core
+
+Plugin Paper **1.21.11**, Java 21, Gradle. Sostituisce CMI/Essentials: nativo (`/kick` non `/cmi kick`), MiniMessage, YAML ovunque.
+
+## Cosa non fare
+- Stringhe, permessi, suoni, delay, materiali, slot GUI, coordinate, durate, comandi: **mai in hardcode**. Default YAML + fallback solo se il file manca.
+- SQL o I/O sul thread principale (join/chat/move/timer). Login-ban può restare sull'async pre-login.
+- Duplicare `string()`/`aliases()`/async-sync: usa `CommandSettings` e `Tasks`.
+- Nomi AI/collaborator nei commit. Dopo ogni feature: commit + push su GitHub come `Nyxon-com`.
+- Non chiedere di buildare. Non force-push su `main`.
+
+## Architettura
+Un `Module` per dominio (worlds, homes, warps, players, moderation, mechanics, kits, sell). Flag in `config.yml` `modules.*`. Messaggi in `messages.yml`. Comandi/permessi in `config.yml`.
+
+`/warp <nomewarp> <player>` usa il **nome player**, non un selettore. I comandi vanilla (`msg`, `tell`, `w`, `kick`, `ban`, …) si registrano nel **bootstrap** Paper.
+
+## 100+ player
+Cache in RAM per mute/vanish/cooldown. Cap sugli hologram a terra. Timer LimitY senza spam. Pool Hikari, query per chiave, niente scan di tutti i player su SQL. Vault sell/kit give sul main thread; il resto async.

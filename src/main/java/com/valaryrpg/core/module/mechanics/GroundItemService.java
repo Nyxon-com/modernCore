@@ -33,6 +33,9 @@ public final class GroundItemService {
         if (text.equals(Component.empty())) {
             return;
         }
+        if (this.holograms.size() >= this.plugin.configs().mechanics().getInt("ground-items.max-holograms", 80)) {
+            return;
+        }
         remove(item.getUniqueId());
         TextDisplay display = item.getWorld().spawn(item.getLocation(), TextDisplay.class, spawned -> {
             spawned.text(text);

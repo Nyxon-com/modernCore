@@ -1,0 +1,19 @@
+---
+description: Java Paper — classi autoesplicative, niente duplicazione, thread-safe
+globs: "**/*.java"
+alwaysApply: false
+---
+
+# Java
+
+Ogni classe pubblica ha un javadoc di una riga che dice **cosa fa**. Nomi di metodi = azione (`ban`, `claim`, `attachHologram`). Niente commenti che ripetono il codice.
+
+```java
+// male: SQL in onChat / onMove; copy-paste di aliases()
+// bene: cache + Tasks.async(plugin, () -> repo.insert(...)); poi Tasks.sync per kick/messaggi
+```
+
+- Eventi caldi (`AsyncChatEvent`, `PlayerMoveEvent`, `runTaskTimer`): zero SQL, zero `getConfigurationSection` in loop se puoi cachare al reload.
+- `PlayerSelector` solo dove serve; staff teleport usa `OnlinePlayers.exact(name)`.
+- GUI: `InventoryHolder` custom, materiali/title/rows da YAML.
+- MMOItems: comando o NBT da `MmoItems`, mai dipendenza compile-time.

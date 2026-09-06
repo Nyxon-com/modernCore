@@ -1,5 +1,6 @@
 # =============================================================================
-# Moderazione stile CMI. I comandi kick/ban/ban-ip/banlist/pardon sostituiscono i vanilla.
+# Moderazione stile CMI. kick/ban/ban-ip/banlist/pardon sostituiscono i vanilla.
+# Durate ban/mute: 10s 5m 2h 7d 2w 1mo 1y  perm  permanent  -1
 # =============================================================================
 
 kick:
@@ -10,6 +11,7 @@ ipban:
   default-reason: IP banned
 mute:
   default-reason: Muted
+  # Label comando senza slash e senza namespace (msg, non minecraft:msg)
   blocked-commands:
     - msg
     - tell
@@ -28,3 +30,23 @@ vanish:
   night-vision: true
   no-pickup: true
   silent-join: true
+
+# /invsee layout. Title MiniMessage, {player} = target.
+# contents-start: i 36 slot inventario (hotbar 0-8 + zaino) partono da qui.
+invsee:
+  gui:
+    title: "<dark_gray>Invsee <white>{player}"
+    rows: 6
+    slots:
+      helmet: 0
+      chestplate: 1
+      leggings: 2
+      boots: 3
+      offhand: 4
+      contents-start: 9
+    filler:
+      slots: "5-8"
+      material: GRAY_STAINED_GLASS_PANE
+      name: "<black>"
+      lore: []
+      glow: false

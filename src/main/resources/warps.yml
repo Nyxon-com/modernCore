@@ -1,5 +1,7 @@
 # =============================================================================
-# Warp di server (non per-player). I punti stanno in questo file.
+# Warp di server (non per-player). I punti stanno in questo file, non su SQL.
+# /setwarp <nome> salva world/x/y/z/yaw/pitch. Nomi: lettere numeri underscore.
+# /warp <nome> [player] — il secondo argomento è il NICK, non @p/@a.
 # =============================================================================
 
 settings:

@@ -1,11 +1,25 @@
 # =============================================================================
-# Utility: LimitY, lore item a terra, morti, long-jump, portali item.
+# Utility: LimitY, hologram item a terra, morti, long-jump, portali item.
+# =============================================================================
+#
+# LimitY: mondi senza sezione = nessun limite. Bypass: valary.limity.bypass
+# /limity <min> <max> [mondo] scrive qui.
+#
+# Portali: cubo pos1-pos2 nel world. Si attiva ENTRANDO (non ogni tick).
+#   item.material       vanilla richiesto in inventario (AIR / vuoto = nessun item)
+#   item.mmoitem-type   + mmoitem-id = richiede quell'MMOItem (stesso TYPE/ID di /mi give)
+#   item.consume        true = toglie amount copie
+#   permission          vuoto = tutti
+#   enabled: false sul portale example di default
+#
+# Long-jump: material = blocco pressure plate. worlds: [] = tutti i mondi
+# Hologram a terra: max-holograms evita lag con tanti drop (100+ player)
 # =============================================================================
 
 limity:
   enabled: true
   check-interval-ticks: 10
-  # Mondi senza sezione = nessun limite.
+  notify-cooldown-millis: 3000
   worlds:
     world:
       min: -64
@@ -19,6 +33,7 @@ ground-items:
   show-name: true
   show-lore: true
   max-lore-lines: 4
+  max-holograms: 80
   name-format: "<white>{name} <gray>x{amount}"
   lore-format: "<dark_gray>{line}"
   background: 1073741824
@@ -70,8 +85,11 @@ portals:
       pitch: 0.0
     item:
       material: ENDER_PEARL
+      # Per un MMOItem: lascia material oppure usalo come fallback, e setta:
       mmoitem-type: ""
       mmoitem-id: ""
+      # mmoitem-type: CONSUMABLE
+      # mmoitem-id: DUNGEON_KEY
       consume: true
       amount: 1
     permission: ""

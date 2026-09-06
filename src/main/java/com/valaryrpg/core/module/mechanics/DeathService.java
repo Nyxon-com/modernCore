@@ -4,6 +4,7 @@ import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.players.PlayerDataRepository;
 import com.valaryrpg.core.storage.StoredLocation;
 import com.valaryrpg.core.util.OnlinePlayers;
+import com.valaryrpg.core.util.Tasks;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
@@ -32,16 +33,15 @@ public final class DeathService {
         if (location.getWorld() == null) {
             return;
         }
-        this.players.saveDeath(
-                player.getUniqueId(),
-                location.getWorld().getName(),
-                location.getX(),
-                location.getY(),
-                location.getZ(),
-                location.getYaw(),
-                location.getPitch(),
-                System.currentTimeMillis()
-        );
+        UUID uuid = player.getUniqueId();
+        String world = location.getWorld().getName();
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        float yaw = location.getYaw();
+        float pitch = location.getPitch();
+        long at = System.currentTimeMillis();
+        Tasks.async(this.plugin, () -> this.players.saveDeath(uuid, world, x, y, z, yaw, pitch, at));
     }
 
     public void show(CommandSender sender, String targetName) {

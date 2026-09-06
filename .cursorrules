@@ -1,0 +1,19 @@
+# ValaryRPG-Core — Paper 1.21.11
+
+Core modulare, data-driven, pensato per **100+ player** contemporanei. Sostituisce CMI/Essentials senza prefisso `/cmi`.
+
+## Stack
+Paper 1.21.11, Java 21, Gradle, MiniMessage, HikariCP (SQLite / MySQL / MariaDB), Vault + CoinsEngine.
+
+## Regole
+1. Zero hardcoding: testi, permessi, suoni, delay, item, slot GUI, coordinate, durate stanno nei YAML. Il Java orchestra.
+2. Classi Java autoesplicative: un javadoc di una riga, metodi con nomi d'azione, niente logica copiata. Helper condivisi: `Tasks`, `CommandSettings`, `OnlinePlayers`, `MmoItems`.
+3. Leggero: niente SQL sul main thread (chat, move, timer, join). Cache mute/vanish/cooldown. Cap hologram. Ban in login può usare SQL perché l'evento è già async.
+4. Comandi nativi; override vanilla (`msg`, `kick`, `ban`, …) solo dal `PluginBootstrap`. `/warp <nomewarp> <player>` = nome, non selettore.
+5. Moduli con flag `modules.*`. Soft-depend: Vault, CoinsEngine, MMOItems, MythicLib, Multiverse-Core, PlaceholderAPI.
+6. Dopo ogni feature: commit + push su GitHub. Mai nominare AI nei commit/commenti. Non serve compilare in locale.
+
+## Dove sta cosa
+- `config.yml` comandi/permessi/moduli, `messages.yml` testi, `storage.yml` DB
+- Un YAML per modulo (worlds, homes, warps, players, moderation, mechanics, kits, prices)
+- Package `com.valaryrpg.core.module.<id>`

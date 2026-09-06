@@ -3,6 +3,7 @@ package com.valaryrpg.core.module.moderation;
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.players.PlayerDataRepository;
 import com.valaryrpg.core.util.Durations;
+import com.valaryrpg.core.util.Tasks;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -13,13 +14,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * Kick/ban/mute/warn/ipban persistiti su SQL. I mute restano in cache per non interrogare il DB a ogni chat.
+ */
 public final class ModerationService {
 
     private final ValaryCorePlugin plugin;
     private final PunishmentRepository repository;
     private final PlayerDataRepository players;
+    private final Map<UUID, Punishment> mutes = new ConcurrentHashMap<>();
 
     public ModerationService(ValaryCorePlugin plugin, PunishmentRepository repository, PlayerDataRepository players) {
         this.plugin = plugin;
@@ -109,7 +115,11 @@ public final class ModerationService {
         Target target = resolve(targetName);
         String finalReason = reasonOrDefault(reason, "mute.default-reason");
         Long expiry = parseExpiry(durationRaw);
-        this.repository.insert(PunishmentType.MUTE, target.uuid, target.name, target.ip, staff.getName(), finalReason, expiry);
+        Punishment mute = new Punishment(-1L, PunishmentType.MUTE, target.uuid, target.name, target.ip, staff.getName(), finalReason, System.currentTimeMillis(), expiry, true);
+        if (target.uuid != null) {
+            this.mutes.put(target.uuid, mute);
+        }
+        Tasks.async(this.plugin, () -> this.repository.insert(PunishmentType.MUTE, target.uuid, target.name, target.ip, staff.getName(), finalReason, expiry));
         if (target.online != null) {
             this.plugin.messages().send(target.online, "moderation.mute-target", Map.of(
                     "reason", this.plugin.messages().escape(finalReason),
@@ -125,12 +135,19 @@ public final class ModerationService {
 
     public void unmute(CommandSender staff, String targetName) {
         Target target = resolve(targetName);
-        int updated = this.repository.deactivate(PunishmentType.MUTE, target.uuid, target.name, target.ip);
-        if (updated <= 0) {
-            this.plugin.messages().send(staff, "moderation.unmute-missing", Map.of("player", target.name));
-            return;
+        if (target.uuid != null) {
+            this.mutes.remove(target.uuid);
         }
-        this.plugin.messages().send(staff, "moderation.unmute-staff", Map.of("player", target.name));
+        Tasks.async(this.plugin, () -> {
+            int updated = this.repository.deactivate(PunishmentType.MUTE, target.uuid, target.name, target.ip);
+            Tasks.sync(this.plugin, () -> {
+                if (updated <= 0) {
+                    this.plugin.messages().send(staff, "moderation.unmute-missing", Map.of("player", target.name));
+                    return;
+                }
+                this.plugin.messages().send(staff, "moderation.unmute-staff", Map.of("player", target.name));
+            });
+        });
     }
 
     public void warn(CommandSender staff, String targetName, String reason) {
@@ -218,7 +235,22 @@ public final class ModerationService {
     }
 
     public Optional<Punishment> activeMute(Player player) {
-        return this.repository.active(PunishmentType.MUTE, player.getUniqueId(), player.getName(), ip(player));
+        Punishment cached = this.mutes.get(player.getUniqueId());
+        if (cached != null) {
+            if (cached.expired()) {
+                this.mutes.remove(player.getUniqueId());
+                Tasks.async(this.plugin, () -> this.repository.deactivate(PunishmentType.MUTE, player.getUniqueId(), player.getName(), ip(player)));
+                return Optional.empty();
+            }
+            return Optional.of(cached);
+        }
+        Optional<Punishment> found = this.repository.active(PunishmentType.MUTE, player.getUniqueId(), player.getName(), ip(player));
+        found.ifPresent(mute -> this.mutes.put(player.getUniqueId(), mute));
+        return found;
+    }
+
+    public void forgetMute(UUID uuid) {
+        this.mutes.remove(uuid);
     }
 
     public PunishmentRepository repository() {
