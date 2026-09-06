@@ -1,0 +1,41 @@
+# =============================================================================
+# ValaryRPG-Core - Configurazione principale
+# Tutti i valori (permessi, comandi, delay, suoni) vivono qui: zero hardcoding.
+# =============================================================================
+
+plugin:
+  prefix: "<gradient:#8B5CF6:#EC4899><bold>Valary</bold></gradient> <dark_gray>»"
+  language: it
+
+modules:
+  worlds: true
+
+commands:
+  root: valary
+  root-aliases:
+    - vcore
+    - core
+  spawn: spawn
+  spawn-aliases: []
+  setspawn: setspawn
+  setspawn-aliases: []
+  weatherlock: weatherlock
+  weatherlock-aliases:
+    - wlock
+
+permissions:
+  admin: valary.admin
+  reload: valary.reload
+  spawn: valary.spawn
+  spawn-others: valary.spawn.others
+  setspawn: valary.setspawn
+  weatherlock: valary.weather.lock
+
+sounds:
+  teleport-success: ENTITY_ENDERMAN_TELEPORT
+  spawn-set: BLOCK_NOTE_BLOCK_PLING
+  command-denied: ENTITY_VILLAGER_NO
+  reload-success: ENTITY_PLAYER_LEVELUP
+
+delays:
+  command-cooldown-millis: 250

@@ -1,0 +1,27 @@
+# =============================================================================
+# Storage - SQLite (default), MySQL o MariaDB
+# type: SQLITE | MYSQL | MARIADB
+# =============================================================================
+
+storage:
+  type: SQLITE
+  table-prefix: valary_
+
+  sqlite:
+    file: data.db
+
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: valarycore
+    username: root
+    password: ""
+    use-ssl: false
+
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout: 30000
+    idle-timeout: 600000
+    max-lifetime: 1800000
+    keepalive-time: 0

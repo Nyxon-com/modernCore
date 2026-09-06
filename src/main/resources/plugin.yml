@@ -1,0 +1,43 @@
+name: ValaryRPG-Core
+version: '${version}'
+main: com.valaryrpg.core.ValaryCorePlugin
+api-version: '1.21'
+description: '${description}'
+authors:
+  - ValaryRPG
+website: https://github.com/Nyxon-com/ValaryRPGcore
+folia-supported: false
+load: POSTWORLD
+softdepend:
+  - Vault
+  - CoinsEngine
+  - ExcellentEconomy
+  - MMOItems
+  - MythicLib
+  - Multiverse-Core
+  - PlaceholderAPI
+libraries: []
+permissions:
+  valary.admin:
+    description: Accesso completo alle funzioni di amministrazione
+    default: op
+    children:
+      valary.reload: true
+      valary.spawn.others: true
+      valary.setspawn: true
+      valary.weather.lock: true
+  valary.reload:
+    description: Ricarica i file di configurazione
+    default: op
+  valary.spawn:
+    description: Teletrasporto allo spawn del mondo
+    default: true
+  valary.spawn.others:
+    description: Teletrasporta altri giocatori allo spawn
+    default: op
+  valary.setspawn:
+    description: Imposta lo spawn del mondo corrente
+    default: op
+  valary.weather.lock:
+    description: Blocca o sblocca il meteo di un mondo
+    default: op

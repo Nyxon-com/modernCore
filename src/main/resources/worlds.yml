@@ -1,0 +1,30 @@
+# =============================================================================
+# Mondi: spawn indipendenti e blocco meteo.
+# Multiverse-Core è opzionale: i mondi caricati da MV sono visibili via Bukkit.
+# =============================================================================
+
+settings:
+  default-world: world
+  use-current-world-spawn: true
+  spawn-on-join: false
+  spawn-on-respawn: true
+  warmup-seconds: 0
+  cancel-on-move: false
+  teleport-sound: true
+
+# spawn per mondo. Se assente, viene usato World#getSpawnLocation().
+spawns: {}
+# esempio:
+#   world:
+#     x: 0.5
+#     y: 64.0
+#     z: 0.5
+#     yaw: 0.0
+#     pitch: 0.0
+
+# lock meteo. type: CLEAR | RAIN | THUNDER
+weather: {}
+# esempio:
+#   world:
+#     lock: true
+#     type: CLEAR

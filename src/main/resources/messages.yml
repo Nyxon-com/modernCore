@@ -1,0 +1,32 @@
+# =============================================================================
+# Messaggi (MiniMessage + HEX). Placeholder: {prefix} {player} {world} {error}
+# {target} {weather} {x} {y} {z}
+# =============================================================================
+
+general:
+  no-permission: "{prefix} <red>Non hai il permesso per eseguire questo comando."
+  player-only: "{prefix} <red>Questo comando può essere usato solo da un giocatore."
+  player-not-found: "{prefix} <red>Giocatore <white>{target}</white> non trovato o non online."
+  invalid-world: "{prefix} <red>Il mondo <white>{world}</white> non è caricato."
+  module-disabled: "{prefix} <red>Il modulo <white>{module}</white> è disabilitato."
+  unknown-subcommand: "{prefix} <gray>Uso: <white>/{label} reload</white>"
+  cooldown: "{prefix} <red>Attendi un attimo prima di riusare il comando."
+
+reload:
+  success: "{prefix} <green>Configurazione ricaricata correttamente."
+  failed: "{prefix} <red>Reload fallito. Controlla la console. <gray>({error})"
+
+spawn:
+  teleported: "{prefix} <gray>Sei stato teletrasportato allo spawn di <white>{world}</white>."
+  teleported-other: "{prefix} <gray>Hai teletrasportato <white>{target}</white> allo spawn di <white>{world}</white>."
+  teleported-by-staff: "{prefix} <gray>Sei stato teletrasportato allo spawn da <white>{player}</white>."
+  not-set: "{prefix} <yellow>Spawn non configurato per <white>{world}</white><yellow>, uso lo spawn di default del mondo."
+  set: "{prefix} <green>Spawn di <white>{world}</white> impostato a <white>{x}</white>, <white>{y}</white>, <white>{z}</white>."
+  warmup: "{prefix} <gray>Teletrasporto tra <white>{seconds}</white>s. Non muoverti."
+  cancelled-move: "{prefix} <red>Teletrasporto annullato: ti sei mosso."
+
+weather:
+  locked: "{prefix} <green>Meteo di <white>{world}</white> bloccato su <white>{weather}</white>."
+  unlocked: "{prefix} <green>Meteo di <white>{world}</white> sbloccato."
+  usage: "{prefix} <gray>Uso: <white>/{label} <clear|rain|thunder|unlock> [mondo]</white>"
+  invalid-type: "{prefix} <red>Tipo meteo non valido. Usa: clear, rain, thunder, unlock."
