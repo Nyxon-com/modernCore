@@ -33,6 +33,7 @@ final class MechanicsCommands {
         registrar.register(limitYCommand(), "Limite Y per mondo", aliases("commands.limity-aliases"));
         registrar.register(checkDeathCommand(), "Ultima posizione di morte", aliases("commands.checkdeath-aliases"));
         registrar.register(copyCoordCommand(), "Copia le coordinate", aliases("commands.copycoord-aliases"));
+        registrar.register(portalCommand(), "Gestione portali", aliases("commands.portal-aliases"));
     }
 
     private LiteralCommandNode<CommandSourceStack> limitYCommand() {
@@ -106,6 +107,74 @@ final class MechanicsCommands {
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();
+    }
+
+    private LiteralCommandNode<CommandSourceStack> portalCommand() {
+        String name = string("commands.portal", "portal");
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "portal"))
+                .executes(ctx -> {
+                    this.plugin.messages().send(ctx.getSource().getSender(), "portals.usage", Map.of("label", name));
+                    return Command.SINGLE_SUCCESS;
+                })
+                .then(Commands.literal("pos1").executes(ctx -> portalPlayer(ctx.getSource().getSender(), player -> module().portals().markPos1(player))))
+                .then(Commands.literal("pos2").executes(ctx -> portalPlayer(ctx.getSource().getSender(), player -> module().portals().markPos2(player))))
+                .then(Commands.literal("dest").executes(ctx -> portalPlayer(ctx.getSource().getSender(), player -> module().portals().markDest(player))))
+                .then(Commands.literal("create")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .executes(ctx -> portalPlayer(ctx.getSource().getSender(), player ->
+                                        module().portals().create(player, StringArgumentType.getString(ctx, "name"))))))
+                .then(Commands.literal("item")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestPortals(builder))
+                                .executes(ctx -> portalPlayer(ctx.getSource().getSender(), player ->
+                                        module().portals().setItem(player, StringArgumentType.getString(ctx, "name"))))))
+                .then(Commands.literal("enable")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestPortals(builder))
+                                .executes(ctx -> {
+                                    module().portals().enable(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "name"), true);
+                                    return Command.SINGLE_SUCCESS;
+                                })))
+                .then(Commands.literal("disable")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestPortals(builder))
+                                .executes(ctx -> {
+                                    module().portals().enable(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "name"), false);
+                                    return Command.SINGLE_SUCCESS;
+                                })))
+                .then(Commands.literal("delete")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestPortals(builder))
+                                .executes(ctx -> {
+                                    module().portals().delete(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "name"));
+                                    return Command.SINGLE_SUCCESS;
+                                })))
+                .then(Commands.literal("list")
+                        .executes(ctx -> {
+                            module().portals().list(ctx.getSource().getSender());
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .build();
+    }
+
+    private int portalPlayer(CommandSender sender, java.util.function.Consumer<Player> action) {
+        if (!(sender instanceof Player player)) {
+            this.plugin.messages().send(sender, "general.player-only");
+            return 0;
+        }
+        action.accept(player);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestPortals(com.mojang.brigadier.suggestion.SuggestionsBuilder builder) {
+        String remaining = builder.getRemainingLowerCase();
+        for (String portal : module().portals().names()) {
+            if (portal.toLowerCase(Locale.ROOT).startsWith(remaining)) {
+                builder.suggest(portal);
+            }
+        }
+        return builder.buildFuture();
     }
 
     private int showLimit(CommandSender sender, String worldName) {

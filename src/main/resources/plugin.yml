@@ -55,6 +55,10 @@ permissions:
       valary.copycoord.others: true
       valary.kit.others: true
       valary.kit.bypass: true
+      valary.god.others: true
+      valary.heal.others: true
+      valary.feed.others: true
+      valary.portal: true
   valary.reload:
     description: Ricarica i file di configurazione
     default: op
@@ -205,3 +209,30 @@ permissions:
   valary.sell:
     description: Usa /sell
     default: true
+  valary.sellall:
+    description: Usa /sellall
+    default: true
+  valary.back:
+    description: Usa /back
+    default: true
+  valary.god:
+    description: Usa /god
+    default: op
+  valary.god.others:
+    description: /god <player> [on|off]
+    default: op
+  valary.heal:
+    description: Usa /heal
+    default: op
+  valary.heal.others:
+    description: /heal <player>
+    default: op
+  valary.feed:
+    description: Usa /feed
+    default: op
+  valary.feed.others:
+    description: /feed <player>
+    default: op
+  valary.portal:
+    description: Usa /portal
+    default: op

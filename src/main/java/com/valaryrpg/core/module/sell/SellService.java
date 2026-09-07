@@ -151,4 +151,38 @@ public final class SellService {
         }
         return worth.getDouble(material);
     }
+
+    public void sellAll(Player player) {
+        if (!this.plugin.economy().available()) {
+            this.plugin.messages().send(player, "sell.no-economy");
+            return;
+        }
+        double total = 0;
+        int sold = 0;
+        for (int slot = 0; slot < 36; slot++) {
+            ItemStack item = player.getInventory().getItem(slot);
+            if (item == null || item.getType().isAir()) {
+                continue;
+            }
+            Double price = priceOf(item);
+            if (price == null) {
+                continue;
+            }
+            total += price * item.getAmount() * this.plugin.configs().prices().getDouble("settings.multiplier", 1.0D);
+            sold += item.getAmount();
+            player.getInventory().setItem(slot, null);
+        }
+        if (sold <= 0) {
+            this.plugin.messages().send(player, "sell.empty");
+            return;
+        }
+        if (!this.plugin.economy().deposit(player, total)) {
+            this.plugin.messages().send(player, "sell.failed");
+            return;
+        }
+        this.plugin.messages().send(player, "sell.sold", Map.of(
+                "amount", String.valueOf(sold),
+                "money", String.format(Locale.US, "%.2f", total)
+        ));
+    }
 }

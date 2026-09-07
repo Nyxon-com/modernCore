@@ -32,6 +32,18 @@ final class SellCommands {
                     return Command.SINGLE_SUCCESS;
                 })
                 .build(), "Vendi oggetti", this.settings.aliases("commands.sell-aliases"));
+        registrar.register(Commands.literal(this.settings.name("commands.sellall", "sellall"))
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "sellall"))
+                .executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!(sender instanceof Player player)) {
+                        this.plugin.messages().send(sender, "general.player-only");
+                        return 0;
+                    }
+                    module().sell().sellAll(player);
+                    return Command.SINGLE_SUCCESS;
+                })
+                .build(), "Vendi tutti gli oggetti dell'inventario", this.settings.aliases("commands.sellall-aliases"));
     }
 
     private SellModule module() {

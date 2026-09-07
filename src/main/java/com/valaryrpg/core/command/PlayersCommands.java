@@ -4,10 +4,13 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.valaryrpg.core.ValaryCorePlugin;
+import com.valaryrpg.core.module.players.BackService;
 import com.valaryrpg.core.module.players.FlyService;
+import com.valaryrpg.core.module.players.GodService;
 import com.valaryrpg.core.module.players.NickService;
 import com.valaryrpg.core.module.players.PlayersModule;
 import com.valaryrpg.core.module.players.PrivateMessageService;
+import com.valaryrpg.core.module.players.VitalService;
 import com.valaryrpg.core.util.OnlinePlayers;
 import com.valaryrpg.core.util.Perms;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -41,6 +44,10 @@ final class PlayersCommands {
         registrar.register(socialSpyCommand(), "Spia i messaggi privati", aliases("commands.socialspy-aliases"));
         registrar.register(nickCommand(), "Imposta un nickname MiniMessage", aliases("commands.nick-aliases"));
         registrar.register(flyCommand(), "Attiva o disattiva il volo", aliases("commands.fly-aliases"));
+        registrar.register(backCommand(), "Torna all'ultima posizione", aliases("commands.back-aliases"));
+        registrar.register(godCommand(), "Attiva o disattiva il god mode", aliases("commands.god-aliases"));
+        registrar.register(healCommand(), "Cura un giocatore", aliases("commands.heal-aliases"));
+        registrar.register(feedCommand(), "Riempie la fame", aliases("commands.feed-aliases"));
     }
 
     private LiteralCommandNode<CommandSourceStack> replyCommand() {
@@ -195,6 +202,141 @@ final class PlayersCommands {
         return Command.SINGLE_SUCCESS;
     }
 
+    private LiteralCommandNode<CommandSourceStack> backCommand() {
+        String name = string("commands.back", "back");
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "back"))
+                .executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!(sender instanceof Player player)) {
+                        this.plugin.messages().send(sender, "general.player-only");
+                        return 0;
+                    }
+                    back().go(player);
+                    return Command.SINGLE_SUCCESS;
+                })
+                .build();
+    }
+
+    private LiteralCommandNode<CommandSourceStack> godCommand() {
+        String name = string("commands.god", "god");
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "god"))
+                .executes(ctx -> godSelf(ctx.getSource().getSender(), null))
+                .then(Commands.argument("playerOrState", StringArgumentType.word())
+                        .suggests((ctx, builder) -> {
+                            OnlinePlayers.suggest(builder);
+                            for (String state : List.of("on", "off")) {
+                                if (state.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(state);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes(ctx -> godFirstArg(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "playerOrState")))
+                        .then(Commands.argument("state", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    for (String state : List.of("on", "off")) {
+                                        if (state.startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(state);
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "god-others"))
+                                .executes(ctx -> godOther(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "playerOrState"),
+                                        parseState(StringArgumentType.getString(ctx, "state"))
+                                ))))
+                .build();
+    }
+
+    private LiteralCommandNode<CommandSourceStack> healCommand() {
+        return vitalCommand("commands.heal", "heal", "heal", "heal-others", (target, sender) -> vitals().heal(target, sender));
+    }
+
+    private LiteralCommandNode<CommandSourceStack> feedCommand() {
+        return vitalCommand("commands.feed", "feed", "feed", "feed-others", (target, sender) -> vitals().feed(target, sender));
+    }
+
+    private LiteralCommandNode<CommandSourceStack> vitalCommand(
+            String path,
+            String fallback,
+            String selfPerm,
+            String othersPerm,
+            java.util.function.BiConsumer<Player, CommandSender> action
+    ) {
+        String name = string(path, fallback);
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), selfPerm))
+                .executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!(sender instanceof Player player)) {
+                        this.plugin.messages().send(sender, fallback + ".usage", Map.of("label", name));
+                        return 0;
+                    }
+                    action.accept(player, player);
+                    return Command.SINGLE_SUCCESS;
+                })
+                .then(Commands.argument("player", StringArgumentType.word())
+                        .requires(stack -> Perms.has(this.plugin, stack.getSender(), othersPerm))
+                        .suggests((ctx, builder) -> {
+                            OnlinePlayers.suggest(builder);
+                            return builder.buildFuture();
+                        })
+                        .executes(ctx -> {
+                            String playerName = StringArgumentType.getString(ctx, "player");
+                            Player target = OnlinePlayers.exact(playerName);
+                            if (target == null) {
+                                this.plugin.messages().send(ctx.getSource().getSender(), "general.player-not-found", Map.of("target", playerName));
+                                return 0;
+                            }
+                            action.accept(target, ctx.getSource().getSender());
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .build();
+    }
+
+    private int godSelf(CommandSender sender, Boolean state) {
+        if (!(sender instanceof Player player)) {
+            this.plugin.messages().send(sender, "god.usage", Map.of("label", string("commands.god", "god")));
+            return 0;
+        }
+        if (state == null) {
+            god().toggle(player, player);
+        } else {
+            god().set(player, state, player);
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int godFirstArg(CommandSender sender, String arg) {
+        Boolean state = parseState(arg);
+        if (state != null) {
+            return godSelf(sender, state);
+        }
+        if (!Perms.has(this.plugin, sender, "god-others")) {
+            this.plugin.messages().send(sender, "general.no-permission");
+            return 0;
+        }
+        return godOther(sender, arg, null);
+    }
+
+    private int godOther(CommandSender sender, String playerName, Boolean state) {
+        Player target = OnlinePlayers.exact(playerName);
+        if (target == null) {
+            this.plugin.messages().send(sender, "general.player-not-found", Map.of("target", playerName));
+            return 0;
+        }
+        if (state == null) {
+            god().toggle(target, sender);
+        } else {
+            god().set(target, state, sender);
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
     private static Boolean parseState(String raw) {
         String value = raw.toLowerCase(Locale.ROOT);
         if (TRUE_STATES.contains(value)) {
@@ -212,6 +354,18 @@ final class PlayersCommands {
 
     private FlyService fly() {
         return module().fly();
+    }
+
+    private GodService god() {
+        return module().god();
+    }
+
+    private VitalService vitals() {
+        return module().vitals();
+    }
+
+    private BackService back() {
+        return module().back();
     }
 
     private PrivateMessageService messages() {

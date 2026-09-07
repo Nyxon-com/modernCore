@@ -10,6 +10,9 @@ public final class PlayersModule implements Module {
     private PlayerDataRepository repository;
     private NickService nicks;
     private FlyService fly;
+    private GodService god;
+    private VitalService vitals;
+    private BackService back;
     private PrivateMessageService messages;
     private PlayersListener listener;
 
@@ -27,8 +30,11 @@ public final class PlayersModule implements Module {
         this.repository = new PlayerDataRepository(this.plugin);
         this.nicks = new NickService(this.plugin, this.repository);
         this.fly = new FlyService(this.plugin, this.repository);
+        this.god = new GodService(this.plugin, this.repository);
+        this.vitals = new VitalService(this.plugin);
+        this.back = new BackService(this.plugin);
         this.messages = new PrivateMessageService(this.plugin, this.repository, this.nicks);
-        this.listener = new PlayersListener(this.plugin, this.repository, this.nicks, this.fly, this.messages);
+        this.listener = new PlayersListener(this.plugin, this.repository, this.nicks, this.fly, this.god, this.messages);
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
     }
 
@@ -51,6 +57,18 @@ public final class PlayersModule implements Module {
 
     public FlyService fly() {
         return this.fly;
+    }
+
+    public GodService god() {
+        return this.god;
+    }
+
+    public VitalService vitals() {
+        return this.vitals;
+    }
+
+    public BackService back() {
+        return this.back;
     }
 
     public PrivateMessageService messages() {

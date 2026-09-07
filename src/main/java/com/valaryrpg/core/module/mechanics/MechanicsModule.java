@@ -63,4 +63,8 @@ public final class MechanicsModule implements Module {
     public DeathService deaths() {
         return this.deaths;
     }
+
+    public PortalService portals() {
+        return this.portals;
+    }
 }

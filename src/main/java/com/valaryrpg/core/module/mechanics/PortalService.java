@@ -6,16 +6,25 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class PortalService {
 
     private final ValaryCorePlugin plugin;
+    private final Map<UUID, Location> pos1 = new ConcurrentHashMap<>();
+    private final Map<UUID, Location> pos2 = new ConcurrentHashMap<>();
+    private final Map<UUID, Location> dest = new ConcurrentHashMap<>();
 
     public PortalService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -48,6 +57,7 @@ public final class PortalService {
             this.plugin.messages().send(player, "portals.invalid-destination", Map.of("portal", entered));
             return;
         }
+        this.plugin.lastLocations().remember(player);
         int warmup = portal.getInt("warmup-seconds", 0);
         if (warmup > 0) {
             this.plugin.messages().send(player, "portals.warmup", Map.of(
@@ -63,6 +73,156 @@ public final class PortalService {
             player.teleport(destination);
         }
         this.plugin.messages().send(player, "portals.used", Map.of("portal", entered));
+    }
+
+    public void markPos1(Player player) {
+        this.pos1.put(player.getUniqueId(), player.getLocation().clone());
+        this.plugin.messages().send(player, "portals.pos1");
+    }
+
+    public void markPos2(Player player) {
+        this.pos2.put(player.getUniqueId(), player.getLocation().clone());
+        this.plugin.messages().send(player, "portals.pos2");
+    }
+
+    public void markDest(Player player) {
+        this.dest.put(player.getUniqueId(), player.getLocation().clone());
+        this.plugin.messages().send(player, "portals.dest");
+    }
+
+    public void create(Player player, String name) {
+        String id = normalize(name);
+        if (id.isBlank()) {
+            this.plugin.messages().send(player, "portals.invalid-name");
+            return;
+        }
+        Location first = this.pos1.get(player.getUniqueId());
+        Location second = this.pos2.get(player.getUniqueId());
+        Location destination = this.dest.get(player.getUniqueId());
+        if (first == null || second == null || destination == null
+                || first.getWorld() == null || second.getWorld() == null || destination.getWorld() == null) {
+            this.plugin.messages().send(player, "portals.incomplete");
+            return;
+        }
+        if (!first.getWorld().equals(second.getWorld())) {
+            this.plugin.messages().send(player, "portals.world-mismatch");
+            return;
+        }
+        FileConfiguration yaml = this.plugin.configs().mechanics();
+        String base = "portals." + id;
+        yaml.set(base + ".enabled", true);
+        yaml.set(base + ".world", first.getWorld().getName());
+        writeLocation(yaml, base + ".pos1", first, false);
+        writeLocation(yaml, base + ".pos2", second, false);
+        writeLocation(yaml, base + ".destination", destination, true);
+        yaml.set(base + ".item.material", "AIR");
+        yaml.set(base + ".item.mmoitem-type", "");
+        yaml.set(base + ".item.mmoitem-id", "");
+        yaml.set(base + ".item.consume", false);
+        yaml.set(base + ".item.amount", 1);
+        yaml.set(base + ".permission", "");
+        yaml.set(base + ".warmup-seconds", 0);
+        this.plugin.configs().saveMechanics();
+        this.plugin.messages().send(player, "portals.created", Map.of("portal", id));
+    }
+
+    public void setItem(Player player, String name) {
+        String id = requirePortal(player, name);
+        if (id == null) {
+            return;
+        }
+        ItemStack hand = player.getInventory().getItemInMainHand();
+        FileConfiguration yaml = this.plugin.configs().mechanics();
+        String base = "portals." + id + ".item";
+        if (hand == null || hand.getType().isAir()) {
+            yaml.set(base + ".material", "AIR");
+            yaml.set(base + ".mmoitem-type", "");
+            yaml.set(base + ".mmoitem-id", "");
+            yaml.set(base + ".consume", false);
+            this.plugin.configs().saveMechanics();
+            this.plugin.messages().send(player, "portals.item-cleared", Map.of("portal", id));
+            return;
+        }
+        yaml.set(base + ".material", hand.getType().name());
+        yaml.set(base + ".amount", Math.max(1, hand.getAmount()));
+        yaml.set(base + ".consume", true);
+        String[] nbt = MmoItems.typeAndId(hand);
+        if (nbt != null && isMmoId(nbt[0]) && isMmoId(nbt[1])) {
+            yaml.set(base + ".mmoitem-type", nbt[0]);
+            yaml.set(base + ".mmoitem-id", nbt[1]);
+        } else {
+            yaml.set(base + ".mmoitem-type", "");
+            yaml.set(base + ".mmoitem-id", "");
+        }
+        this.plugin.configs().saveMechanics();
+        this.plugin.messages().send(player, "portals.item-set", Map.of("portal", id));
+    }
+
+    public void enable(CommandSender sender, String name, boolean enabled) {
+        String id = requirePortal(sender, name);
+        if (id == null) {
+            return;
+        }
+        this.plugin.configs().mechanics().set("portals." + id + ".enabled", enabled);
+        this.plugin.configs().saveMechanics();
+        this.plugin.messages().send(sender, enabled ? "portals.enabled" : "portals.disabled", Map.of("portal", id));
+    }
+
+    public void delete(CommandSender sender, String name) {
+        String id = requirePortal(sender, name);
+        if (id == null) {
+            return;
+        }
+        this.plugin.configs().mechanics().set("portals." + id, null);
+        this.plugin.configs().saveMechanics();
+        this.plugin.messages().send(sender, "portals.deleted", Map.of("portal", id));
+    }
+
+    public void list(CommandSender sender) {
+        Set<String> names = names();
+        if (names.isEmpty()) {
+            this.plugin.messages().send(sender, "portals.list-empty");
+            return;
+        }
+        this.plugin.messages().send(sender, "portals.list", Map.of(
+                "count", String.valueOf(names.size()),
+                "portals", String.join(", ", names)
+        ));
+    }
+
+    public Set<String> names() {
+        ConfigurationSection portals = this.plugin.configs().mechanics().getConfigurationSection("portals");
+        return portals == null ? Set.of() : portals.getKeys(false);
+    }
+
+    private String requirePortal(CommandSender sender, String name) {
+        String id = normalize(name);
+        if (this.plugin.configs().mechanics().getConfigurationSection("portals." + id) == null) {
+            this.plugin.messages().send(sender, "portals.unknown", Map.of("portal", name));
+            return null;
+        }
+        return id;
+    }
+
+    private static void writeLocation(FileConfiguration yaml, String path, Location location, boolean withWorld) {
+        if (withWorld && location.getWorld() != null) {
+            yaml.set(path + ".world", location.getWorld().getName());
+        }
+        yaml.set(path + ".x", location.getX());
+        yaml.set(path + ".y", location.getY());
+        yaml.set(path + ".z", location.getZ());
+        if (withWorld) {
+            yaml.set(path + ".yaw", location.getYaw());
+            yaml.set(path + ".pitch", location.getPitch());
+        }
+    }
+
+    private static String normalize(String name) {
+        return name == null ? "" : name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "");
+    }
+
+    private static boolean isMmoId(String value) {
+        return value != null && !value.isBlank() && !"null".equalsIgnoreCase(value);
     }
 
     private String nameAt(Location location) {
@@ -126,6 +286,9 @@ public final class PortalService {
         String type = item.getString("mmoitem-type", "");
         String id = item.getString("mmoitem-id", "");
         int amount = Math.max(1, item.getInt("amount", 1));
+        if ((material == null || material.isAir()) && (type == null || type.isBlank()) && (id == null || id.isBlank())) {
+            return true;
+        }
         PlayerInventory inventory = player.getInventory();
         int slot = findSlot(inventory, material, type, id, amount);
         if (slot < 0) {

@@ -42,6 +42,23 @@ public final class WeatherService {
         }
     }
 
+    public void applyCatalogAll() {
+        for (World world : Bukkit.getWorlds()) {
+            applyCatalog(world);
+        }
+    }
+
+    public void applyCatalog(World world) {
+        if (isLocked(world)) {
+            return;
+        }
+        String type = this.plugin.configs().worlds().getString("worlds." + world.getName() + ".weather", "UNSET");
+        if (type == null || type.isBlank() || type.equalsIgnoreCase("UNSET")) {
+            return;
+        }
+        applyType(world, WeatherLock.from(type));
+    }
+
     public void apply(World world) {
         WeatherLock lock = lockOf(world.getName());
         if (lock == null) {

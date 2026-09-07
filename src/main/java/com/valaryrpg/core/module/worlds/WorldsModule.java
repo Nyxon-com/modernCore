@@ -11,6 +11,7 @@ import org.bukkit.event.HandlerList;
 public final class WorldsModule implements Module {
 
     private final ValaryCorePlugin plugin;
+    private WorldCatalog catalog;
     private SpawnService spawns;
     private WeatherService weather;
     private WorldsListener listener;
@@ -26,14 +27,17 @@ public final class WorldsModule implements Module {
 
     @Override
     public void enable() {
+        this.catalog = new WorldCatalog(this.plugin);
         this.spawns = new SpawnService(this.plugin);
         this.weather = new WeatherService(this.plugin);
-        this.listener = new WorldsListener(this.plugin, this.spawns, this.weather);
-        Bukkit.getPluginManager().registerEvents(this.listener, this.plugin);
+        this.catalog.syncAll();
+        this.weather.applyCatalogAll();
         this.weather.applyAll();
+        this.listener = new WorldsListener(this.plugin, this.catalog, this.spawns, this.weather);
+        Bukkit.getPluginManager().registerEvents(this.listener, this.plugin);
 
         if (Bukkit.getPluginManager().getPlugin("Multiverse-Core") != null) {
-            this.plugin.getLogger().info("Multiverse-Core rilevato: i mondi caricati sono gestiti via Bukkit API.");
+            this.plugin.getLogger().info("Multiverse-Core rilevato: opzioni mondo importate in worlds.yml se mancanti.");
         }
     }
 
@@ -56,5 +60,9 @@ public final class WorldsModule implements Module {
 
     public WeatherService weather() {
         return this.weather;
+    }
+
+    public WorldCatalog catalog() {
+        return this.catalog;
     }
 }

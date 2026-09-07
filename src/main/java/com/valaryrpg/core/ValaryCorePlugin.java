@@ -13,7 +13,9 @@ import com.valaryrpg.core.module.players.PlayersModule;
 import com.valaryrpg.core.module.sell.SellModule;
 import com.valaryrpg.core.module.warps.WarpsModule;
 import com.valaryrpg.core.module.worlds.WorldsModule;
+import com.valaryrpg.core.papi.PlaceholderHook;
 import com.valaryrpg.core.storage.StorageManager;
+import com.valaryrpg.core.util.LastLocations;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -27,6 +29,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
     private EconomyService economy;
     private ModuleManager modules;
     private CommandService commands;
+    private LastLocations lastLocations;
 
     @Override
     public void onLoad() {
@@ -49,6 +52,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
 
         this.economy = new EconomyService(this);
         this.economy.hook();
+        this.lastLocations = new LastLocations();
 
         this.modules = new ModuleManager(this);
         this.modules.register(new WorldsModule(this));
@@ -63,6 +67,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
 
         this.commands = new CommandService(this);
         this.commands.register();
+        PlaceholderHook.register(this);
 
         getLogger().info("ValaryRPG-Core " + getPluginMeta().getVersion() + " abilitato.");
     }
@@ -114,5 +119,12 @@ public final class ValaryCorePlugin extends JavaPlugin {
 
     public ModuleManager modules() {
         return this.modules;
+    }
+
+    public LastLocations lastLocations() {
+        if (this.lastLocations == null) {
+            this.lastLocations = new LastLocations();
+        }
+        return this.lastLocations;
     }
 }

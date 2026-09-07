@@ -71,6 +71,10 @@ public final class MmoItems {
                 .replace("{amount}", String.valueOf(Math.max(1, amount))));
     }
 
+    public static String[] typeAndId(ItemStack item) {
+        return nbt(item);
+    }
+
     private static String[] nbt(ItemStack item) {
         if (Bukkit.getPluginManager().getPlugin("MMOItems") == null) {
             return null;

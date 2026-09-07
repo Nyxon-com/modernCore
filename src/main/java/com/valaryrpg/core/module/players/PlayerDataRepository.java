@@ -73,6 +73,23 @@ public final class PlayerDataRepository {
         updateFlag(uuid, "fly", fly);
     }
 
+    public void updateGod(UUID uuid, boolean god) {
+        updateFlag(uuid, "god", god);
+    }
+
+    public boolean god(UUID uuid) {
+        String sql = "SELECT god FROM " + table() + " WHERE uuid = ?";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next() && result.getInt("god") == 1;
+            }
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
     public List<String> namesByIp(String ip) {
         if (ip == null || ip.isBlank()) {
             return List.of();

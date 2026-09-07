@@ -6,6 +6,7 @@
 # /limity <min> <max> [mondo] scrive qui.
 #
 # Portali: cubo pos1-pos2 nel world. Si attiva ENTRANDO (non ogni tick).
+# /portal pos1|pos2|dest|create|item|enable|disable|delete|list scrive qui.
 #   item.material       vanilla richiesto in inventario (AIR / vuoto = nessun item)
 #   item.mmoitem-type   + mmoitem-id = richiede quell'MMOItem (stesso TYPE/ID di /mi give)
 #   item.consume        true = toglie amount copie

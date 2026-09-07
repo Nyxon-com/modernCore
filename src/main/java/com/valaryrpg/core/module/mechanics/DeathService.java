@@ -41,6 +41,9 @@ public final class DeathService {
         float yaw = location.getYaw();
         float pitch = location.getPitch();
         long at = System.currentTimeMillis();
+        if (this.plugin.configs().players().getBoolean("back.include-death", true)) {
+            this.plugin.lastLocations().remember(player);
+        }
         Tasks.async(this.plugin, () -> this.players.saveDeath(uuid, world, x, y, z, yaw, pitch, at));
     }
 

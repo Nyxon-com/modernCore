@@ -102,6 +102,19 @@ commands:
   kits-aliases: []
   sell: sell
   sell-aliases: []
+  sellall: sellall
+  sellall-aliases: []
+  back: back
+  back-aliases: []
+  god: god
+  god-aliases: []
+  heal: heal
+  heal-aliases: []
+  feed: feed
+  feed-aliases: []
+  portal: portal
+  portal-aliases:
+    - portals
 
 permissions:
   admin: valary.admin
@@ -150,6 +163,15 @@ permissions:
   kit-others: valary.kit.others
   kit-bypass: valary.kit.bypass
   sell: valary.sell
+  sellall: valary.sellall
+  back: valary.back
+  god: valary.god
+  god-others: valary.god.others
+  heal: valary.heal
+  heal-others: valary.heal.others
+  feed: valary.feed
+  feed-others: valary.feed.others
+  portal: valary.portal
 
 sounds:
   teleport-success: ENTITY_ENDERMAN_TELEPORT

@@ -9,7 +9,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 /**
- * GUI kit e kit di benvenuto al primo join.
+ * GUI kit, anteprima e kit di benvenuto al primo join.
  */
 public final class KitsListener implements Listener {
 
@@ -21,14 +21,26 @@ public final class KitsListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onClick(InventoryClickEvent event) {
-        if (!(event.getInventory().getHolder() instanceof MenuHolder holder) || !KitService.MENU.equals(holder.menu())) {
+        if (!(event.getInventory().getHolder() instanceof MenuHolder holder)) {
+            return;
+        }
+        if (KitService.PREVIEW.equals(holder.menu())) {
+            event.setCancelled(true);
+            if (event.getWhoClicked() instanceof Player player
+                    && event.getClickedInventory() == event.getView().getTopInventory()
+                    && this.kits.closePreviewSlot(event.getSlot())) {
+                player.closeInventory();
+            }
+            return;
+        }
+        if (!KitService.MENU.equals(holder.menu())) {
             return;
         }
         event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player) || event.getClickedInventory() != event.getView().getTopInventory()) {
             return;
         }
-        this.kits.click(player, event.getSlot());
+        this.kits.click(player, event.getSlot(), holder.page());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

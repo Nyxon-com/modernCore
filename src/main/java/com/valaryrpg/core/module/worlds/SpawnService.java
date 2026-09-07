@@ -116,6 +116,7 @@ public final class SpawnService {
     }
 
     private void completeTeleport(CommandSender initiator, Player target, World world, Location destination) {
+        this.plugin.lastLocations().remember(target);
         boolean custom = this.plugin.configs().worlds().contains("spawns." + world.getName());
         if (!custom) {
             this.plugin.messages().send(initiator, "spawn.not-set", Map.of("world", world.getName()));

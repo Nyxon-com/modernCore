@@ -169,6 +169,22 @@ portals:
   no-permission: "{prefix} <red>Non puoi usare il portale <white>{portal}</white>."
   invalid-destination: "{prefix} <red>Destinazione del portale <white>{portal}</white> non valida."
   warmup: "{prefix} <gray>Portale <white>{portal}</white> tra <white>{seconds}</white>s."
+  usage: "{prefix} <gray>Uso: <white>/{label} <pos1|pos2|dest|create|item|enable|disable|delete|list></white>"
+  pos1: "{prefix} <green>Angolo 1 del portale impostato."
+  pos2: "{prefix} <green>Angolo 2 del portale impostato."
+  dest: "{prefix} <green>Destinazione del portale impostata."
+  incomplete: "{prefix} <red>Imposta prima pos1, pos2 e dest."
+  world-mismatch: "{prefix} <red>pos1 e pos2 devono essere nello stesso mondo."
+  invalid-name: "{prefix} <red>Nome portale non valido. Usa lettere, numeri e underscore."
+  created: "{prefix} <green>Portale <white>{portal}</white> creato."
+  item-set: "{prefix} <green>Item del portale <white>{portal}</white> impostato dall'oggetto in mano."
+  item-cleared: "{prefix} <yellow>Item del portale <white>{portal}</white> rimosso (mano vuota)."
+  enabled: "{prefix} <green>Portale <white>{portal}</white> abilitato."
+  disabled: "{prefix} <yellow>Portale <white>{portal}</white> disabilitato."
+  deleted: "{prefix} <green>Portale <white>{portal}</white> eliminato."
+  unknown: "{prefix} <red>Portale <white>{portal}</white> inesistente."
+  list: "{prefix} <gray>Portali ({count}): <white>{portals}</white>"
+  list-empty: "{prefix} <gray>Nessun portale. Usa <white>/portal pos1</white> poi create."
 
 kits:
   gui-title: "<dark_gray>Kit"
@@ -179,6 +195,9 @@ kits:
   cooldown: "{prefix} <red>Kit <white>{kit}</white> tra <white>{seconds}</white>s."
   received: "{prefix} <green>Hai ricevuto il kit <white>{kit}</white>."
   given: "{prefix} <green>Kit <white>{kit}</white> dato a <white>{player}</white>."
+  one-time: "{prefix} <red>Il kit <white>{kit}</white> si ritira una sola volta."
+  no-page: "{prefix} <red>Pagina kit <white>{page}</white> inesistente."
+  preview-title: "<dark_gray>Anteprima <white>{kit}"
 
 sell:
   gui-title: "<dark_gray>Sell"
@@ -187,3 +206,28 @@ sell:
   empty: "{prefix} <gray>Nessun oggetto vendibile."
   failed: "{prefix} <red>Transazione economy fallita."
   sold: "{prefix} <green>Venduti <white>{amount}</white> item per <white>{money}</white>."
+
+back:
+  teleported: "{prefix} <gray>Sei tornato alla posizione precedente."
+  none: "{prefix} <red>Nessuna posizione precedente."
+
+god:
+  enabled: "{prefix} <green>God mode attivato."
+  disabled: "{prefix} <yellow>God mode disattivato."
+  enabled-for: "{prefix} <green>God mode attivato per <white>{player}</white>."
+  disabled-for: "{prefix} <yellow>God mode disattivato per <white>{player}</white>."
+  enabled-by: "{prefix} <gray>God mode attivato da <white>{player}</white>."
+  disabled-by: "{prefix} <gray>God mode disattivato da <white>{player}</white>."
+  usage: "{prefix} <gray>Uso da console: <white>/{label} <player> [on|off]</white>"
+
+heal:
+  done: "{prefix} <green>Sei stato curato."
+  done-for: "{prefix} <green>Hai curato <white>{player}</white>."
+  done-by: "{prefix} <gray>Sei stato curato da <white>{player}</white>."
+  usage: "{prefix} <gray>Uso da console: <white>/{label} <player></white>"
+
+feed:
+  done: "{prefix} <green>Fame riempita."
+  done-for: "{prefix} <green>Hai riempito la fame di <white>{player}</white>."
+  done-by: "{prefix} <gray>Fame riempita da <white>{player}</white>."
+  usage: "{prefix} <gray>Uso da console: <white>/{label} <player></white>"

@@ -10,8 +10,13 @@
 #   slots          mappa slot -> bottone. Chiavi: "11" oppure "18-26" oppure "0,8,17"
 #
 # Campi di uno slot:
-#   action              kit | close | command | none
-#   kit                 id del kit (solo se action: kit)
+#   action              kit | preview | page | close | command | none
+#   kit                 id del kit (action: kit o preview)
+#   page                numero pagina (solo action: page)
+#   one-time            sul kit: true = ritirabile una sola volta (SQL kit_claims)
+#
+# Pagine extra sotto gui.pages.<n> (stessi campi di gui: title, rows, slots).
+# Il fill della pagina 1 viene riusato. preview: GUI anteprima contenuto kit.
 #   material            materiale vanilla (IRON_SWORD). Fallback se MMOItems assente
 #   mmoitem-type        tipo MMOItems (SWORD, CONSUMABLE, ARMOR, ...)
 #   mmoitem-id          id interno MMOItems (es. STEEL_SWORD)
@@ -33,6 +38,7 @@
 #   cooldown-seconds    0 = nessuno. Persistito su SQL
 #   permission          vuoto = tutti. Es. valary.kit.daily
 #   first-join          true = candidabile come kit welcome (vedi settings)
+#   one-time            true = una sola volta (bypass: valary.kit.bypass)
 #   items               lista:
 #     - material: BREAD
 #       amount: 16
@@ -80,18 +86,59 @@ gui:
       lore:
         - "<gray>Ricompensa giornaliera"
       commands: []
+    20:
+      action: preview
+      kit: starter
+      material: BOOK
+      name: "<aqua>Anteprima Starter"
+      lore:
+        - "<gray>Guarda il contenuto"
+      commands: []
+    18:
+      action: page
+      page: 2
+      material: ARROW
+      name: "<gray>Avanti"
+      commands: []
     26:
       action: close
       material: BARRIER
       name: "<red>Chiudi"
       commands:
         - "[close]"
+  pages:
+    2:
+      title: "<dark_gray>Kit <white>{player} <gray>p.2"
+      rows: 3
+      slots:
+        18:
+          action: page
+          page: 1
+          material: ARROW
+          name: "<gray>Indietro"
+          commands: []
+        26:
+          action: close
+          material: BARRIER
+          name: "<red>Chiudi"
+          commands:
+            - "[close]"
+
+preview:
+  title: "<dark_gray>Anteprima <white>{kit}"
+  rows: 6
+  close-slot: 53
+  close:
+    material: BARRIER
+    name: "<red>Chiudi"
+    commands: []
 
 kits:
   starter:
     cooldown-seconds: 86400
     permission: ""
     first-join: true
+    one-time: false
     items:
       - material: BREAD
         amount: 16
@@ -106,6 +153,7 @@ kits:
     cooldown-seconds: 86400
     permission: valary.kit.daily
     first-join: false
+    one-time: false
     items:
       - material: COOKED_BEEF
         amount: 8

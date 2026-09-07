@@ -47,6 +47,7 @@ public final class Teleports {
     }
 
     private void complete(Player player, Location destination, Consumer<Player> after) {
+        this.plugin.lastLocations().remember(player);
         player.teleportAsync(destination).thenAccept(success -> {
             if (!Boolean.TRUE.equals(success) || !player.isOnline()) {
                 return;

@@ -19,3 +19,15 @@ msg:
 fly:
   persist: true
   start-flying: true
+
+back:
+  include-death: true
+
+heal:
+  health: 20
+  feed: true
+  clear-effects: false
+
+feed:
+  food: 20
+  saturation: 20.0

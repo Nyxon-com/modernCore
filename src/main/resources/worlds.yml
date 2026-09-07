@@ -1,6 +1,8 @@
 # =============================================================================
-# Mondi: spawn indipendenti e blocco meteo.
-# Multiverse-Core è opzionale: i mondi caricati da MV sono visibili via Bukkit.
+# Mondi: spawn indipendenti, blocco meteo e catalogo stile Multiverse-Core.
+# All'avvio (e su WorldLoad) i mondi Bukkit/MV vengono scritti in `worlds:`
+# SOLO se la chiave manca: i valori già presenti non vengono sovrascritti.
+# Poi le opzioni vengono applicate (pvp, difficulty, spawn, keep-spawn, auto-heal).
 # =============================================================================
 
 settings:
@@ -11,6 +13,7 @@ settings:
   warmup-seconds: 0
   cancel-on-move: false
   teleport-sound: true
+  import-on-start: true
 
 # spawn per mondo. Se assente, viene usato World#getSpawnLocation().
 spawns: {}
@@ -22,9 +25,21 @@ spawns: {}
 #     yaw: 0.0
 #     pitch: 0.0
 
-# lock meteo. type: CLEAR | RAIN | THUNDER
+# lock meteo. type: CLEAR | RAIN | THUNDER  (sovrascrive worlds.<name>.weather)
 weather: {}
 # esempio:
 #   world:
 #     lock: true
 #     type: CLEAR
+
+# Catalogo per-mondo. Compilato all'avvio. Chiavi:
+#   source              bukkit | multiverse
+#   alias               nome visibile (PlaceholderAPI %valary_world_alias%)
+#   environment         NORMAL | NETHER | THE_END
+#   pvp / difficulty / gamemode
+#   force-gamemode      false = non cambiare il gamemode del player
+#   spawn-monsters / spawn-animals / hunger / allow-flight
+#   keep-spawn-in-memory / hidden / auto-heal / portal-forming
+#   weather             UNSET | CLEAR | RAIN | THUNDER  (solo se weather.<mondo>.lock è assente)
+#   generator / seed
+worlds: {}

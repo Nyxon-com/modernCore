@@ -18,11 +18,24 @@ public final class Panels {
     }
 
     public static Inventory open(ValaryCorePlugin plugin, Player player, String menuId, ConfigurationSection gui, Map<String, String> titlePlaceholders) {
-        int rows = GuiLayouts.rows(gui, 3);
-        String titleRaw = gui == null ? "" : gui.getString("title", "");
+        return open(plugin, player, new MenuHolder(menuId), gui, gui, titlePlaceholders);
+    }
+
+    public static Inventory open(
+            ValaryCorePlugin plugin,
+            Player player,
+            MenuHolder holder,
+            ConfigurationSection gui,
+            ConfigurationSection fillFrom,
+            Map<String, String> titlePlaceholders
+    ) {
+        ConfigurationSection layout = gui == null ? fillFrom : gui;
+        ConfigurationSection fillSection = fillFrom == null ? layout : fillFrom;
+        int rows = GuiLayouts.rows(layout, GuiLayouts.rows(fillSection, 3));
+        String titleRaw = firstTitle(layout, fillSection);
         net.kyori.adventure.text.Component title;
         if (titleRaw == null || titleRaw.isBlank()) {
-            title = plugin.messages().component(menuId + ".gui-title", titlePlaceholders == null ? Map.of() : titlePlaceholders);
+            title = plugin.messages().component(holder.menu() + ".gui-title", titlePlaceholders == null ? Map.of() : titlePlaceholders);
         } else {
             String parsed = titleRaw;
             if (titlePlaceholders != null) {
@@ -33,16 +46,15 @@ public final class Panels {
             parsed = parsed.replace("{player}", player.getName());
             title = plugin.messages().deserialize(parsed);
         }
-        MenuHolder holder = new MenuHolder(menuId);
         Inventory inventory = Bukkit.createInventory(holder, rows * 9, title);
         holder.inventory(inventory);
-        ItemStack fill = PanelItems.filler(plugin, gui);
+        ItemStack fill = PanelItems.filler(plugin, fillSection);
         if (!fill.getType().isAir()) {
             for (int slot = 0; slot < inventory.getSize(); slot++) {
                 inventory.setItem(slot, fill.clone());
             }
         }
-        ConfigurationSection slots = gui == null ? null : gui.getConfigurationSection("slots");
+        ConfigurationSection slots = layout == null ? null : layout.getConfigurationSection("slots");
         if (slots != null) {
             for (String key : slots.getKeys(false)) {
                 ConfigurationSection button = slots.getConfigurationSection(key);
@@ -58,7 +70,17 @@ public final class Panels {
             }
         }
         player.openInventory(inventory);
-        PanelClicks.openSound(plugin, player, gui);
+        PanelClicks.openSound(plugin, player, fillSection);
         return inventory;
+    }
+
+    private static String firstTitle(ConfigurationSection layout, ConfigurationSection fallback) {
+        if (layout != null) {
+            String title = layout.getString("title", "");
+            if (title != null && !title.isBlank()) {
+                return title;
+            }
+        }
+        return fallback == null ? "" : fallback.getString("title", "");
     }
 }
