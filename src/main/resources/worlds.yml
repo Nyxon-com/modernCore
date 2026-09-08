@@ -1,8 +1,8 @@
 # =============================================================================
 # Mondi: spawn globale (/setspawn + /spawn), lock meteo/ora, catalogo Multiverse.
-# All'avvio (e su WorldLoad) i mondi Bukkit/MV vengono scritti in `worlds:`
-# SOLO se la chiave manca: i valori già presenti non vengono sovrascritti.
-# Poi le opzioni vengono applicate (pvp, difficulty, spawn, keep-spawn, auto-heal).
+# All'avvio (e su WorldLoad) i mondi Bukkit/MV vengono scritti in `worlds:`.
+# Con Multiverse-Core le config del mondo (pvp, difficulty, gamemode, hunger, fly)
+# restano quelle di MV: non serve risettarle qui.
 # =============================================================================
 
 settings:
@@ -15,6 +15,10 @@ settings:
   cancel-on-move: false
   teleport-sound: true
   import-on-start: true
+  # Se Multiverse-Core è presente: non riscrivere pvp/difficulty/gamemode/hunger/fly.
+  # Le config restano quelle di MV, worlds.yml viene allineato da solo.
+  use-multiverse-world-config: true
+  sync-worlds-from-multiverse: true
   time-lock-interval-ticks: 20
   weather-lock-client-particles: true
   weather-lock-particle: FALLING_WATER

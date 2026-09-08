@@ -11,9 +11,10 @@ import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
- * All'avvio importa ogni mondo Bukkit/Multiverse in worlds.yml (solo chiavi mancanti) e applica le opzioni.
+ * Catalogo mondi: se Multiverse-Core è presente usa le sue config (niente doppio setup).
  */
 public final class WorldCatalog {
 
@@ -39,29 +40,43 @@ public final class WorldCatalog {
         }
     }
 
+    public void syncFromMultiverseLater() {
+        if (!multiverseEnabled()) {
+            return;
+        }
+        Bukkit.getScheduler().runTaskLater(this.plugin, this::syncAll, 20L);
+    }
+
     public boolean importWorld(World world) {
         FileConfiguration yaml = this.plugin.configs().worlds();
         String base = "worlds." + world.getName();
-        boolean changed = false;
         Object mv = mvWorld(world);
-        changed |= put(yaml, base + ".source", mv == null ? "bukkit" : "multiverse");
-        changed |= put(yaml, base + ".alias", string(mv, "getAlias", world.getName()));
-        changed |= put(yaml, base + ".environment", world.getEnvironment().name());
-        changed |= put(yaml, base + ".pvp", bool(mv, world.getPVP(), "isPVPEnabled", "getPVP", "isPVP"));
-        changed |= put(yaml, base + ".difficulty", string(mv, "getDifficulty", world.getDifficulty().name()));
-        changed |= put(yaml, base + ".gamemode", string(mv, "getGameMode", GameMode.SURVIVAL.name()));
-        changed |= put(yaml, base + ".force-gamemode", false);
-        changed |= put(yaml, base + ".spawn-monsters", bool(mv, world.getAllowMonsters(), "canMonstersSpawn", "getMonsterSpawn"));
-        changed |= put(yaml, base + ".spawn-animals", bool(mv, world.getAllowAnimals(), "canAnimalsSpawn", "getAnimalSpawn"));
-        changed |= put(yaml, base + ".hunger", bool(mv, true, "getHunger", "isHungerEnabled"));
-        changed |= put(yaml, base + ".allow-flight", bool(mv, false, "getAllowFlight", "isAllowFlight"));
-        changed |= put(yaml, base + ".keep-spawn-in-memory", bool(mv, world.getKeepSpawnInMemory(), "getKeepSpawnInMemory"));
-        changed |= put(yaml, base + ".hidden", bool(mv, false, "isHidden"));
-        changed |= put(yaml, base + ".auto-heal", true);
-        changed |= put(yaml, base + ".portal-forming", true);
-        changed |= put(yaml, base + ".weather", "UNSET");
-        changed |= put(yaml, base + ".generator", world.getGenerator() == null ? "default" : world.getGenerator().getClass().getName());
-        changed |= put(yaml, base + ".seed", world.getSeed());
+        boolean overwrite = syncFromMultiverse();
+        boolean mvSync = overwrite && mv != null;
+        boolean changed = false;
+        changed |= write(yaml, base + ".source", mv == null ? "bukkit" : "multiverse", overwrite);
+        changed |= write(yaml, base + ".alias", string(mv, world.getName(), "getAliasOrName", "getAlias"), mvSync);
+        changed |= write(yaml, base + ".environment", world.getEnvironment().name(), overwrite);
+        changed |= write(yaml, base + ".pvp", bool(mv, world.getPVP(), "getPvp", "isPVPEnabled", "getPVP", "isPVP"), overwrite);
+        changed |= write(yaml, base + ".difficulty", difficulty(mv, world), overwrite);
+        changed |= write(yaml, base + ".gamemode", gamemodeName(mv), mvSync);
+        changed |= write(yaml, base + ".force-gamemode", false, false);
+        changed |= write(yaml, base + ".spawn-monsters", bool(mv, world.getAllowMonsters(), "canMonstersSpawn", "getMonsterSpawn"), overwrite);
+        changed |= write(yaml, base + ".spawn-animals", bool(mv, world.getAllowAnimals(), "canAnimalsSpawn", "getAnimalSpawn"), overwrite);
+        changed |= write(yaml, base + ".hunger", bool(mv, true, "isHunger", "getHunger", "isHungerEnabled"), mvSync);
+        changed |= write(yaml, base + ".allow-flight", bool(mv, false, "isAllowFlight", "getAllowFlight"), mvSync);
+        changed |= write(yaml, base + ".keep-spawn-in-memory", bool(mv, world.getKeepSpawnInMemory(), "isKeepSpawnInMemory", "getKeepSpawnInMemory"), overwrite);
+        changed |= write(yaml, base + ".hidden", bool(mv, false, "isHidden"), mvSync);
+        changed |= write(yaml, base + ".auto-heal", bool(mv, true, "getAutoHeal", "isAutoHeal"), mvSync);
+        changed |= write(yaml, base + ".portal-forming", portalForming(mv), mvSync);
+        changed |= write(yaml, base + ".weather", weather(mv), mvSync);
+        changed |= write(
+                yaml,
+                base + ".generator",
+                world.getGenerator() == null ? "default" : world.getGenerator().getClass().getName(),
+                overwrite
+        );
+        changed |= write(yaml, base + ".seed", world.getSeed(), overwrite);
         if (!yaml.contains("spawns." + world.getName())) {
             yaml.set("spawns." + world.getName() + ".x", world.getSpawnLocation().getX());
             yaml.set("spawns." + world.getName() + ".y", world.getSpawnLocation().getY());
@@ -74,6 +89,9 @@ public final class WorldCatalog {
     }
 
     public void apply(World world) {
+        if (multiverseOwns(world)) {
+            return;
+        }
         FileConfiguration yaml = this.plugin.configs().worlds();
         String base = "worlds." + world.getName();
         if (!yaml.contains(base)) {
@@ -90,23 +108,41 @@ public final class WorldCatalog {
                 yaml.getBoolean(base + ".spawn-animals", world.getAllowAnimals())
         );
         world.setKeepSpawnInMemory(yaml.getBoolean(base + ".keep-spawn-in-memory", world.getKeepSpawnInMemory()));
-        Boolean heal = yaml.getBoolean(base + ".auto-heal", true);
-        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, heal);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, yaml.getBoolean(base + ".auto-heal", true));
     }
 
     public boolean hunger(World world) {
+        Object mv = liveMultiverse(world);
+        if (mv != null) {
+            return bool(mv, true, "isHunger", "getHunger", "isHungerEnabled");
+        }
         return this.plugin.configs().worlds().getBoolean("worlds." + world.getName() + ".hunger", true);
     }
 
     public boolean allowFlight(World world) {
+        Object mv = liveMultiverse(world);
+        if (mv != null) {
+            return bool(mv, false, "isAllowFlight", "getAllowFlight");
+        }
         return this.plugin.configs().worlds().getBoolean("worlds." + world.getName() + ".allow-flight", false);
     }
 
     public boolean forceGamemode(World world) {
+        if (multiverseOwns(world)) {
+            return false;
+        }
         return this.plugin.configs().worlds().getBoolean("worlds." + world.getName() + ".force-gamemode", false);
     }
 
     public GameMode gamemode(World world) {
+        Object mv = liveMultiverse(world);
+        if (mv != null) {
+            try {
+                return GameMode.valueOf(gamemodeName(mv));
+            } catch (IllegalArgumentException ignored) {
+                return GameMode.SURVIVAL;
+            }
+        }
         try {
             return GameMode.valueOf(this.plugin.configs().worlds().getString("worlds." + world.getName() + ".gamemode", "SURVIVAL").toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ignored) {
@@ -115,11 +151,41 @@ public final class WorldCatalog {
     }
 
     public String alias(World world) {
+        Object mv = liveMultiverse(world);
+        if (mv != null) {
+            return string(mv, world.getName(), "getAliasOrName", "getAlias");
+        }
         return this.plugin.configs().worlds().getString("worlds." + world.getName() + ".alias", world.getName());
     }
 
-    private static boolean put(FileConfiguration yaml, String path, Object value) {
-        if (yaml.contains(path)) {
+    private boolean multiverseOwns(World world) {
+        return useMultiverseConfig() && mvWorld(world) != null;
+    }
+
+    private Object liveMultiverse(World world) {
+        return useMultiverseConfig() ? mvWorld(world) : null;
+    }
+
+    private boolean useMultiverseConfig() {
+        return this.plugin.configs().worlds().getBoolean("settings.use-multiverse-world-config", true)
+                && multiverseEnabled();
+    }
+
+    private boolean syncFromMultiverse() {
+        return this.plugin.configs().worlds().getBoolean("settings.sync-worlds-from-multiverse", true)
+                && useMultiverseConfig();
+    }
+
+    private static boolean multiverseEnabled() {
+        Plugin multiverse = Bukkit.getPluginManager().getPlugin("Multiverse-Core");
+        return multiverse != null && multiverse.isEnabled();
+    }
+
+    private static boolean write(FileConfiguration yaml, String path, Object value, boolean overwrite) {
+        if (!overwrite && yaml.contains(path)) {
+            return false;
+        }
+        if (overwrite && yaml.contains(path) && Objects.equals(yaml.get(path), value)) {
             return false;
         }
         yaml.set(path, value);
@@ -127,6 +193,36 @@ public final class WorldCatalog {
     }
 
     private static Object mvWorld(World world) {
+        Object mv5 = mv5World(world);
+        if (mv5 != null) {
+            return mv5;
+        }
+        return mv4World(world);
+    }
+
+    private static Object mv5World(World world) {
+        try {
+            Class<?> apiClass = Class.forName("org.mvplugins.multiverse.core.MultiverseCoreApi");
+            Object api = apiClass.getMethod("get").invoke(null);
+            if (api == null) {
+                return null;
+            }
+            Object manager = api.getClass().getMethod("getWorldManager").invoke(api);
+            try {
+                Object loaded = unwrap(manager.getClass().getMethod("getLoadedWorld", World.class).invoke(manager, world));
+                if (loaded != null) {
+                    return loaded;
+                }
+            } catch (NoSuchMethodException ignored) {
+                // MV senza getLoadedWorld(World)
+            }
+            return unwrap(manager.getClass().getMethod("getWorld", World.class).invoke(manager, world));
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static Object mv4World(World world) {
         Plugin multiverse = Bukkit.getPluginManager().getPlugin("Multiverse-Core");
         if (multiverse == null || !multiverse.isEnabled()) {
             return null;
@@ -144,6 +240,21 @@ public final class WorldCatalog {
         }
     }
 
+    private static Object unwrap(Object value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            Method isEmpty = value.getClass().getMethod("isEmpty");
+            if (Boolean.TRUE.equals(isEmpty.invoke(value))) {
+                return null;
+            }
+            return value.getClass().getMethod("get").invoke(value);
+        } catch (ReflectiveOperationException ignored) {
+            return value;
+        }
+    }
+
     private static boolean bool(Object mv, boolean fallback, String... methods) {
         for (String method : methods) {
             Object value = invoke(mv, method);
@@ -154,9 +265,52 @@ public final class WorldCatalog {
         return fallback;
     }
 
-    private static String string(Object mv, String method, String fallback) {
-        Object value = invoke(mv, method);
-        return value == null ? fallback : String.valueOf(value);
+    private static String string(Object mv, String fallback, String... methods) {
+        for (String method : methods) {
+            Object value = invoke(mv, method);
+            if (value != null && !String.valueOf(value).isBlank()) {
+                return String.valueOf(value);
+            }
+        }
+        return fallback;
+    }
+
+    private static String difficulty(Object mv, World world) {
+        Object value = invoke(mv, "getDifficulty");
+        if (value != null) {
+            return String.valueOf(value);
+        }
+        return world.getDifficulty().name();
+    }
+
+    private static String gamemodeName(Object mv) {
+        Object value = invoke(mv, "getGameMode");
+        if (value instanceof GameMode mode) {
+            return mode.name();
+        }
+        if (value != null) {
+            return String.valueOf(value).toUpperCase(Locale.ROOT);
+        }
+        return GameMode.SURVIVAL.name();
+    }
+
+    private static boolean portalForming(Object mv) {
+        Object value = invoke(mv, "getPortalForm");
+        if (value == null) {
+            return true;
+        }
+        String name = String.valueOf(value).toUpperCase(Locale.ROOT);
+        return !name.contains("NONE") && !name.equals("FALSE");
+    }
+
+    private static String weather(Object mv) {
+        if (mv == null) {
+            return "UNSET";
+        }
+        if (!bool(mv, true, "isAllowWeather")) {
+            return "CLEAR";
+        }
+        return "UNSET";
     }
 
     private static Object invoke(Object target, String method) {

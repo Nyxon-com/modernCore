@@ -50,7 +50,7 @@ MiniMessage: `<red>`, `<gradient:#8B5CF6:#EC4899>`, `&#FF00AA`, `<lang:item.mine
 - `/weatherlock <clear|rain|thunder|unlock> [mondo]` — meteo mondo + client (serve anche negli spawn void)
 - `/timelock <day|noon|night|midnight|unlock> [mondo]` — ferma il ciclo; `/time add` viene riportato indietro
 
-I mondi Bukkit/Multiverse vengono importati in `worlds.yml` solo se la chiave manca. Poi puoi settare pvp, difficulty, gamemode, hunger, flight.
+Se **Multiverse-Core** è presente, pvp, difficulty, gamemode, hunger e flight restano quelli di MV: non serve rifarli in `worlds.yml`. Valary usa `/setspawn`, weatherlock e timelock. Senza MV, il catalogo in `worlds.yml` viene applicato come prima.
 
 PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary_god%` `%valary_vanished%` `%valary_fly%`
 

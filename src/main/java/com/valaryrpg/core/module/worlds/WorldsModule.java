@@ -33,6 +33,7 @@ public final class WorldsModule implements Module {
         this.weather = new WeatherService(this.plugin);
         this.time = new TimeService(this.plugin);
         this.catalog.syncAll();
+        this.catalog.syncFromMultiverseLater();
         this.weather.applyCatalogAll();
         this.weather.applyAll();
         this.weather.start();
@@ -41,7 +42,7 @@ public final class WorldsModule implements Module {
         Bukkit.getPluginManager().registerEvents(this.listener, this.plugin);
 
         if (Bukkit.getPluginManager().getPlugin("Multiverse-Core") != null) {
-            this.plugin.getLogger().info("Multiverse-Core rilevato: opzioni mondo importate in worlds.yml se mancanti.");
+            this.plugin.getLogger().info("Multiverse-Core rilevato: pvp, difficulty, gamemode, hunger e flight restano quelli di MV.");
         }
     }
 
