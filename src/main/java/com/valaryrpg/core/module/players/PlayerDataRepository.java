@@ -72,6 +72,10 @@ public final class PlayerDataRepository {
         updateFlag(uuid, "fly", fly);
     }
 
+    public void updateSocialSpy(UUID uuid, boolean spy) {
+        updateFlag(uuid, "social_spy", spy);
+    }
+
     public void updateGod(UUID uuid, boolean god) {
         updateFlag(uuid, "god", god);
     }

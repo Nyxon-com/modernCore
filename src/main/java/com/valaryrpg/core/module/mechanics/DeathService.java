@@ -49,14 +49,12 @@ public final class DeathService {
         float yaw = location.getYaw();
         float pitch = location.getPitch();
         long at = System.currentTimeMillis();
-        String cause = "UNKNOWN";
-        if (player.getLastDamageCause() != null) {
-            cause = player.getLastDamageCause().getCause().name();
-        }
-        String killer = "";
-        if (event.getEntity().getKiller() != null) {
-            killer = event.getEntity().getKiller().getName();
-        }
+        String cause = player.getLastDamageCause() == null
+                ? "UNKNOWN"
+                : player.getLastDamageCause().getCause().name();
+        String killer = event.getEntity().getKiller() == null
+                ? ""
+                : event.getEntity().getKiller().getName();
         String inventory = ItemStacks.encodePlayer(player.getInventory());
         if (this.plugin.configs().players().getBoolean("back.include-death", true)) {
             this.plugin.lastLocations().remember(player);
