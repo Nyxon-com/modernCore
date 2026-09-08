@@ -165,19 +165,28 @@ invsee:
   title: "<dark_gray>Invsee <white>{player}"
 
 limity:
-  usage: "{prefix} <gray>Uso: <white>/limity</white> oppure <white>/limity <min> <max> [mondo]</white>"
+  usage: "{prefix} <gray>Uso: <white>/limity</white> | <white>/limity <min> <max> [mondo]</white> | <white>/limity command [mondo] <comando></white>"
   current: "{prefix} <gray>LimitY di <white>{world}</white>: <white>{range}</white>"
-  none: "{prefix} <gray>Nessun LimitY per <white>{world}</white>."
+  none: "{prefix} <gray>Nessun range Y per <white>{world}</white>."
   set: "{prefix} <green>LimitY di <white>{world}</white> impostato a <white>{min}</white> → <white>{max}</white>."
   blocked: "{prefix} <red>Sei fuori dal limite Y di <white>{world}</white> <gray>({min} → {max})."
+  command-usage: "{prefix} <gray>Uso: <white>/limity command [mondo] <comando></white>  es. <white>/limity command [player] spawn</white>"
+  command-set: "{prefix} <green>Comando LimitY di <white>{world}</white>: <gray>{command}"
+  command-cleared: "{prefix} <yellow>Comandi LimitY di <white>{world}</white> azzerati."
+  commands: "{prefix} <gray>Comando: <white>{commands}"
+  commands-none: "{prefix} <gray>Nessun comando LimitY per <white>{world}</white>. Usa <white>/limity command ...</white>"
 
 checkdeath:
-  usage: "{prefix} <gray>Uso: <white>/checkdeath [player]</white>"
+  usage: "{prefix} <gray>Uso: <white>/checkdeath [player]</white> oppure <white>/checkdeath restore [player]</white>"
   missing: "{prefix} <gray>Nessuna morte registrata per <white>{player}</white>."
   found: "{prefix} <gray>Ultima morte di <white>{player}</white>: <white>{world}</white> <aqua>{coords}</aqua> <dark_gray>(click per copiare)"
   cause: "{prefix} <gray>Causa: <white>{cause}</white> <dark_gray>killer: <white>{killer}"
   items: "{prefix} <gray>Item in inventario alla morte: <white>{count}</white>"
   gui-title: "<dark_gray>Morte <white>{player}"
+  restored: "{prefix} <green>Inventario di morte ripristinato a <white>{player}</white>."
+  restored-target: "{prefix} <gray>Il tuo inventario di morte è stato ripristinato da <white>{player}</white>."
+  restore-offline: "{prefix} <red><white>{player}</white> deve essere online per il restore."
+  restore-empty: "{prefix} <gray>Nessun inventario salvato per la morte di <white>{player}</white>."
 
 copycoord:
   usage: "{prefix} <gray>Uso da console: <white>/copycoord <player></white>"

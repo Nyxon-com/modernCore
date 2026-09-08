@@ -16,8 +16,8 @@
 #   commands            eseguite all'ingresso. Destinazione opzionale se ci sono solo comandi
 #
 # Long-jump: material = blocco pressure plate. worlds: [] = tutti i mondi
-# look-trigger: salta anche mirando la plate. look-required: lo step richiede lo sguardo
-# /pressureplayerjump set <preset> associa IL blocco mirato a un preset
+# Long-jump: solo CALPESTANDO la plate (look-trigger deve restare false).
+# /pressureplayerjump set <preset> associa IL blocco mirato a un preset (non salta mirando)
 #
 # Hologram a terra: font piccolo + countdown despawn. show-lore = lore dell'item
 # =============================================================================
@@ -64,6 +64,7 @@ copycoord:
 
 checkdeath:
   teleport: false
+  restore-clear: true
   gui:
     title: "<dark_gray>Morte <white>{player}"
     rows: 6
@@ -86,7 +87,7 @@ deaths:
 long-jump:
   enabled: true
   cooldown-millis: 800
-  look-trigger: true
+        look-trigger: false
   look-required: false
   look-range: 3.5
   look-interval-ticks: 4

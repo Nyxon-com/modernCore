@@ -57,16 +57,19 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 - [ ] Sezione `custom` in `prices.yml`: vendi quell'item → money + comando + xp
 
 ## 7. LimitY / drop / morti / coords
-- [ ] `/limity -5 20` nel mondo test, vola sopra 20 → comando (`/spawn`) + messaggio
+- [ ] `/limity -5 20` nel mondo test
+- [ ] `/limity command [player] spawn` → vola fuori range esegue spawn (mondo corrente)
+- [ ] `/limity command world_nether [message] <red>nether` → solo in nether
 - [ ] Bypass `valary.limity.bypass` ignora
 - [ ] Droppa un diamond: hologram piccolo con nome e countdown ~300s; `show-lore: true` mostra lore
 - [ ] Dopo il tempo l'item sparisce
-- [ ] Muori: messaggio custom, `/checkdeath` coords cliccabili, causa, GUI inventario
+- [ ] `/checkdeath` coords cliccabili, causa, GUI inventario
+- [ ] `/checkdeath restore` ripristina l'inv; `/checkdeath restore <player>` da staff
 - [ ] `/copycoord` click = clipboard `world x y z`
 
 ## 8. Long jump
 - [ ] Calpesta gold plate → salto in direzione sguardo
-- [ ] Mira una gold plate da vicino (`look-trigger`) → salto
+- [ ] Mira una gold plate **senza** calpestarla → **nessun** salto
 - [ ] `/pressureplayerjump` mentre miri → info blocco
 - [ ] `/pressureplayerjump set iron` su una stone plate? solo se miri una plate; su gold plate associa quel blocco
 - [ ] `/pressureplayerjump remove`

@@ -53,6 +53,24 @@ public final class ItemStacks {
         }
     }
 
+    public static void restorePlayer(PlayerInventory inventory, ItemStack[] packed) {
+        for (int i = 0; i < 36; i++) {
+            inventory.setItem(i, copyAt(packed, i));
+        }
+        inventory.setHelmet(copyAt(packed, 36));
+        inventory.setChestplate(copyAt(packed, 37));
+        inventory.setLeggings(copyAt(packed, 38));
+        inventory.setBoots(copyAt(packed, 39));
+        inventory.setItemInOffHand(copyAt(packed, 40));
+    }
+
+    private static ItemStack copyAt(ItemStack[] packed, int index) {
+        if (packed == null || index >= packed.length || packed[index] == null || packed[index].getType().isAir()) {
+            return null;
+        }
+        return packed[index].clone();
+    }
+
     public static ItemStack[] decode(String raw) {
         if (raw == null || raw.isBlank()) {
             return new ItemStack[0];

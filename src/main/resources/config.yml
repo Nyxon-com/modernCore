@@ -168,6 +168,7 @@ permissions:
   limity-bypass: valary.limity.bypass
   checkdeath: valary.checkdeath
   checkdeath-others: valary.checkdeath.others
+  checkdeath-restore: valary.checkdeath.restore
   copycoord: valary.copycoord
   copycoord-others: valary.copycoord.others
   kit: valary.kit

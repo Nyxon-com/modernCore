@@ -74,6 +74,7 @@ permissions:
       valary.limity: true
       valary.limity.bypass: true
       valary.checkdeath.others: true
+      valary.checkdeath.restore: true
       valary.copycoord.others: true
       valary.kit.others: true
       valary.kit.bypass: true
@@ -212,7 +213,10 @@ permissions:
     description: Usa /checkdeath
     default: true
   valary.checkdeath.others:
-    description: /checkdeath <player>
+    description: /checkdeath <player> e restore su altri
+    default: op
+  valary.checkdeath.restore:
+    description: /checkdeath restore
     default: op
   valary.copycoord:
     description: Usa /copycoord

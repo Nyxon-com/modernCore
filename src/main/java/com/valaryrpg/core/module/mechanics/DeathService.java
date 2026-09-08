@@ -103,6 +103,49 @@ public final class DeathService {
         }
     }
 
+    public void restore(CommandSender sender, String targetName) {
+        Resolved resolved = resolve(sender, targetName);
+        if (resolved == null) {
+            return;
+        }
+        Player online = Bukkit.getPlayer(resolved.uuid);
+        if (online == null || !online.isOnline()) {
+            this.plugin.messages().send(sender, "checkdeath.restore-offline", Map.of("player", resolved.name));
+            return;
+        }
+        Optional<DeathSnapshot> death = this.players.lastDeath(resolved.uuid);
+        if (death.isEmpty()) {
+            this.plugin.messages().send(sender, "checkdeath.missing", Map.of("player", resolved.name));
+            return;
+        }
+        ItemStack[] items = ItemStacks.decode(death.get().inventory());
+        int count = 0;
+        for (ItemStack item : items) {
+            if (item != null && !item.getType().isAir()) {
+                count++;
+            }
+        }
+        if (count == 0) {
+            this.plugin.messages().send(sender, "checkdeath.restore-empty", Map.of("player", resolved.name));
+            return;
+        }
+        if (this.plugin.configs().mechanics().getBoolean("checkdeath.restore-clear", true)) {
+            ItemStacks.restorePlayer(online.getInventory(), items);
+        } else {
+            for (ItemStack item : items) {
+                if (item == null || item.getType().isAir()) {
+                    continue;
+                }
+                online.getInventory().addItem(item.clone()).values()
+                        .forEach(left -> online.getWorld().dropItemNaturally(online.getLocation(), left));
+            }
+        }
+        this.plugin.messages().send(sender, "checkdeath.restored", Map.of("player", resolved.name));
+        if (sender != online) {
+            this.plugin.messages().send(online, "checkdeath.restored-target", Map.of("player", sender.getName()));
+        }
+    }
+
     public boolean isSnapshot(Inventory inventory) {
         return inventory.getHolder() instanceof MenuHolder holder && MENU.equals(holder.menu());
     }

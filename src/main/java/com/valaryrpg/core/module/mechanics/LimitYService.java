@@ -51,10 +51,33 @@ public final class LimitYService {
         return bounds.min + " → " + bounds.max;
     }
 
+    public String commandsOf(World world) {
+        ConfigurationSection section = this.plugin.configs().mechanics()
+                .getConfigurationSection("limity.worlds." + world.getName());
+        if (section == null) {
+            return "";
+        }
+        List<String> commands = section.getStringList("commands");
+        return commands.isEmpty() ? "" : String.join(" | ", commands);
+    }
+
     public void set(World world, double min, double max) {
         String path = "limity.worlds." + world.getName();
         this.plugin.configs().mechanics().set(path + ".min", min);
         this.plugin.configs().mechanics().set(path + ".max", max);
+        this.plugin.configs().saveMechanics();
+    }
+
+    public void setCommand(World world, String command) {
+        String path = "limity.worlds." + world.getName();
+        this.plugin.configs().mechanics().set(path + ".commands", List.of(command));
+        this.plugin.configs().mechanics().set(path + ".teleport-spawn", false);
+        this.plugin.configs().saveMechanics();
+    }
+
+    public void clearCommands(World world) {
+        String path = "limity.worlds." + world.getName();
+        this.plugin.configs().mechanics().set(path + ".commands", List.of());
         this.plugin.configs().saveMechanics();
     }
 
@@ -114,7 +137,7 @@ public final class LimitYService {
 
     private Bounds boundsOf(World world) {
         ConfigurationSection section = this.plugin.configs().mechanics().getConfigurationSection("limity.worlds." + world.getName());
-        if (section == null) {
+        if (section == null || !section.contains("min") || !section.contains("max")) {
             return null;
         }
         return new Bounds(section.getDouble("min"), section.getDouble("max"));

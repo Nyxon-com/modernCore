@@ -114,8 +114,14 @@ Senza Vault il comando avvisa `sell.no-economy`.
 ## Meccaniche
 
 ### LimitY
-`/limity` mostra. `/limity <min> <max> [mondo]` salva.
-Arrivati fuori range: esegue `commands` (ActionCommands) e opzionalmente tp spawn (`teleport-spawn`).
+`/limity` mostra range e comando del mondo in cui sei.
+`/limity <min> <max> [mondo]` imposta il range.
+`/limity command [mondo] <comando>` imposta **il comando** eseguito appena si esce dal range (uno per mondo). Esempi:
+- `/limity command [player] spawn`
+- `/limity command world_nether [console] warp netherhub {player}`
+`/limity clearcommand [mondo]` toglie il comando.
+
+`teleport-spawn` viene spento quando setti un comando, così non conflitto col comando.
 
 ### Item a terra
 Hologram piccolo (`font` + `scale`). `show-lore: false` nasconde la lore dell'item. Countdown despawn in `despawn-format` (`despawn-seconds: 300` = 5 minuti).
@@ -123,6 +129,7 @@ Hologram piccolo (`font` + `scale`). `show-lore: false` nasconde la lore dell'it
 ### Morti
 Messaggi in `mechanics.yml` → `deaths.messages.<CAUSE>`.
 `/checkdeath [player]` — coords (click = copia), causa, killer, GUI inventario al momento della morte.
+`/checkdeath restore [player]` — ripristina quell'inventario sul player (online). Permesso `valary.checkdeath.restore`.
 
 ### Coordinate
 `/copycoord [player]` — click sul messaggio = Ctrl+C (`world x y z`).
@@ -130,8 +137,7 @@ Messaggi in `mechanics.yml` → `deaths.messages.<CAUSE>`.
 ### Pressure plate long-jump
 Piastre per materiale in `long-jump.plates`.
 - Step sulla plate → jump
-- `look-trigger: true` → jump anche **mirando** la plate
-- `/pressureplayerjump` info sul blocco mirato
+- **Non** salta mirando. `/pressureplayerjump` serve solo a vedere/associare il blocco che miri
 - `/pressureplayerjump set <gold|iron>` associa **quel** blocco al preset
 - `/pressureplayerjump remove` toglie l'associazione
 

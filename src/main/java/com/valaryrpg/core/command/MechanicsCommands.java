@@ -42,6 +42,24 @@ final class MechanicsCommands {
         return Commands.literal(name)
                 .requires(stack -> Perms.has(this.plugin, stack.getSender(), "limity"))
                 .executes(ctx -> showLimit(ctx.getSource().getSender(), null))
+                .then(Commands.literal("command")
+                        .executes(ctx -> {
+                            this.plugin.messages().send(ctx.getSource().getSender(), "limity.command-usage");
+                            return Command.SINGLE_SUCCESS;
+                        })
+                        .then(Commands.argument("line", StringArgumentType.greedyString())
+                                .executes(ctx -> setLimitCommand(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "line")
+                                ))))
+                .then(Commands.literal("clearcommand")
+                        .executes(ctx -> clearLimitCommand(ctx.getSource().getSender(), null))
+                        .then(Commands.argument("world", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestWorlds(builder))
+                                .executes(ctx -> clearLimitCommand(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "world")
+                                ))))
                 .then(Commands.argument("min", DoubleArgumentType.doubleArg())
                         .then(Commands.argument("max", DoubleArgumentType.doubleArg())
                                 .executes(ctx -> setLimit(
@@ -76,6 +94,25 @@ final class MechanicsCommands {
                     module().deaths().show(ctx.getSource().getSender(), null);
                     return Command.SINGLE_SUCCESS;
                 })
+                .then(Commands.literal("restore")
+                        .requires(stack -> Perms.has(this.plugin, stack.getSender(), "checkdeath-restore"))
+                        .executes(ctx -> {
+                            module().deaths().restore(ctx.getSource().getSender(), null);
+                            return Command.SINGLE_SUCCESS;
+                        })
+                        .then(Commands.argument("player", StringArgumentType.word())
+                                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "checkdeath-others"))
+                                .suggests((ctx, builder) -> {
+                                    OnlinePlayers.suggest(builder);
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> {
+                                    module().deaths().restore(
+                                            ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "player")
+                                    );
+                                    return Command.SINGLE_SUCCESS;
+                                })))
                 .then(Commands.argument("player", StringArgumentType.word())
                         .requires(stack -> Perms.has(this.plugin, stack.getSender(), "checkdeath-others"))
                         .suggests((ctx, builder) -> {
@@ -242,11 +279,16 @@ final class MechanicsCommands {
         String range = module().limitY().describe(world);
         if (range.isBlank()) {
             this.plugin.messages().send(sender, "limity.none", Map.of("world", world.getName()));
-            return Command.SINGLE_SUCCESS;
+        } else {
+            this.plugin.messages().send(sender, "limity.current", Map.of(
+                    "world", world.getName(),
+                    "range", range
+            ));
         }
-        this.plugin.messages().send(sender, "limity.current", Map.of(
+        String commands = module().limitY().commandsOf(world);
+        this.plugin.messages().send(sender, commands.isBlank() ? "limity.commands-none" : "limity.commands", Map.of(
                 "world", world.getName(),
-                "range", range
+                "commands", commands.isBlank() ? "-" : commands
         ));
         return Command.SINGLE_SUCCESS;
     }
@@ -265,6 +307,58 @@ final class MechanicsCommands {
                 "max", String.valueOf(high)
         ));
         return Command.SINGLE_SUCCESS;
+    }
+
+    private int setLimitCommand(CommandSender sender, String rest) {
+        String trimmed = rest == null ? "" : rest.trim();
+        if (trimmed.isBlank()) {
+            this.plugin.messages().send(sender, "limity.command-usage");
+            return 0;
+        }
+        String[] parts = trimmed.split("\\s+", 2);
+        World named = Bukkit.getWorld(parts[0]);
+        World world;
+        String command;
+        if (named != null && parts.length >= 2) {
+            world = named;
+            command = parts[1];
+        } else if (named != null) {
+            this.plugin.messages().send(sender, "limity.command-usage");
+            return 0;
+        } else {
+            world = worldOf(sender, null);
+            command = trimmed;
+        }
+        if (world == null) {
+            return 0;
+        }
+        module().limitY().setCommand(world, command);
+        this.plugin.messages().send(sender, "limity.command-set", Map.of(
+                "world", world.getName(),
+                "command", command
+        ));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int clearLimitCommand(CommandSender sender, String worldName) {
+        World world = worldOf(sender, worldName);
+        if (world == null) {
+            return 0;
+        }
+        module().limitY().clearCommands(world);
+        this.plugin.messages().send(sender, "limity.command-cleared", Map.of("world", world.getName()));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestWorlds(
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder
+    ) {
+        for (World world : Bukkit.getWorlds()) {
+            if (world.getName().toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase())) {
+                builder.suggest(world.getName());
+            }
+        }
+        return builder.buildFuture();
     }
 
     private World worldOf(CommandSender sender, String worldName) {

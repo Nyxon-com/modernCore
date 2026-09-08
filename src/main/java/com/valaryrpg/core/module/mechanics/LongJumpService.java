@@ -32,7 +32,7 @@ public final class LongJumpService {
     public void start() {
         stop();
         if (!this.plugin.configs().mechanics().getBoolean("long-jump.enabled", true)
-                || !this.plugin.configs().mechanics().getBoolean("long-jump.look-trigger", true)) {
+                || !this.plugin.configs().mechanics().getBoolean("long-jump.look-trigger", false)) {
             return;
         }
         int interval = Math.max(1, this.plugin.configs().mechanics().getInt("long-jump.look-interval-ticks", 4));
@@ -65,7 +65,7 @@ public final class LongJumpService {
     }
 
     public void tickLooks() {
-        if (!this.plugin.configs().mechanics().getBoolean("long-jump.look-trigger", true)) {
+        if (!this.plugin.configs().mechanics().getBoolean("long-jump.look-trigger", false)) {
             return;
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
