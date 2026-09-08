@@ -15,7 +15,6 @@
 #   item.consume        true = toglie amount copie
 #   commands            eseguite all'ingresso. Destinazione opzionale se ci sono solo comandi
 #
-# Long-jump: material = blocco pressure plate. worlds: [] = tutti i mondi
 # Long-jump: solo CALPESTANDO la plate (look-trigger deve restare false).
 # /pressureplayerjump set <preset> associa IL blocco mirato a un preset (non salta mirando)
 #
@@ -87,7 +86,7 @@ deaths:
 long-jump:
   enabled: true
   cooldown-millis: 800
-        look-trigger: false
+  look-trigger: false
   look-required: false
   look-range: 3.5
   look-interval-ticks: 4
