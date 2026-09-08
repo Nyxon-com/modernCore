@@ -15,6 +15,10 @@ settings:
   cancel-on-move: false
   teleport-sound: true
   import-on-start: true
+  time-lock-interval-ticks: 20
+  weather-lock-client-particles: true
+  weather-lock-particle: FALLING_WATER
+  weather-lock-particle-count: 48
 
 # Spawn globale: /setspawn lo scrive, /spawn ci porta da qualsiasi mondo.
 # spawn: {}

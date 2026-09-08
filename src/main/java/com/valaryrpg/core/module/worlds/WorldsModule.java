@@ -35,6 +35,7 @@ public final class WorldsModule implements Module {
         this.catalog.syncAll();
         this.weather.applyCatalogAll();
         this.weather.applyAll();
+        this.weather.start();
         this.time.start();
         this.listener = new WorldsListener(this.plugin, this.catalog, this.spawns, this.weather, this.time);
         Bukkit.getPluginManager().registerEvents(this.listener, this.plugin);
@@ -46,6 +47,9 @@ public final class WorldsModule implements Module {
 
     @Override
     public void disable() {
+        if (this.weather != null) {
+            this.weather.stop();
+        }
         if (this.time != null) {
             this.time.stop();
         }

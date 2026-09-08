@@ -34,6 +34,9 @@ public final class WorldsListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onWeatherChange(WeatherChangeEvent event) {
+        if (this.weather.isApplying()) {
+            return;
+        }
         if (!this.weather.allowsWeatherChange(event.getWorld(), event.toWeatherState())) {
             event.setCancelled(true);
         }
@@ -41,6 +44,9 @@ public final class WorldsListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onThunderChange(ThunderChangeEvent event) {
+        if (this.weather.isApplying()) {
+            return;
+        }
         if (!this.weather.allowsThunderChange(event.getWorld(), event.toThunderState())) {
             event.setCancelled(true);
         }
@@ -115,5 +121,7 @@ public final class WorldsListener implements Listener {
         if (this.catalog.allowFlight(world)) {
             player.setAllowFlight(true);
         }
+        this.weather.applyTo(player);
+        this.time.applyTo(player);
     }
 }

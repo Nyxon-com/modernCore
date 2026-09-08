@@ -4,7 +4,7 @@ import com.valaryrpg.core.ValaryCorePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameMode;
-import org.bukkit.GameRule;
+import org.bukkit.GameRules;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -91,7 +91,7 @@ public final class WorldCatalog {
         );
         world.setKeepSpawnInMemory(yaml.getBoolean(base + ".keep-spawn-in-memory", world.getKeepSpawnInMemory()));
         Boolean heal = yaml.getBoolean(base + ".auto-heal", true);
-        world.setGameRule(GameRule.NATURAL_REGENERATION, heal);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, heal);
     }
 
     public boolean hunger(World world) {

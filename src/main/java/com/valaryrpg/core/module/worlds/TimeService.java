@@ -2,10 +2,11 @@ package com.valaryrpg.core.module.worlds;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import org.bukkit.Bukkit;
-import org.bukkit.GameRule;
+import org.bukkit.GameRules;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -16,12 +17,13 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Locale;
 
 /**
- * Blocca l'ora del giorno per mondo (ciclo giorno/notte).
+ * Blocca l'ora per mondo. setTime di Paper spara TimeSkipEvent: non cancelliamo il nostro apply.
  */
 public final class TimeService implements Listener {
 
     private final ValaryCorePlugin plugin;
     private BukkitTask task;
+    private boolean applying;
 
     public TimeService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -30,7 +32,8 @@ public final class TimeService implements Listener {
     public void start() {
         stop();
         applyAll();
-        this.task = Bukkit.getScheduler().runTaskTimer(this.plugin, this::applyAll, 40L, 40L);
+        long interval = Math.max(1L, this.plugin.configs().worlds().getLong("settings.time-lock-interval-ticks", 20L));
+        this.task = Bukkit.getScheduler().runTaskTimer(this.plugin, this::applyAll, interval, interval);
         Bukkit.getPluginManager().registerEvents(this, this.plugin);
     }
 
@@ -53,8 +56,29 @@ public final class TimeService implements Listener {
         if (ticks == null) {
             return;
         }
-        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        world.setTime(ticks);
+        this.applying = true;
+        try {
+            world.setGameRule(GameRules.ADVANCE_TIME, false);
+            world.setTime(ticks);
+            for (Player player : world.getPlayers()) {
+                player.setPlayerTime(ticks, false);
+            }
+        } finally {
+            this.applying = false;
+        }
+    }
+
+    public void applyTo(Player player) {
+        World world = player.getWorld();
+        if (world == null) {
+            return;
+        }
+        Long ticks = ticksOf(world.getName());
+        if (ticks == null) {
+            player.resetPlayerTime();
+            return;
+        }
+        player.setPlayerTime(ticks, false);
     }
 
     public boolean isLocked(World world) {
@@ -73,7 +97,10 @@ public final class TimeService implements Listener {
     public void unlock(World world) {
         this.plugin.configs().worlds().set("time." + world.getName(), null);
         this.plugin.configs().saveWorlds();
-        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
+        world.setGameRule(GameRules.ADVANCE_TIME, true);
+        for (Player player : world.getPlayers()) {
+            player.resetPlayerTime();
+        }
     }
 
     public static long ticksOfPreset(String raw) {
@@ -94,6 +121,9 @@ public final class TimeService implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onTimeSkip(TimeSkipEvent event) {
+        if (this.applying) {
+            return;
+        }
         if (isLocked(event.getWorld())) {
             event.setCancelled(true);
         }

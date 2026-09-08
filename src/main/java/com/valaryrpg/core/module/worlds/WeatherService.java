@@ -2,14 +2,19 @@ package com.valaryrpg.core.module.worlds;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import org.bukkit.Bukkit;
+import org.bukkit.GameRules;
+import org.bukkit.Particle;
+import org.bukkit.WeatherType;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Locale;
 
 /**
- * Blocco meteo per mondo. Multiverse non è richiesto: i mondi MV sono già in Bukkit.
+ * Blocco meteo per mondo, incluso il meteo client (i biomi void non mostrano la pioggia vanilla).
  */
 public final class WeatherService {
 
@@ -31,9 +36,25 @@ public final class WeatherService {
     }
 
     private final ValaryCorePlugin plugin;
+    private BukkitTask task;
+    private boolean applying;
 
     public WeatherService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
+    }
+
+    public void start() {
+        stop();
+        applyAll();
+        long interval = Math.max(1L, this.plugin.configs().worlds().getLong("settings.time-lock-interval-ticks", 20L));
+        this.task = Bukkit.getScheduler().runTaskTimer(this.plugin, this::tickPlayers, interval, interval);
+    }
+
+    public void stop() {
+        if (this.task != null) {
+            this.task.cancel();
+            this.task = null;
+        }
     }
 
     public void applyAll() {
@@ -67,11 +88,31 @@ public final class WeatherService {
         applyType(world, lock);
     }
 
+    public void applyTo(Player player) {
+        World world = player.getWorld();
+        if (world == null) {
+            return;
+        }
+        WeatherLock lock = lockOf(world.getName());
+        if (lock == null) {
+            player.resetPlayerWeather();
+            return;
+        }
+        player.setPlayerWeather(lock == WeatherLock.CLEAR ? WeatherType.CLEAR : WeatherType.DOWNFALL);
+    }
+
     public boolean isLocked(World world) {
         return lockOf(world.getName()) != null;
     }
 
+    public boolean isApplying() {
+        return this.applying;
+    }
+
     public boolean allowsWeatherChange(World world, boolean raining) {
+        if (this.applying) {
+            return true;
+        }
         WeatherLock lock = lockOf(world.getName());
         if (lock == null) {
             return true;
@@ -83,6 +124,9 @@ public final class WeatherService {
     }
 
     public boolean allowsThunderChange(World world, boolean thunder) {
+        if (this.applying) {
+            return true;
+        }
         WeatherLock lock = lockOf(world.getName());
         if (lock == null) {
             return true;
@@ -106,6 +150,10 @@ public final class WeatherService {
         FileConfiguration yaml = this.plugin.configs().worlds();
         yaml.set("weather." + world.getName(), null);
         this.plugin.configs().saveWorlds();
+        world.setGameRule(GameRules.ADVANCE_WEATHER, true);
+        for (Player player : world.getPlayers()) {
+            player.resetPlayerWeather();
+        }
     }
 
     private WeatherLock lockOf(String worldName) {
@@ -117,35 +165,72 @@ public final class WeatherService {
     }
 
     private void applyType(World world, WeatherLock type) {
-        switch (type) {
-            case CLEAR -> {
-                if (world.hasStorm()) {
+        this.applying = true;
+        try {
+            world.setGameRule(GameRules.ADVANCE_WEATHER, false);
+            switch (type) {
+                case CLEAR -> {
                     world.setStorm(false);
-                }
-                if (world.isThundering()) {
                     world.setThundering(false);
+                    world.setClearWeatherDuration(Integer.MAX_VALUE);
                 }
-                world.setClearWeatherDuration(Integer.MAX_VALUE);
-            }
-            case RAIN -> {
-                if (!world.hasStorm()) {
+                case RAIN -> {
                     world.setStorm(true);
-                }
-                if (world.isThundering()) {
                     world.setThundering(false);
+                    world.setWeatherDuration(Integer.MAX_VALUE);
                 }
-                world.setWeatherDuration(Integer.MAX_VALUE);
-            }
-            case THUNDER -> {
-                if (!world.hasStorm()) {
+                case THUNDER -> {
                     world.setStorm(true);
-                }
-                if (!world.isThundering()) {
                     world.setThundering(true);
+                    world.setWeatherDuration(Integer.MAX_VALUE);
+                    world.setThunderDuration(Integer.MAX_VALUE);
                 }
-                world.setWeatherDuration(Integer.MAX_VALUE);
-                world.setThunderDuration(Integer.MAX_VALUE);
             }
+            WeatherType playerWeather = type == WeatherLock.CLEAR ? WeatherType.CLEAR : WeatherType.DOWNFALL;
+            for (Player player : world.getPlayers()) {
+                player.setPlayerWeather(playerWeather);
+            }
+        } finally {
+            this.applying = false;
+        }
+    }
+
+    private void tickPlayers() {
+        boolean particles = this.plugin.configs().worlds().getBoolean("settings.weather-lock-client-particles", true);
+        int count = Math.max(0, this.plugin.configs().worlds().getInt("settings.weather-lock-particle-count", 48));
+        Particle particle = particle();
+        for (World world : Bukkit.getWorlds()) {
+            WeatherLock lock = lockOf(world.getName());
+            if (lock == null) {
+                continue;
+            }
+            WeatherType playerWeather = lock == WeatherLock.CLEAR ? WeatherType.CLEAR : WeatherType.DOWNFALL;
+            for (Player player : world.getPlayers()) {
+                player.setPlayerWeather(playerWeather);
+                if (particles && particle != null && lock != WeatherLock.CLEAR && count > 0) {
+                    player.spawnParticle(
+                            particle,
+                            player.getLocation().add(0.0, 8.0, 0.0),
+                            count,
+                            6.0,
+                            4.0,
+                            6.0,
+                            0.3
+                    );
+                }
+            }
+        }
+    }
+
+    private Particle particle() {
+        String name = this.plugin.configs().worlds().getString("settings.weather-lock-particle", "FALLING_WATER");
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        try {
+            return Particle.valueOf(name.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            return Particle.FALLING_WATER;
         }
     }
 }
