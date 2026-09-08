@@ -21,12 +21,14 @@ public final class WorldsListener implements Listener {
     private final WorldCatalog catalog;
     private final SpawnService spawns;
     private final WeatherService weather;
+    private final TimeService time;
 
-    public WorldsListener(ValaryCorePlugin plugin, WorldCatalog catalog, SpawnService spawns, WeatherService weather) {
+    public WorldsListener(ValaryCorePlugin plugin, WorldCatalog catalog, SpawnService spawns, WeatherService weather, TimeService time) {
         this.plugin = plugin;
         this.catalog = catalog;
         this.spawns = spawns;
         this.weather = weather;
+        this.time = time;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -56,6 +58,7 @@ public final class WorldsListener implements Listener {
         this.catalog.apply(world);
         this.weather.applyCatalog(world);
         this.weather.apply(world);
+        this.time.apply(world);
     }
 
     @EventHandler

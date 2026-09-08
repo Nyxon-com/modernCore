@@ -47,7 +47,7 @@ public final class ModerationListener implements Listener {
                         this.plugin.messages().component("moderation.ban-screen", Map.of(
                                 "reason", this.plugin.messages().escape(punishment.reason()),
                                 "staff", this.plugin.messages().escape(punishment.staff()),
-                                "duration", Durations.formatRemaining(punishment.expiresAt())
+                                "duration", Durations.formatRemaining(this.plugin, punishment.expiresAt())
                         ))
                 ));
     }
@@ -58,7 +58,7 @@ public final class ModerationListener implements Listener {
             event.setCancelled(true);
             this.plugin.messages().send(event.getPlayer(), "moderation.mute-blocked", Map.of(
                     "reason", this.plugin.messages().escape(mute.reason()),
-                    "duration", Durations.formatRemaining(mute.expiresAt())
+                    "duration", Durations.formatRemaining(this.plugin, mute.expiresAt())
             ));
         });
     }

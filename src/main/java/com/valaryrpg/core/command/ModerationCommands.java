@@ -39,6 +39,21 @@ public final class ModerationCommands {
         registrar.register(vanishNode("vanish"), "Vanish Valary", aliases("commands.vanish-aliases"));
         registrar.register(vanishEditNode("vanishedit"), "VanishEdit Valary", aliases("commands.vanishedit-aliases"));
         registrar.register(invseeNode("invsee"), "Invsee Valary", aliases("commands.invsee-aliases"));
+        for (String alias : aliases("commands.kick-aliases")) {
+            if (!alias.equalsIgnoreCase("kick") && !alias.isBlank()) {
+                registrar.register(kickNode(alias), "Kick Valary", List.of());
+            }
+        }
+        for (String alias : aliases("commands.ban-aliases")) {
+            if (!alias.equalsIgnoreCase("ban") && !alias.isBlank()) {
+                registrar.register(banNode(alias), "Ban Valary", List.of());
+            }
+        }
+        for (String alias : aliases("commands.banlist-aliases")) {
+            if (!alias.equalsIgnoreCase("banlist") && !alias.isBlank()) {
+                registrar.register(banListNode(alias), "Lista ban Valary", List.of());
+            }
+        }
     }
 
     public static LiteralCommandNode<CommandSourceStack> kickNode(String literal) {

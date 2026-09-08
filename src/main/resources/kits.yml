@@ -52,7 +52,7 @@
 
 settings:
   first-join-kit: starter
-  first-join-delay-ticks: 20
+  first-join-delay-ticks: 5
   mmoitems-give: "mi give {player} {type} {id} {amount}"
 
 gui:

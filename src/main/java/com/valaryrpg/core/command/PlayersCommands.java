@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Comandi player stile CMI: nick, msg/r, socialspy, fly.
+ * Comandi player: nick, msg/r, socialspy, fly.
  */
 final class PlayersCommands {
 

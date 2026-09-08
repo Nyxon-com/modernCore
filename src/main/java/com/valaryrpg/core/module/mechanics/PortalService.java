@@ -1,18 +1,24 @@
 package com.valaryrpg.core.module.mechanics;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import com.valaryrpg.core.gui.PanelItems;
+import com.valaryrpg.core.util.ActionCommands;
 import com.valaryrpg.core.util.MmoItems;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.persistence.PersistentDataType;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -52,12 +58,20 @@ public final class PortalService {
             this.plugin.messages().send(player, "portals.need-item", Map.of("portal", entered));
             return;
         }
+        this.plugin.lastLocations().remember(player);
+        List<String> commands = portal.getStringList("commands");
+        if (!commands.isEmpty()) {
+            ActionCommands.run(this.plugin, player, commands, Map.of("portal", entered));
+        }
         Location destination = destinationOf(portal);
         if (destination == null) {
-            this.plugin.messages().send(player, "portals.invalid-destination", Map.of("portal", entered));
+            if (commands.isEmpty()) {
+                this.plugin.messages().send(player, "portals.invalid-destination", Map.of("portal", entered));
+            } else {
+                this.plugin.messages().send(player, "portals.used", Map.of("portal", entered));
+            }
             return;
         }
-        this.plugin.lastLocations().remember(player);
         int warmup = portal.getInt("warmup-seconds", 0);
         if (warmup > 0) {
             this.plugin.messages().send(player, "portals.warmup", Map.of(
@@ -76,12 +90,20 @@ public final class PortalService {
     }
 
     public void markPos1(Player player) {
-        this.pos1.put(player.getUniqueId(), player.getLocation().clone());
+        markPos1(player, player.getLocation());
+    }
+
+    public void markPos1(Player player, Location location) {
+        this.pos1.put(player.getUniqueId(), location.clone());
         this.plugin.messages().send(player, "portals.pos1");
     }
 
     public void markPos2(Player player) {
-        this.pos2.put(player.getUniqueId(), player.getLocation().clone());
+        markPos2(player, player.getLocation());
+    }
+
+    public void markPos2(Player player, Location location) {
+        this.pos2.put(player.getUniqueId(), location.clone());
         this.plugin.messages().send(player, "portals.pos2");
     }
 
@@ -99,8 +121,8 @@ public final class PortalService {
         Location first = this.pos1.get(player.getUniqueId());
         Location second = this.pos2.get(player.getUniqueId());
         Location destination = this.dest.get(player.getUniqueId());
-        if (first == null || second == null || destination == null
-                || first.getWorld() == null || second.getWorld() == null || destination.getWorld() == null) {
+        if (first == null || second == null
+                || first.getWorld() == null || second.getWorld() == null) {
             this.plugin.messages().send(player, "portals.incomplete");
             return;
         }
@@ -114,7 +136,10 @@ public final class PortalService {
         yaml.set(base + ".world", first.getWorld().getName());
         writeLocation(yaml, base + ".pos1", first, false);
         writeLocation(yaml, base + ".pos2", second, false);
-        writeLocation(yaml, base + ".destination", destination, true);
+        if (destination != null && destination.getWorld() != null) {
+            writeLocation(yaml, base + ".destination", destination, true);
+        }
+        yaml.set(base + ".commands", List.of());
         yaml.set(base + ".item.material", "AIR");
         yaml.set(base + ".item.mmoitem-type", "");
         yaml.set(base + ".item.mmoitem-id", "");
@@ -193,6 +218,67 @@ public final class PortalService {
     public Set<String> names() {
         ConfigurationSection portals = this.plugin.configs().mechanics().getConfigurationSection("portals");
         return portals == null ? Set.of() : portals.getKeys(false);
+    }
+
+    public void giveWand(Player player) {
+        ConfigurationSection wand = this.plugin.configs().mechanics().getConfigurationSection("portal-wand");
+        ItemStack item = wand == null
+                ? PanelItems.named("BLAZE_ROD", Material.BLAZE_ROD)
+                : PanelItems.from(this.plugin, wand, player);
+        item.editMeta(meta -> meta.getPersistentDataContainer().set(wandKey(), PersistentDataType.BYTE, (byte) 1));
+        player.getInventory().addItem(item);
+        this.plugin.messages().send(player, "portals.wand-given");
+    }
+
+    public boolean isWand(ItemStack item) {
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
+            return false;
+        }
+        return item.getItemMeta().getPersistentDataContainer().has(wandKey(), PersistentDataType.BYTE);
+    }
+
+    public void handleWand(Player player, Block block, boolean sneak, boolean leftClick) {
+        Location location = block.getLocation().add(0.5D, 0.0D, 0.5D);
+        if (leftClick && sneak) {
+            this.dest.put(player.getUniqueId(), player.getLocation().clone());
+            this.plugin.messages().send(player, "portals.dest");
+            return;
+        }
+        if (sneak) {
+            markPos2(player, location);
+            return;
+        }
+        markPos1(player, location);
+    }
+
+    public void setCommand(CommandSender sender, String name, String command) {
+        String id = requirePortal(sender, name);
+        if (id == null) {
+            return;
+        }
+        List<String> commands = this.plugin.configs().mechanics().getStringList("portals." + id + ".commands");
+        commands = new java.util.ArrayList<>(commands);
+        commands.add(command);
+        this.plugin.configs().mechanics().set("portals." + id + ".commands", commands);
+        this.plugin.configs().saveMechanics();
+        this.plugin.messages().send(sender, "portals.command-set", Map.of(
+                "portal", id,
+                "command", command
+        ));
+    }
+
+    public void clearCommands(CommandSender sender, String name) {
+        String id = requirePortal(sender, name);
+        if (id == null) {
+            return;
+        }
+        this.plugin.configs().mechanics().set("portals." + id + ".commands", List.of());
+        this.plugin.configs().saveMechanics();
+        this.plugin.messages().send(sender, "portals.commands-cleared", Map.of("portal", id));
+    }
+
+    private NamespacedKey wandKey() {
+        return new NamespacedKey(this.plugin, "portal_wand");
     }
 
     private String requirePortal(CommandSender sender, String name) {

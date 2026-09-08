@@ -6,7 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 
 /**
- * Modulo mondi: spawn per mondo e lock meteo. Hook Multiverse puramente opzionale.
+ * Modulo mondi: spawn, lock meteo e lock ora. Hook Multiverse opzionale.
  */
 public final class WorldsModule implements Module {
 
@@ -14,6 +14,7 @@ public final class WorldsModule implements Module {
     private WorldCatalog catalog;
     private SpawnService spawns;
     private WeatherService weather;
+    private TimeService time;
     private WorldsListener listener;
 
     public WorldsModule(ValaryCorePlugin plugin) {
@@ -30,10 +31,12 @@ public final class WorldsModule implements Module {
         this.catalog = new WorldCatalog(this.plugin);
         this.spawns = new SpawnService(this.plugin);
         this.weather = new WeatherService(this.plugin);
+        this.time = new TimeService(this.plugin);
         this.catalog.syncAll();
         this.weather.applyCatalogAll();
         this.weather.applyAll();
-        this.listener = new WorldsListener(this.plugin, this.catalog, this.spawns, this.weather);
+        this.time.start();
+        this.listener = new WorldsListener(this.plugin, this.catalog, this.spawns, this.weather, this.time);
         Bukkit.getPluginManager().registerEvents(this.listener, this.plugin);
 
         if (Bukkit.getPluginManager().getPlugin("Multiverse-Core") != null) {
@@ -43,6 +46,9 @@ public final class WorldsModule implements Module {
 
     @Override
     public void disable() {
+        if (this.time != null) {
+            this.time.stop();
+        }
         if (this.listener != null) {
             HandlerList.unregisterAll(this.listener);
         }
@@ -60,6 +66,10 @@ public final class WorldsModule implements Module {
 
     public WeatherService weather() {
         return this.weather;
+    }
+
+    public TimeService time() {
+        return this.time;
     }
 
     public WorldCatalog catalog() {

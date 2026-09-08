@@ -1,12 +1,14 @@
 package com.valaryrpg.core.util;
 
+import com.valaryrpg.core.ValaryCorePlugin;
+
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parser durate CMI-like: 10s, 5m, 2h, 7d, 2w, 1mo, 1y. Vuoto/perm = permanente.
+ * Parser durate: 10s, 5m, 2h, 7d, 2w, 1mo, 1y. Vuoto/perm = permanente.
  */
 public final class Durations {
 
@@ -52,13 +54,13 @@ public final class Durations {
         return System.currentTimeMillis() + totalMs;
     }
 
-    public static String formatRemaining(Long expiresAt) {
+    public static String formatRemaining(ValaryCorePlugin plugin, Long expiresAt) {
         if (expiresAt == null) {
-            return "permanente";
+            return plugin.messages().text("duration.permanent");
         }
         long remaining = expiresAt - System.currentTimeMillis();
         if (remaining <= 0) {
-            return "scaduto";
+            return plugin.messages().text("duration.expired");
         }
         long days = TimeUnit.MILLISECONDS.toDays(remaining);
         long hours = TimeUnit.MILLISECONDS.toHours(remaining) % 24;

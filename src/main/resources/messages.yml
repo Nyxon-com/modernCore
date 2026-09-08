@@ -12,6 +12,10 @@ general:
   unknown-subcommand: "{prefix} <gray>Uso: <white>/{label} reload</white>"
   cooldown: "{prefix} <red>Attendi un attimo prima di riusare il comando."
 
+duration:
+  permanent: permanente
+  expired: scaduto
+
 reload:
   success: "{prefix} <green>Configurazione ricaricata correttamente."
   failed: "{prefix} <red>Reload fallito. Controlla la console. <gray>({error})"
@@ -59,6 +63,12 @@ weather:
   unlocked: "{prefix} <green>Meteo di <white>{world}</white> sbloccato."
   usage: "{prefix} <gray>Uso: <white>/{label} <clear|rain|thunder|unlock> [mondo]</white>"
   invalid-type: "{prefix} <red>Tipo meteo non valido. Usa: clear, rain, thunder, unlock."
+
+time:
+  locked: "{prefix} <green>Ora di <white>{world}</white> bloccata su <white>{time}</white> <gray>({ticks} tick)."
+  unlocked: "{prefix} <green>Ciclo giorno/notte di <white>{world}</white> sbloccato."
+  usage: "{prefix} <gray>Uso: <white>/{label} <day|noon|night|midnight|unlock> [mondo]</white>"
+  invalid-type: "{prefix} <red>Tipo ora non valido. Usa: day, noon, night, midnight, unlock oppure un numero di tick."
 
 join-quit:
   join: "<dark_gray>[<green>+<dark_gray>] <gray>{displayname}"
@@ -130,6 +140,14 @@ moderation:
   dupeip-usage: "{prefix} <gray>Uso: <white>/{label} <player|ip></white>"
   dupeip-missing: "{prefix} <red>Nessun IP noto per <white>{player}</white>."
   dupeip: "{prefix} <gray>Account su <white>{ip}</white>: <white>{players}</white>"
+  dupeip-line: "{prefix} <dark_gray>-</dark_gray> <white>{player}</white> <gray>{status}"
+  status-online: "<green>online"
+  status-offline: "<dark_gray>offline"
+  status-banned: "<red>BAN"
+  status-ipban: "<red>IPBAN"
+  status-muted: "<yellow>MUTE"
+  status-warns: "<gold>warn x{count}"
+  default-reason: Nessun motivo
 
 vanish:
   usage: "{prefix} <gray>Uso da console: <white>/vanish <player></white>"
@@ -157,6 +175,9 @@ checkdeath:
   usage: "{prefix} <gray>Uso: <white>/checkdeath [player]</white>"
   missing: "{prefix} <gray>Nessuna morte registrata per <white>{player}</white>."
   found: "{prefix} <gray>Ultima morte di <white>{player}</white>: <white>{world}</white> <aqua>{coords}</aqua> <dark_gray>(click per copiare)"
+  cause: "{prefix} <gray>Causa: <white>{cause}</white> <dark_gray>killer: <white>{killer}"
+  items: "{prefix} <gray>Item in inventario alla morte: <white>{count}</white>"
+  gui-title: "<dark_gray>Morte <white>{player}"
 
 copycoord:
   usage: "{prefix} <gray>Uso da console: <white>/copycoord <player></white>"
@@ -169,11 +190,14 @@ portals:
   no-permission: "{prefix} <red>Non puoi usare il portale <white>{portal}</white>."
   invalid-destination: "{prefix} <red>Destinazione del portale <white>{portal}</white> non valida."
   warmup: "{prefix} <gray>Portale <white>{portal}</white> tra <white>{seconds}</white>s."
-  usage: "{prefix} <gray>Uso: <white>/{label} <pos1|pos2|dest|create|item|enable|disable|delete|list></white>"
+  usage: "{prefix} <gray>Uso: <white>/{label} <pos1|pos2|dest|wand|create|item|command|clearcommands|enable|disable|delete|list></white>"
   pos1: "{prefix} <green>Angolo 1 del portale impostato."
   pos2: "{prefix} <green>Angolo 2 del portale impostato."
   dest: "{prefix} <green>Destinazione del portale impostata."
-  incomplete: "{prefix} <red>Imposta prima pos1, pos2 e dest."
+  wand-given: "{prefix} <green>Wand portale in inventario. Destro = pos1, Shift+destro = pos2, Shift+sinistro = dest."
+  command-set: "{prefix} <green>Comando aggiunto al portale <white>{portal}</white>: <gray>{command}"
+  commands-cleared: "{prefix} <yellow>Comandi del portale <white>{portal}</white> azzerati."
+  incomplete: "{prefix} <red>Imposta prima pos1 e pos2 (dest è opzionale se usi solo comandi)."
   world-mismatch: "{prefix} <red>pos1 e pos2 devono essere nello stesso mondo."
   invalid-name: "{prefix} <red>Nome portale non valido. Usa lettere, numeri e underscore."
   created: "{prefix} <green>Portale <white>{portal}</white> creato."
@@ -198,6 +222,14 @@ kits:
   one-time: "{prefix} <red>Il kit <white>{kit}</white> si ritira una sola volta."
   no-page: "{prefix} <red>Pagina kit <white>{page}</white> inesistente."
   preview-title: "<dark_gray>Anteprima <white>{kit}"
+  preview-close-name: "<red>Chiudi"
+
+long-jump:
+  not-looking: "{prefix} <red>Non stai mirando una pressure plate."
+  unknown-preset: "{prefix} <red>Preset <white>{preset}</white> inesistente in long-jump.plates."
+  bound: "{prefix} <green>Plate <white>{block}</white> associata al preset <white>{preset}</white>."
+  unbound: "{prefix} <yellow>Plate <white>{block}</white> rimossa dai long jump custom."
+  info: "{prefix} <gray>Miri <white>{material}</white> in <aqua>{block}</aqua>."
 
 sell:
   gui-title: "<dark_gray>Sell"

@@ -12,9 +12,11 @@ import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 public final class MechanicsListener implements Listener {
 
@@ -40,7 +42,14 @@ public final class MechanicsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent event) {
-        this.deaths.record(event.getPlayer());
+        this.deaths.record(event);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDeathSnapshotClick(InventoryClickEvent event) {
+        if (this.deaths.isSnapshot(event.getView().getTopInventory())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -80,7 +89,27 @@ public final class MechanicsListener implements Listener {
         if (event.getAction() != Action.PHYSICAL || event.getClickedBlock() == null) {
             return;
         }
-        this.longJumps.tryJump(event.getPlayer(), event.getClickedBlock().getType());
+        this.longJumps.tryJump(event.getPlayer(), event.getClickedBlock().getType(), event.getClickedBlock().getLocation());
+    }
+
+    @EventHandler
+    public void onWand(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND || event.getClickedBlock() == null) {
+            return;
+        }
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK) {
+            return;
+        }
+        if (!this.portals.isWand(event.getItem())) {
+            return;
+        }
+        event.setCancelled(true);
+        this.portals.handleWand(
+                event.getPlayer(),
+                event.getClickedBlock(),
+                event.getPlayer().isSneaking(),
+                event.getAction() == Action.LEFT_CLICK_BLOCK
+        );
     }
 
     @EventHandler(ignoreCancelled = true)

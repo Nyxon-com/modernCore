@@ -34,6 +34,7 @@ final class MechanicsCommands {
         registrar.register(checkDeathCommand(), "Ultima posizione di morte", aliases("commands.checkdeath-aliases"));
         registrar.register(copyCoordCommand(), "Copia le coordinate", aliases("commands.copycoord-aliases"));
         registrar.register(portalCommand(), "Gestione portali", aliases("commands.portal-aliases"));
+        registrar.register(pressureJumpCommand(), "Long jump su pressure plate", aliases("commands.pressureplayerjump-aliases"));
     }
 
     private LiteralCommandNode<CommandSourceStack> limitYCommand() {
@@ -120,6 +121,7 @@ final class MechanicsCommands {
                 .then(Commands.literal("pos1").executes(ctx -> portalPlayer(ctx.getSource().getSender(), player -> module().portals().markPos1(player))))
                 .then(Commands.literal("pos2").executes(ctx -> portalPlayer(ctx.getSource().getSender(), player -> module().portals().markPos2(player))))
                 .then(Commands.literal("dest").executes(ctx -> portalPlayer(ctx.getSource().getSender(), player -> module().portals().markDest(player))))
+                .then(Commands.literal("wand").executes(ctx -> portalPlayer(ctx.getSource().getSender(), player -> module().portals().giveWand(player))))
                 .then(Commands.literal("create")
                         .then(Commands.argument("name", StringArgumentType.word())
                                 .executes(ctx -> portalPlayer(ctx.getSource().getSender(), player ->
@@ -155,6 +157,61 @@ final class MechanicsCommands {
                             module().portals().list(ctx.getSource().getSender());
                             return Command.SINGLE_SUCCESS;
                         }))
+                .then(Commands.literal("command")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestPortals(builder))
+                                .then(Commands.argument("command", StringArgumentType.greedyString())
+                                        .executes(ctx -> {
+                                            module().portals().setCommand(
+                                                    ctx.getSource().getSender(),
+                                                    StringArgumentType.getString(ctx, "name"),
+                                                    StringArgumentType.getString(ctx, "command")
+                                            );
+                                            return Command.SINGLE_SUCCESS;
+                                        }))))
+                .then(Commands.literal("clearcommands")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestPortals(builder))
+                                .executes(ctx -> {
+                                    module().portals().clearCommands(
+                                            ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "name")
+                                    );
+                                    return Command.SINGLE_SUCCESS;
+                                })))
+                .build();
+    }
+
+    private LiteralCommandNode<CommandSourceStack> pressureJumpCommand() {
+        String name = string("commands.pressureplayerjump", "pressureplayerjump");
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "pressureplayerjump"))
+                .executes(ctx -> {
+                    if (!(ctx.getSource().getSender() instanceof Player player)) {
+                        this.plugin.messages().send(ctx.getSource().getSender(), "general.player-only");
+                        return 0;
+                    }
+                    module().longJumps().info(player, player);
+                    return Command.SINGLE_SUCCESS;
+                })
+                .then(Commands.literal("set")
+                        .then(Commands.argument("preset", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    org.bukkit.configuration.ConfigurationSection plates = this.plugin.configs().mechanics()
+                                            .getConfigurationSection("long-jump.plates");
+                                    if (plates != null) {
+                                        for (String key : plates.getKeys(false)) {
+                                            if (key.toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase())) {
+                                                builder.suggest(key);
+                                            }
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> portalPlayer(ctx.getSource().getSender(), player ->
+                                        module().longJumps().bindLooking(player, StringArgumentType.getString(ctx, "preset"))))))
+                .then(Commands.literal("remove")
+                        .executes(ctx -> portalPlayer(ctx.getSource().getSender(), player -> module().longJumps().unbindLooking(player))))
                 .build();
     }
 

@@ -2,6 +2,7 @@ package com.valaryrpg.core.module.mechanics;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.worlds.WorldsModule;
+import com.valaryrpg.core.util.ActionCommands;
 import com.valaryrpg.core.util.Perms;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -10,6 +11,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +20,7 @@ public final class LimitYService {
 
     private final ValaryCorePlugin plugin;
     private final Map<UUID, Long> lastNotify = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastCommand = new ConcurrentHashMap<>();
     private BukkitTask task;
 
     public LimitYService(ValaryCorePlugin plugin) {
@@ -69,14 +72,32 @@ public final class LimitYService {
             if (location.getY() >= bounds.min && location.getY() <= bounds.max) {
                 continue;
             }
-            Location destination;
-            WorldsModule worlds = this.plugin.modules().get("worlds");
-            if (worlds != null) {
-                destination = worlds.spawns().locationOf(world);
-            } else {
-                destination = world.getSpawnLocation();
+            ConfigurationSection section = this.plugin.configs().mechanics()
+                    .getConfigurationSection("limity.worlds." + world.getName());
+            List<String> commands = section == null ? List.of() : section.getStringList("commands");
+            boolean teleport = section == null || section.getBoolean("teleport-spawn", commands.isEmpty());
+            if (!commands.isEmpty()) {
+                long now = System.currentTimeMillis();
+                long cooldown = this.plugin.configs().mechanics().getLong("limity.command-cooldown-millis", 3000L);
+                Long last = this.lastCommand.get(player.getUniqueId());
+                if (last == null || now - last >= cooldown) {
+                    this.lastCommand.put(player.getUniqueId(), now);
+                    ActionCommands.run(this.plugin, player, commands, Map.of(
+                            "min", String.valueOf(bounds.min),
+                            "max", String.valueOf(bounds.max)
+                    ));
+                }
             }
-            player.teleport(destination);
+            if (teleport) {
+                Location destination;
+                WorldsModule worlds = this.plugin.modules().get("worlds");
+                if (worlds != null) {
+                    destination = worlds.spawns().locationOf(world);
+                } else {
+                    destination = world.getSpawnLocation();
+                }
+                player.teleport(destination);
+            }
             long now = System.currentTimeMillis();
             long cooldown = this.plugin.configs().mechanics().getLong("limity.notify-cooldown-millis", 3000L);
             Long last = this.lastNotify.get(player.getUniqueId());

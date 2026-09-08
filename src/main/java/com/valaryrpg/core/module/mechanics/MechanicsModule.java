@@ -35,12 +35,17 @@ public final class MechanicsModule implements Module {
         this.listener = new MechanicsListener(this.plugin, this.deaths, this.groundItems, this.longJumps, this.portals);
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
         this.limitY.start();
+        this.groundItems.start();
+        this.longJumps.start();
     }
 
     @Override
     public void disable() {
         if (this.limitY != null) {
             this.limitY.stop();
+        }
+        if (this.longJumps != null) {
+            this.longJumps.stop();
         }
         if (this.groundItems != null) {
             this.groundItems.clear();
@@ -66,5 +71,9 @@ public final class MechanicsModule implements Module {
 
     public PortalService portals() {
         return this.portals;
+    }
+
+    public LongJumpService longJumps() {
+        return this.longJumps;
     }
 }

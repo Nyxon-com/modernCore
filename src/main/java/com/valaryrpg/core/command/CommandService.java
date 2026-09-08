@@ -43,6 +43,7 @@ public final class CommandService {
                 registrar.register(spawnCommand(), "Teletrasporto allo spawn del mondo", aliases("commands.spawn-aliases"));
                 registrar.register(setSpawnCommand(), "Imposta lo spawn del mondo corrente", aliases("commands.setspawn-aliases"));
                 registrar.register(weatherLockCommand(), "Blocca o sblocca il meteo di un mondo", aliases("commands.weatherlock-aliases"));
+                registrar.register(timeLockCommand(), "Blocca o sblocca l'ora di un mondo", aliases("commands.timelock-aliases"));
             }
             if (enabled("homes")) {
                 new HomesCommands(this.plugin).register(registrar);
@@ -138,6 +139,77 @@ public final class CommandService {
                     return Command.SINGLE_SUCCESS;
                 })
                 .build();
+    }
+
+    private LiteralCommandNode<CommandSourceStack> timeLockCommand() {
+        String name = string("commands.timelock", "timelock");
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "timelock"))
+                .executes(ctx -> {
+                    this.plugin.messages().send(ctx.getSource().getSender(), "time.usage", Map.of("label", name));
+                    return Command.SINGLE_SUCCESS;
+                })
+                .then(Commands.argument("type", StringArgumentType.word())
+                        .suggests((ctx, builder) -> {
+                            for (String suggestion : List.of("day", "noon", "night", "midnight", "unlock")) {
+                                if (suggestion.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(suggestion);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes(ctx -> applyTime(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "type"), null, name))
+                        .then(Commands.argument("world", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    for (World world : Bukkit.getWorlds()) {
+                                        if (world.getName().toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(world.getName());
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> applyTime(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "type"),
+                                        StringArgumentType.getString(ctx, "world"),
+                                        name
+                                ))))
+                .build();
+    }
+
+    private int applyTime(CommandSender sender, String typeRaw, String worldName, String label) {
+        World world;
+        if (worldName == null || worldName.isBlank()) {
+            if (!(sender instanceof Player player) || player.getWorld() == null) {
+                this.plugin.messages().send(sender, "time.usage", Map.of("label", label));
+                return 0;
+            }
+            world = player.getWorld();
+        } else {
+            world = Bukkit.getWorld(worldName);
+            if (world == null) {
+                this.plugin.messages().send(sender, "general.invalid-world", Map.of("world", worldName));
+                return 0;
+            }
+        }
+        String type = typeRaw.toLowerCase(Locale.ROOT);
+        if (type.equals("unlock")) {
+            worlds().time().unlock(world);
+            this.plugin.messages().send(sender, "time.unlocked", Map.of("world", world.getName()));
+            return Command.SINGLE_SUCCESS;
+        }
+        long ticks = com.valaryrpg.core.module.worlds.TimeService.ticksOfPreset(type);
+        if (ticks < 0) {
+            this.plugin.messages().send(sender, "time.invalid-type");
+            return 0;
+        }
+        worlds().time().lock(world, ticks);
+        this.plugin.messages().send(sender, "time.locked", Map.of(
+                "world", world.getName(),
+                "time", type,
+                "ticks", String.valueOf(ticks)
+        ));
+        return Command.SINGLE_SUCCESS;
     }
 
     private LiteralCommandNode<CommandSourceStack> weatherLockCommand() {

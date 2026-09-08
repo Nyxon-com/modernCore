@@ -5,12 +5,15 @@ import com.valaryrpg.core.gui.GuiLayouts;
 import com.valaryrpg.core.gui.PanelClicks;
 import com.valaryrpg.core.gui.Panels;
 import com.valaryrpg.core.gui.SlotSpec;
+import com.valaryrpg.core.util.ActionCommands;
 import com.valaryrpg.core.util.MmoItems;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -77,6 +80,7 @@ public final class SellService {
         }
         double total = 0;
         int sold = 0;
+        java.util.List<Runnable> rewards = new java.util.ArrayList<>();
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             if (locked(slot)) {
                 continue;
@@ -85,14 +89,16 @@ public final class SellService {
             if (item == null || item.getType().isAir()) {
                 continue;
             }
-            Double price = priceOf(item);
-            if (price == null) {
+            Reward reward = rewardOf(item);
+            if (reward == null) {
                 player.getInventory().addItem(item.clone());
                 inventory.setItem(slot, null);
                 continue;
             }
-            total += price * item.getAmount() * this.plugin.configs().prices().getDouble("settings.multiplier", 1.0D);
-            sold += item.getAmount();
+            int amount = item.getAmount();
+            total += reward.money * amount * this.plugin.configs().prices().getDouble("settings.multiplier", 1.0D);
+            sold += amount;
+            rewards.add(() -> applyReward(player, reward, amount));
             inventory.setItem(slot, null);
         }
         if (sold <= 0) {
@@ -101,9 +107,12 @@ public final class SellService {
             }
             return;
         }
-        if (!this.plugin.economy().deposit(player, total)) {
+        if (total > 0 && !this.plugin.economy().deposit(player, total)) {
             this.plugin.messages().send(player, "sell.failed");
             return;
+        }
+        for (Runnable reward : rewards) {
+            reward.run();
         }
         this.plugin.messages().send(player, "sell.sold", Map.of(
                 "amount", String.valueOf(sold),
@@ -127,6 +136,60 @@ public final class SellService {
 
     private ConfigurationSection gui() {
         return this.plugin.configs().prices().getConfigurationSection("gui");
+    }
+
+    private Reward rewardOf(ItemStack item) {
+        ConfigurationSection custom = this.plugin.configs().prices().getConfigurationSection("custom");
+        if (custom != null) {
+            for (String key : custom.getKeys(false)) {
+                ConfigurationSection section = custom.getConfigurationSection(key);
+                if (section == null) {
+                    continue;
+                }
+                String type = section.getString("mmoitem-type", "");
+                String id = section.getString("mmoitem-id", "");
+                String materialName = section.getString("material", "");
+                boolean mmo = type != null && !type.isBlank() && id != null && !id.isBlank();
+                if (mmo && !MmoItems.matches(item, type, id)) {
+                    continue;
+                }
+                if (!mmo) {
+                    Material material = Material.matchMaterial(materialName);
+                    if (material == null || item.getType() != material) {
+                        continue;
+                    }
+                }
+                return new Reward(
+                        section.getDouble("money", 0.0D),
+                        section.getInt("xp", 0),
+                        section.getStringList("commands"),
+                        section.getMapList("items")
+                );
+            }
+        }
+        Double price = priceOf(item);
+        return price == null ? null : new Reward(price, 0, List.of(), List.of());
+    }
+
+    private void applyReward(Player player, Reward reward, int amount) {
+        if (reward.xp > 0) {
+            player.giveExp(reward.xp * amount);
+        }
+        ActionCommands.run(this.plugin, player, reward.commands, Map.of("amount", String.valueOf(amount)));
+        for (Map<?, ?> raw : reward.items) {
+            String type = raw.get("mmoitem-type") == null ? "" : String.valueOf(raw.get("mmoitem-type"));
+            String id = raw.get("mmoitem-id") == null ? "" : String.valueOf(raw.get("mmoitem-id"));
+            int give = Math.max(1, raw.get("amount") instanceof Number number ? number.intValue() : 1);
+            ItemStack stack = MmoItems.stack(type, id, give);
+            if (stack == null) {
+                Material material = Material.matchMaterial(raw.get("material") == null ? "" : String.valueOf(raw.get("material")));
+                if (material == null || material.isAir()) {
+                    continue;
+                }
+                stack = new ItemStack(material, give);
+            }
+            player.getInventory().addItem(stack);
+        }
     }
 
     private Double priceOf(ItemStack item) {
@@ -159,30 +222,39 @@ public final class SellService {
         }
         double total = 0;
         int sold = 0;
+        java.util.List<Runnable> rewards = new java.util.ArrayList<>();
         for (int slot = 0; slot < 36; slot++) {
             ItemStack item = player.getInventory().getItem(slot);
             if (item == null || item.getType().isAir()) {
                 continue;
             }
-            Double price = priceOf(item);
-            if (price == null) {
+            Reward reward = rewardOf(item);
+            if (reward == null) {
                 continue;
             }
-            total += price * item.getAmount() * this.plugin.configs().prices().getDouble("settings.multiplier", 1.0D);
-            sold += item.getAmount();
+            int amount = item.getAmount();
+            total += reward.money * amount * this.plugin.configs().prices().getDouble("settings.multiplier", 1.0D);
+            sold += amount;
+            rewards.add(() -> applyReward(player, reward, amount));
             player.getInventory().setItem(slot, null);
         }
         if (sold <= 0) {
             this.plugin.messages().send(player, "sell.empty");
             return;
         }
-        if (!this.plugin.economy().deposit(player, total)) {
+        if (total > 0 && !this.plugin.economy().deposit(player, total)) {
             this.plugin.messages().send(player, "sell.failed");
             return;
+        }
+        for (Runnable reward : rewards) {
+            reward.run();
         }
         this.plugin.messages().send(player, "sell.sold", Map.of(
                 "amount", String.valueOf(sold),
                 "money", String.format(Locale.US, "%.2f", total)
         ));
+    }
+
+    private record Reward(double money, int xp, List<String> commands, List<Map<?, ?>> items) {
     }
 }

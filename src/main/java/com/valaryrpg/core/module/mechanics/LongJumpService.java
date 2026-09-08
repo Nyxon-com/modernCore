@@ -2,9 +2,16 @@ package com.valaryrpg.core.module.mechanics;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.util.Sounds;
+import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.List;
@@ -16,18 +23,129 @@ public final class LongJumpService {
 
     private final ValaryCorePlugin plugin;
     private final Map<UUID, Long> cooldown = new ConcurrentHashMap<>();
+    private BukkitTask lookTask;
 
     public LongJumpService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
     }
 
+    public void start() {
+        stop();
+        if (!this.plugin.configs().mechanics().getBoolean("long-jump.enabled", true)
+                || !this.plugin.configs().mechanics().getBoolean("long-jump.look-trigger", true)) {
+            return;
+        }
+        int interval = Math.max(1, this.plugin.configs().mechanics().getInt("long-jump.look-interval-ticks", 4));
+        this.lookTask = Bukkit.getScheduler().runTaskTimer(this.plugin, this::tickLooks, interval, interval);
+    }
+
+    public void stop() {
+        if (this.lookTask != null) {
+            this.lookTask.cancel();
+            this.lookTask = null;
+        }
+    }
+
     public void tryJump(Player player, Material plate) {
+        tryJump(player, plate, player.getLocation().getBlock().getLocation());
+    }
+
+    public void tryJump(Player player, Material plate, Location block) {
         if (!this.plugin.configs().mechanics().getBoolean("long-jump.enabled", true)) {
             return;
         }
+        if (this.plugin.configs().mechanics().getBoolean("long-jump.look-required", false) && !lookingAt(player, block)) {
+            return;
+        }
+        ConfigurationSection section = sectionOf(plate, block);
+        if (section == null) {
+            return;
+        }
+        launch(player, section);
+    }
+
+    public void tickLooks() {
+        if (!this.plugin.configs().mechanics().getBoolean("long-jump.look-trigger", true)) {
+            return;
+        }
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Block target = lookingBlock(player);
+            if (target == null) {
+                continue;
+            }
+            tryJump(player, target.getType(), target.getLocation());
+        }
+    }
+
+    public Block lookingBlock(Player player) {
+        double range = this.plugin.configs().mechanics().getDouble("long-jump.look-range", 3.5D);
+        RayTraceResult hit = player.rayTraceBlocks(range, FluidCollisionMode.NEVER);
+        return hit == null ? null : hit.getHitBlock();
+    }
+
+    public void bindLooking(Player player, String preset) {
+        Block target = lookingBlock(player);
+        if (target == null) {
+            this.plugin.messages().send(player, "long-jump.not-looking");
+            return;
+        }
+        ConfigurationSection plates = this.plugin.configs().mechanics().getConfigurationSection("long-jump.plates." + preset);
+        if (plates == null) {
+            this.plugin.messages().send(player, "long-jump.unknown-preset", Map.of("preset", preset));
+            return;
+        }
+        String key = locationKey(target.getLocation());
+        String path = "long-jump.locations." + key;
+        this.plugin.configs().mechanics().set(path + ".horizontal", plates.getDouble("horizontal", 2.0D));
+        this.plugin.configs().mechanics().set(path + ".vertical", plates.getDouble("vertical", 0.8D));
+        this.plugin.configs().mechanics().set(path + ".use-player-direction", plates.getBoolean("use-player-direction", true));
+        this.plugin.configs().mechanics().set(path + ".material", target.getType().name());
+        this.plugin.configs().saveMechanics();
+        this.plugin.messages().send(player, "long-jump.bound", Map.of(
+                "preset", preset,
+                "block", key
+        ));
+    }
+
+    public void unbindLooking(Player player) {
+        Block target = lookingBlock(player);
+        if (target == null) {
+            this.plugin.messages().send(player, "long-jump.not-looking");
+            return;
+        }
+        String key = locationKey(target.getLocation());
+        this.plugin.configs().mechanics().set("long-jump.locations." + key, null);
+        this.plugin.configs().saveMechanics();
+        this.plugin.messages().send(player, "long-jump.unbound", Map.of("block", key));
+    }
+
+    public void info(CommandSender sender, Player player) {
+        Block target = lookingBlock(player);
+        if (target == null) {
+            this.plugin.messages().send(sender, "long-jump.not-looking");
+            return;
+        }
+        this.plugin.messages().send(sender, "long-jump.info", Map.of(
+                "block", locationKey(target.getLocation()),
+                "material", target.getType().name()
+        ));
+    }
+
+    public void unload(UUID uuid) {
+        this.cooldown.remove(uuid);
+    }
+
+    private ConfigurationSection sectionOf(Material plate, Location block) {
+        if (block != null && block.getWorld() != null) {
+            ConfigurationSection location = this.plugin.configs().mechanics()
+                    .getConfigurationSection("long-jump.locations." + locationKey(block));
+            if (location != null) {
+                return location;
+            }
+        }
         ConfigurationSection plates = this.plugin.configs().mechanics().getConfigurationSection("long-jump.plates");
         if (plates == null) {
-            return;
+            return null;
         }
         for (String key : plates.getKeys(false)) {
             ConfigurationSection section = plates.getConfigurationSection(key);
@@ -39,12 +157,12 @@ public final class LongJumpService {
                 continue;
             }
             List<String> worlds = section.getStringList("worlds");
-            if (!worlds.isEmpty() && (player.getWorld() == null || !worlds.contains(player.getWorld().getName()))) {
+            if (!worlds.isEmpty() && (block == null || block.getWorld() == null || !worlds.contains(block.getWorld().getName()))) {
                 continue;
             }
-            launch(player, section);
-            return;
+            return section;
         }
+        return null;
     }
 
     private void launch(Player player, ConfigurationSection section) {
@@ -81,7 +199,17 @@ public final class LongJumpService {
         );
     }
 
-    public void unload(UUID uuid) {
-        this.cooldown.remove(uuid);
+    private boolean lookingAt(Player player, Location block) {
+        Block target = lookingBlock(player);
+        return target != null && block != null
+                && target.getWorld() != null && block.getWorld() != null
+                && target.getWorld().equals(block.getWorld())
+                && target.getX() == block.getBlockX()
+                && target.getY() == block.getBlockY()
+                && target.getZ() == block.getBlockZ();
+    }
+
+    private static String locationKey(Location location) {
+        return location.getWorld().getName() + "," + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ();
     }
 }

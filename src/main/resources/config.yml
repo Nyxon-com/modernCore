@@ -31,6 +31,9 @@ commands:
   weatherlock: weatherlock
   weatherlock-aliases:
     - wlock
+  timelock: timelock
+  timelock-aliases:
+    - tlock
   home: home
   home-aliases: []
   sethome: sethome
@@ -63,8 +66,11 @@ commands:
   fly: fly
   fly-aliases: []
   kick: kick
+  kick-aliases: []
   ban: ban
+  ban-aliases: []
   banlist: banlist
+  banlist-aliases: []
   unban: unban
   unban-aliases: []
   ipban: ipban
@@ -115,6 +121,10 @@ commands:
   portal: portal
   portal-aliases:
     - portals
+  pressureplayerjump: pressureplayerjump
+  pressureplayerjump-aliases:
+    - ppjump
+    - longjump
 
 permissions:
   admin: valary.admin
@@ -123,6 +133,7 @@ permissions:
   spawn-others: valary.spawn.others
   setspawn: valary.setspawn
   weatherlock: valary.weather.lock
+  timelock: valary.time.lock
   home: valary.home
   sethome: valary.home.set
   delhome: valary.home.delete
@@ -172,6 +183,7 @@ permissions:
   feed: valary.feed
   feed-others: valary.feed.others
   portal: valary.portal
+  pressureplayerjump: valary.pressureplayerjump
 
 sounds:
   teleport-success: ENTITY_ENDERMAN_TELEPORT

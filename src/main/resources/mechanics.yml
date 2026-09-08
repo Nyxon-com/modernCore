@@ -4,39 +4,57 @@
 #
 # LimitY: mondi senza sezione = nessun limite. Bypass: valary.limity.bypass
 # /limity <min> <max> [mondo] scrive qui.
+#   commands            lista ActionCommands al superamento Y
+#   teleport-spawn      true = tp spawn mondo (default true se commands è vuoto)
 #
 # Portali: cubo pos1-pos2 nel world. Si attiva ENTRANDO (non ogni tick).
-# /portal pos1|pos2|dest|create|item|enable|disable|delete|list scrive qui.
+# /portal wand dà l'item. Destro = pos1, Shift+destro = pos2, Shift+sinistro = dest.
+# /portal command <nome> <comando> aggiunge un'azione (stessa sintassi GUI).
 #   item.material       vanilla richiesto in inventario (AIR / vuoto = nessun item)
-#   item.mmoitem-type   + mmoitem-id = richiede quell'MMOItem (stesso TYPE/ID di /mi give)
+#   item.mmoitem-type   + mmoitem-id = richiede quell'MMOItem
 #   item.consume        true = toglie amount copie
-#   permission          vuoto = tutti
-#   enabled: false sul portale example di default
+#   commands            eseguite all'ingresso. Destinazione opzionale se ci sono solo comandi
 #
 # Long-jump: material = blocco pressure plate. worlds: [] = tutti i mondi
-# Hologram a terra: max-holograms evita lag con tanti drop (100+ player)
+# look-trigger: salta anche mirando la plate. look-required: lo step richiede lo sguardo
+# /pressureplayerjump set <preset> associa IL blocco mirato a un preset
+#
+# Hologram a terra: font piccolo + countdown despawn. show-lore = lore dell'item
 # =============================================================================
 
 limity:
   enabled: true
   check-interval-ticks: 10
   notify-cooldown-millis: 3000
+  command-cooldown-millis: 3000
   worlds:
     world:
       min: -64
       max: 320
+      teleport-spawn: false
+      commands:
+        - "[player] spawn"
+        - "[message] <red>Sei uscito dal limite Y ({min} → {max})"
     world_nether:
       min: 0
       max: 127
+      teleport-spawn: true
+      commands: []
 
 ground-items:
   enabled: true
   show-name: true
-  show-lore: true
+  show-lore: false
+  show-despawn: true
+  despawn-seconds: 300
+  update-interval-ticks: 20
+  scale: 0.45
+  font: minecraft:uniform
   max-lore-lines: 4
   max-holograms: 80
   name-format: "<white>{name} <gray>x{amount}"
   lore-format: "<dark_gray>{line}"
+  despawn-format: "<dark_gray>{seconds}s"
   background: 1073741824
   see-through: true
   line-width: 200
@@ -46,10 +64,32 @@ copycoord:
 
 checkdeath:
   teleport: false
+  gui:
+    title: "<dark_gray>Morte <white>{player}"
+    rows: 6
+
+deaths:
+  enabled: true
+  hide-vanilla: true
+  messages:
+    default: "<gray>{player} è morto <dark_gray>({cause})"
+    PLAYER: "<gray>{player} è stato ucciso da <white>{killer}"
+    ENTITY_ATTACK: "<gray>{player} è stato ucciso da <white>{killer}"
+    FALL: "<gray>{player} è caduto da troppa altezza"
+    VOID: "<gray>{player} è caduto nel vuoto"
+    LAVA: "<gray>{player} è morto nella lava"
+    DROWNING: "<gray>{player} è annegato"
+    FIRE: "<gray>{player} è bruciato"
+    FIRE_TICK: "<gray>{player} è bruciato"
+    MAGIC: "<gray>{player} è morto per magia"
 
 long-jump:
   enabled: true
   cooldown-millis: 800
+  look-trigger: true
+  look-required: false
+  look-range: 3.5
+  look-interval-ticks: 4
   sound: ENTITY_WIND_CHARGE_WIND_BURST
   plates:
     gold:
@@ -64,6 +104,16 @@ long-jump:
       horizontal: 1.6
       vertical: 0.55
       worlds: []
+  locations: {}
+
+portal-wand:
+  material: BLAZE_ROD
+  name: "<light_purple>Wand portale"
+  lore:
+    - "<gray>Destro: pos1"
+    - "<gray>Shift+destro: pos2"
+    - "<gray>Shift+sinistro: dest"
+  glow: true
 
 portals:
   example:
@@ -84,13 +134,12 @@ portals:
       z: 100.5
       yaw: 0.0
       pitch: 0.0
+    commands:
+      - "[message] <gray>Portale example"
     item:
       material: ENDER_PEARL
-      # Per un MMOItem: lascia material oppure usalo come fallback, e setta:
       mmoitem-type: ""
       mmoitem-id: ""
-      # mmoitem-type: CONSUMABLE
-      # mmoitem-id: DUNGEON_KEY
       consume: true
       amount: 1
     permission: ""

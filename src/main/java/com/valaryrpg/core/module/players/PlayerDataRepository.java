@@ -2,7 +2,6 @@ package com.valaryrpg.core.module.players;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.storage.StorageException;
-import com.valaryrpg.core.storage.StoredLocation;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -131,8 +130,20 @@ public final class PlayerDataRepository {
         }
     }
 
-    public void saveDeath(UUID uuid, String world, double x, double y, double z, float yaw, float pitch, long at) {
-        String sql = "UPDATE " + table() + " SET death_world=?, death_x=?, death_y=?, death_z=?, death_yaw=?, death_pitch=?, death_at=? WHERE uuid=?";
+    public void saveDeath(
+            UUID uuid,
+            String world,
+            double x,
+            double y,
+            double z,
+            float yaw,
+            float pitch,
+            long at,
+            String cause,
+            String killer,
+            String inventory
+    ) {
+        String sql = "UPDATE " + table() + " SET death_world=?, death_x=?, death_y=?, death_z=?, death_yaw=?, death_pitch=?, death_at=?, death_cause=?, death_killer=?, death_inventory=? WHERE uuid=?";
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, world);
@@ -142,15 +153,19 @@ public final class PlayerDataRepository {
             statement.setFloat(5, yaw);
             statement.setFloat(6, pitch);
             statement.setLong(7, at);
-            statement.setString(8, uuid.toString());
+            statement.setString(8, cause == null ? "" : cause);
+            statement.setString(9, killer == null ? "" : killer);
+            statement.setString(10, inventory == null ? "" : inventory);
+            statement.setString(11, uuid.toString());
             statement.executeUpdate();
         } catch (SQLException exception) {
             throw new StorageException("Salvataggio morte fallito.", exception);
         }
     }
 
-    public Optional<StoredLocation> lastDeath(UUID uuid) {
-        String sql = "SELECT death_world, death_x, death_y, death_z, death_yaw, death_pitch FROM " + table() + " WHERE uuid = ? AND death_world IS NOT NULL";
+    public Optional<DeathSnapshot> lastDeath(UUID uuid) {
+        String sql = "SELECT death_world, death_x, death_y, death_z, death_yaw, death_pitch, death_at, death_cause, death_killer, death_inventory FROM "
+                + table() + " WHERE uuid = ? AND death_world IS NOT NULL";
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, uuid.toString());
@@ -158,20 +173,27 @@ public final class PlayerDataRepository {
                 if (!result.next()) {
                     return Optional.empty();
                 }
-                return Optional.of(new StoredLocation(
+                return Optional.of(new DeathSnapshot(
                         uuid,
-                        "death",
                         result.getString("death_world"),
                         result.getDouble("death_x"),
                         result.getDouble("death_y"),
                         result.getDouble("death_z"),
                         result.getFloat("death_yaw"),
-                        result.getFloat("death_pitch")
+                        result.getFloat("death_pitch"),
+                        result.getLong("death_at"),
+                        empty(result.getString("death_cause")),
+                        empty(result.getString("death_killer")),
+                        empty(result.getString("death_inventory"))
                 ));
             }
         } catch (SQLException exception) {
             throw new StorageException("Lettura morte fallita.", exception);
         }
+    }
+
+    private static String empty(String value) {
+        return value == null ? "" : value;
     }
 
     private void updateColumn(UUID uuid, String column, String value) {

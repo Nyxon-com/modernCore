@@ -55,13 +55,13 @@ public final class ModerationService {
             target.online.kick(this.plugin.messages().component("moderation.ban-screen", Map.of(
                     "reason", this.plugin.messages().escape(finalReason),
                     "staff", this.plugin.messages().escape(staff.getName()),
-                    "duration", Durations.formatRemaining(expiry)
+                    "duration", Durations.formatRemaining(this.plugin, expiry)
             )));
         }
         this.plugin.messages().send(staff, "moderation.ban-staff", Map.of(
                 "player", target.name,
                 "reason", this.plugin.messages().escape(finalReason),
-                "duration", Durations.formatRemaining(expiry)
+                "duration", Durations.formatRemaining(this.plugin, expiry)
         ));
     }
 
@@ -88,7 +88,7 @@ public final class ModerationService {
             if (bannedIp.equals(ip(player))) {
                 player.kick(this.plugin.messages().component("moderation.ipban-screen", Map.of(
                         "reason", this.plugin.messages().escape(finalReason),
-                        "duration", Durations.formatRemaining(expiry)
+                        "duration", Durations.formatRemaining(this.plugin, expiry)
                 )));
             }
         }
@@ -96,7 +96,7 @@ public final class ModerationService {
                 "target", name,
                 "ip", ip,
                 "reason", this.plugin.messages().escape(finalReason),
-                "duration", Durations.formatRemaining(expiry)
+                "duration", Durations.formatRemaining(this.plugin, expiry)
         ));
     }
 
@@ -123,13 +123,13 @@ public final class ModerationService {
         if (target.online != null) {
             this.plugin.messages().send(target.online, "moderation.mute-target", Map.of(
                     "reason", this.plugin.messages().escape(finalReason),
-                    "duration", Durations.formatRemaining(expiry)
+                    "duration", Durations.formatRemaining(this.plugin, expiry)
             ));
         }
         this.plugin.messages().send(staff, "moderation.mute-staff", Map.of(
                 "player", target.name,
                 "reason", this.plugin.messages().escape(finalReason),
-                "duration", Durations.formatRemaining(expiry)
+                "duration", Durations.formatRemaining(this.plugin, expiry)
         ));
     }
 
@@ -153,7 +153,7 @@ public final class ModerationService {
     public void warn(CommandSender staff, String targetName, String reason) {
         Target target = resolve(targetName);
         String finalReason = reasonOrDefault(reason, "warn.default-reason");
-        this.repository.insert(PunishmentType.WARN, target.uuid, target.name, target.ip, staff.getName(), finalReason, System.currentTimeMillis());
+        this.repository.insert(PunishmentType.WARN, target.uuid, target.name, target.ip, staff.getName(), finalReason, null);
         if (target.online != null) {
             this.plugin.messages().send(target.online, "moderation.warn-target", Map.of(
                     "reason", this.plugin.messages().escape(finalReason),
@@ -203,27 +203,64 @@ public final class ModerationService {
     }
 
     public void dupeIp(CommandSender staff, String target) {
-        String ip;
-        if (looksLikeIp(target)) {
-            ip = target;
-        } else {
-            Player online = Bukkit.getPlayerExact(target);
-            if (online != null) {
-                ip = ip(online);
+        Tasks.async(this.plugin, () -> {
+            String ip;
+            if (looksLikeIp(target)) {
+                ip = target;
             } else {
-                Target resolved = resolve(target);
-                ip = resolved.uuid != null ? this.players.lastIp(resolved.uuid) : "";
+                Player online = Bukkit.getPlayerExact(target);
+                if (online != null) {
+                    ip = ip(online);
+                } else {
+                    Target resolved = resolve(target);
+                    ip = resolved.uuid != null ? this.players.lastIp(resolved.uuid) : "";
+                }
             }
+            if (ip == null || ip.isBlank()) {
+                Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "moderation.dupeip-missing", Map.of("player", target)));
+                return;
+            }
+            java.util.List<String> names = this.players.namesByIp(ip);
+            String listed = names.isEmpty() ? "-" : String.join(", ", names);
+            java.util.List<String> lines = new java.util.ArrayList<>();
+            for (String name : names) {
+                lines.add(statusOf(name, ip));
+            }
+            Tasks.sync(this.plugin, () -> {
+                this.plugin.messages().send(staff, "moderation.dupeip", Map.of(
+                        "ip", ip,
+                        "players", listed
+                ));
+                for (int i = 0; i < names.size(); i++) {
+                    this.plugin.messages().send(staff, "moderation.dupeip-line", Map.of(
+                            "player", names.get(i),
+                            "status", lines.get(i)
+                    ));
+                }
+            });
+        });
+    }
+
+    private String statusOf(String name, String ip) {
+        Target resolved = resolve(name);
+        java.util.List<String> flags = new java.util.ArrayList<>();
+        flags.add(resolved.online != null
+                ? this.plugin.messages().text("moderation.status-online")
+                : this.plugin.messages().text("moderation.status-offline"));
+        if (this.repository.active(PunishmentType.BAN, resolved.uuid, resolved.name, ip).isPresent()) {
+            flags.add(this.plugin.messages().text("moderation.status-banned"));
         }
-        if (ip == null || ip.isBlank()) {
-            this.plugin.messages().send(staff, "moderation.dupeip-missing", Map.of("player", target));
-            return;
+        if (this.repository.active(PunishmentType.IPBAN, resolved.uuid, resolved.name, ip).isPresent()) {
+            flags.add(this.plugin.messages().text("moderation.status-ipban"));
         }
-        java.util.List<String> names = this.players.namesByIp(ip);
-        this.plugin.messages().send(staff, "moderation.dupeip", Map.of(
-                "ip", ip,
-                "players", names.isEmpty() ? "-" : String.join(", ", names)
-        ));
+        if (this.repository.active(PunishmentType.MUTE, resolved.uuid, resolved.name, ip).isPresent()) {
+            flags.add(this.plugin.messages().text("moderation.status-muted"));
+        }
+        int warns = this.repository.history(resolved.uuid, resolved.name, PunishmentType.WARN).size();
+        if (warns > 0) {
+            flags.add(this.plugin.messages().text("moderation.status-warns", Map.of("count", String.valueOf(warns))));
+        }
+        return String.join(" ", flags);
     }
 
     public Optional<Punishment> loginBlock(UUID uuid, String name, String ip) {
@@ -261,7 +298,7 @@ public final class ModerationService {
         if (reason != null && !reason.isBlank()) {
             return reason.trim();
         }
-        return this.plugin.configs().moderation().getString(configKey, "No reason");
+        return this.plugin.configs().moderation().getString(configKey, this.plugin.messages().text("moderation.default-reason"));
     }
 
     private Long parseExpiry(String durationRaw) {

@@ -47,6 +47,7 @@ permissions:
       valary.spawn.others: true
       valary.setspawn: true
       valary.weather.lock: true
+      valary.time.lock: true
       valary.home.unlimited: true
       valary.warp.others: true
       valary.warp.set: true
@@ -80,6 +81,7 @@ permissions:
       valary.heal.others: true
       valary.feed.others: true
       valary.portal: true
+      valary.pressureplayerjump: true
   valary.reload:
     description: Ricarica i file di configurazione
     default: op
@@ -94,6 +96,9 @@ permissions:
     default: op
   valary.weather.lock:
     description: Blocca o sblocca il meteo di un mondo
+    default: op
+  valary.time.lock:
+    description: Blocca o sblocca l'ora di un mondo
     default: op
   valary.home:
     description: Usa /home e /homes
@@ -256,4 +261,7 @@ permissions:
     default: op
   valary.portal:
     description: Usa /portal
+    default: op
+  valary.pressureplayerjump:
+    description: Usa /pressureplayerjump
     default: op

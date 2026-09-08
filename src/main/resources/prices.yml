@@ -68,3 +68,22 @@ worth:
 mmoitems:
   # SWORD.STEEL_SWORD: 40.0
   # CONSUMABLE.HEALTH_POTION: 5.0
+
+# Reward custom (priorità su worth/mmoitems). money può essere 0.
+# commands: stessa sintassi GUI. items: come i kit. {amount} = quantità venduta
+custom: {}
+# esempio:
+#   dungeon_token:
+#     mmoitem-type: CONSUMABLE
+#     mmoitem-id: DUNGEON_TOKEN
+#     money: 5.0
+#     xp: 2
+#     commands:
+#       - "[message] <gray>Venduti {amount} token"
+#     items: []
+#   gold_nugget:
+#     material: GOLD_NUGGET
+#     money: 1.0
+#     xp: 0
+#     commands: []
+#     items: []

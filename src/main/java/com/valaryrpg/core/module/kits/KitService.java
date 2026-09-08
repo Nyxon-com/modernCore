@@ -128,7 +128,7 @@ public final class KitService {
         if (closeSlot >= 0 && closeSlot < inventory.getSize()) {
             ConfigurationSection close = preview == null ? null : preview.getConfigurationSection("close");
             inventory.setItem(closeSlot, close == null
-                    ? named(Material.BARRIER, "<red>Chiudi")
+                    ? named(Material.BARRIER, this.plugin.messages().text("kits.preview-close-name"))
                     : PanelItems.from(this.plugin, close, player));
         }
         player.openInventory(inventory);

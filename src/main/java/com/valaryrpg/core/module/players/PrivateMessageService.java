@@ -12,7 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Messaggi privati stile CMI: /msg, /r e socialspy.
+ * Messaggi privati: /msg, /r e socialspy.
  */
 public final class PrivateMessageService {
 

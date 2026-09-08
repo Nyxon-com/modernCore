@@ -39,13 +39,21 @@ public final class MessageService {
         return this.miniMessage.escapeTags(text == null ? "" : text);
     }
 
-    public Component component(String key, Map<String, String> placeholders) {
+    public String text(String key) {
+        return text(key, Map.of());
+    }
+
+    public String text(String key, Map<String, String> placeholders) {
         String raw = this.plugin.configs().messages().getString(key, "<red>Messaggio mancante: " + key);
         String prefix = this.plugin.configs().root().getString("plugin.prefix", "");
         raw = raw.replace("{prefix}", prefix);
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
             raw = raw.replace("{" + entry.getKey() + "}", entry.getValue());
         }
-        return this.miniMessage.deserialize(raw);
+        return raw;
+    }
+
+    public Component component(String key, Map<String, String> placeholders) {
+        return this.miniMessage.deserialize(text(key, placeholders));
     }
 }

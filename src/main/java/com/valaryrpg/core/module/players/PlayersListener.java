@@ -1,7 +1,7 @@
 package com.valaryrpg.core.module.players;
 
 import com.valaryrpg.core.ValaryCorePlugin;
-import com.valaryrpg.core.storage.StoredLocation;
+import com.valaryrpg.core.module.players.DeathSnapshot;
 import com.valaryrpg.core.util.Tasks;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -88,12 +88,12 @@ public final class PlayersListener implements Listener {
         }
         UUID uuid = player.getUniqueId();
         Tasks.async(this.plugin, () -> {
-            Optional<StoredLocation> death = this.repository.lastDeath(uuid);
+            Optional<DeathSnapshot> death = this.repository.lastDeath(uuid);
             Tasks.sync(this.plugin, () -> {
                 if (!player.isOnline() || this.plugin.lastLocations().peek(uuid).isPresent()) {
                     return;
                 }
-                death.map(StoredLocation::toLocation).ifPresent(location -> this.plugin.lastLocations().put(uuid, location));
+                death.map(DeathSnapshot::toLocation).ifPresent(location -> this.plugin.lastLocations().put(uuid, location));
             });
         });
     }
