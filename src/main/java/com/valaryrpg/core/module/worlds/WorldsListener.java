@@ -1,6 +1,7 @@
 package com.valaryrpg.core.module.worlds;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -33,20 +34,16 @@ public final class WorldsListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onWeatherChange(WeatherChangeEvent event) {
-        if (!this.weather.isLocked(event.getWorld())) {
-            return;
+        if (!this.weather.allowsWeatherChange(event.getWorld(), event.toWeatherState())) {
+            event.setCancelled(true);
         }
-        event.setCancelled(true);
-        this.weather.apply(event.getWorld());
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onThunderChange(ThunderChangeEvent event) {
-        if (!this.weather.isLocked(event.getWorld())) {
-            return;
+        if (!this.weather.allowsThunderChange(event.getWorld(), event.toThunderState())) {
+            event.setCancelled(true);
         }
-        event.setCancelled(true);
-        this.weather.apply(event.getWorld());
     }
 
     @EventHandler
@@ -68,9 +65,9 @@ public final class WorldsListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
-        World world = this.spawns.resolveWorld(player);
-        if (world != null) {
-            player.teleportAsync(this.spawns.locationOf(world));
+        Location destination = this.spawns.spawnLocation(player);
+        if (destination != null) {
+            player.teleportAsync(destination);
         }
     }
 
@@ -97,9 +94,9 @@ public final class WorldsListener implements Listener {
         if (event.isBedSpawn() || event.isAnchorSpawn()) {
             return;
         }
-        World world = this.spawns.resolveWorld(event.getPlayer());
-        if (world != null) {
-            event.setRespawnLocation(this.spawns.locationOf(world));
+        Location destination = this.spawns.spawnLocation(event.getPlayer());
+        if (destination != null) {
+            event.setRespawnLocation(destination);
         }
     }
 

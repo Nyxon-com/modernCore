@@ -1,5 +1,5 @@
 # =============================================================================
-# Mondi: spawn indipendenti, blocco meteo e catalogo stile Multiverse-Core.
+# Mondi: spawn globale (/setspawn + /spawn), lock meteo/ora, catalogo Multiverse.
 # All'avvio (e su WorldLoad) i mondi Bukkit/MV vengono scritti in `worlds:`
 # SOLO se la chiave manca: i valori già presenti non vengono sovrascritti.
 # Poi le opzioni vengono applicate (pvp, difficulty, spawn, keep-spawn, auto-heal).
@@ -7,7 +7,8 @@
 
 settings:
   default-world: world
-  use-current-world-spawn: true
+  # true = join/respawn usano lo spawn del mondo in cui sei. /spawn è SEMPRE globale.
+  use-current-world-spawn: false
   spawn-on-join: false
   spawn-on-respawn: true
   warmup-seconds: 0
@@ -15,7 +16,18 @@ settings:
   teleport-sound: true
   import-on-start: true
 
-# spawn per mondo. Se assente, viene usato World#getSpawnLocation().
+# Spawn globale: /setspawn lo scrive, /spawn ci porta da qualsiasi mondo.
+# spawn: {}
+# esempio dopo /setspawn:
+# spawn:
+#   world: cacca
+#   x: 0.5
+#   y: 64.0
+#   z: 0.5
+#   yaw: 0.0
+#   pitch: 0.0
+
+# spawn per mondo (LimitY, spawn vanilla del mondo). Se assente: World#getSpawnLocation().
 spawns: {}
 # esempio:
 #   world:

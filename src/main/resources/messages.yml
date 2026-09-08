@@ -21,11 +21,11 @@ reload:
   failed: "{prefix} <red>Reload fallito. Controlla la console. <gray>({error})"
 
 spawn:
-  teleported: "{prefix} <gray>Sei stato teletrasportato allo spawn di <white>{world}</white>."
-  teleported-other: "{prefix} <gray>Hai teletrasportato <white>{target}</white> allo spawn di <white>{world}</white>."
+  teleported: "{prefix} <gray>Sei stato teletrasportato allo spawn <gray>(<white>{world}</white>)."
+  teleported-other: "{prefix} <gray>Hai teletrasportato <white>{target}</white> allo spawn <gray>(<white>{world}</white>)."
   teleported-by-staff: "{prefix} <gray>Sei stato teletrasportato allo spawn da <white>{player}</white>."
-  not-set: "{prefix} <yellow>Spawn non configurato per <white>{world}</white><yellow>, uso lo spawn di default del mondo."
-  set: "{prefix} <green>Spawn di <white>{world}</white> impostato a <white>{x}</white>, <white>{y}</white>, <white>{z}</white>."
+  not-set: "{prefix} <yellow>Spawn globale non impostato, uso lo spawn di default di <white>{world}</white>."
+  set: "{prefix} <green>Spawn globale impostato in <white>{world}</white> a <white>{x}</white>, <white>{y}</white>, <white>{z}</white>."
   warmup: "{prefix} <gray>Teletrasporto tra <white>{seconds}</white>s. Non muoverti."
   cancelled-move: "{prefix} <red>Teletrasporto annullato: ti sei mosso."
 

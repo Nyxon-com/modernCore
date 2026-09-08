@@ -45,8 +45,8 @@ MiniMessage: `<red>`, `<gradient:#8B5CF6:#EC4899>`, `&#FF00AA`, `<lang:item.mine
 
 ## Mondi e spawn
 
-- `/setspawn` — spawn del mondo in cui sei
-- `/spawn` — tp al tuo mondo (o default). `/spawn <player>` con `valary.spawn.others`
+- `/setspawn` — imposta **lo** spawn (un solo punto, nel mondo in cui sei)
+- `/spawn` — ti porta lì da qualsiasi mondo. `/spawn <player>` con `valary.spawn.others`
 - `/weatherlock <clear|rain|thunder|unlock> [mondo]`
 - `/timelock <day|noon|night|midnight|unlock> [mondo]` — blocca anche il ciclo giorno/notte (`GameRule.DO_DAYLIGHT_CYCLE`)
 

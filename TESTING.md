@@ -3,13 +3,13 @@
 Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun comando `/cmi`.
 
 ## 0. Avvio
-- [ ] Il plugin si abilita, storage SQLITE ok
-- [ ] Cartella `plugins/ValaryRPG-Core/` con tutti i YAML
-- [ ] Cancella una chiave da `messages.yml`, `/valary reload` → la chiave torna, i tuoi testi restano
-- [ ] Rinomina `config.yml` in modo da corromperlo, reload/restart → backup `*.broken.*.yml` + file nuovo
+- [x] Il plugin si abilita, storage SQLITE ok
+- [x] Cartella `plugins/ValaryRPG-Core/` con tutti i YAML
+- [x] Cancella una chiave da `messages.yml`, `/valary reload` → la chiave torna, i tuoi testi restano
+- [x] Rinomina `config.yml` in modo da corromperlo, reload/restart → backup `*.broken.*.yml` + file nuovo
 
 ## 1. Mondi
-- [ ] `/setspawn` nel overworld, `/spawn` ti riporta lì
+- [ ] `/setspawn` nel overworld, vai in un altro mondo, `/spawn` ti riporta al punto del `/setspawn` (non allo spawn del mondo in cui sei)
 - [ ] `/spawn <altro>` con permesso
 - [ ] `/weatherlock rain` → resta pioggia; `/weatherlock unlock`
 - [ ] `/timelock noon` → ora ferma; `/time add 1000` non deve avanzare; `/timelock unlock`

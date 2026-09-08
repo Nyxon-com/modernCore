@@ -40,8 +40,8 @@ public final class CommandService {
             Commands registrar = event.registrar();
             registrar.register(rootCommand(), "Comandi amministrativi ValaryRPG-Core", aliases("commands.root-aliases"));
             if (enabled("worlds")) {
-                registrar.register(spawnCommand(), "Teletrasporto allo spawn del mondo", aliases("commands.spawn-aliases"));
-                registrar.register(setSpawnCommand(), "Imposta lo spawn del mondo corrente", aliases("commands.setspawn-aliases"));
+                registrar.register(spawnCommand(), "Teletrasporto allo spawn globale", aliases("commands.spawn-aliases"));
+                registrar.register(setSpawnCommand(), "Imposta lo spawn globale", aliases("commands.setspawn-aliases"));
                 registrar.register(weatherLockCommand(), "Blocca o sblocca il meteo di un mondo", aliases("commands.weatherlock-aliases"));
                 registrar.register(timeLockCommand(), "Blocca o sblocca l'ora di un mondo", aliases("commands.timelock-aliases"));
             }

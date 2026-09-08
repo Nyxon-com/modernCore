@@ -71,6 +71,28 @@ public final class WeatherService {
         return lockOf(world.getName()) != null;
     }
 
+    public boolean allowsWeatherChange(World world, boolean raining) {
+        WeatherLock lock = lockOf(world.getName());
+        if (lock == null) {
+            return true;
+        }
+        return switch (lock) {
+            case CLEAR -> !raining;
+            case RAIN, THUNDER -> raining;
+        };
+    }
+
+    public boolean allowsThunderChange(World world, boolean thunder) {
+        WeatherLock lock = lockOf(world.getName());
+        if (lock == null) {
+            return true;
+        }
+        return switch (lock) {
+            case CLEAR, RAIN -> !thunder;
+            case THUNDER -> thunder;
+        };
+    }
+
     public void lock(World world, WeatherLock type) {
         FileConfiguration yaml = this.plugin.configs().worlds();
         String path = "weather." + world.getName();
@@ -94,21 +116,33 @@ public final class WeatherService {
         return WeatherLock.from(section.getString("type", "CLEAR"));
     }
 
-    private static void applyType(World world, WeatherLock type) {
+    private void applyType(World world, WeatherLock type) {
         switch (type) {
             case CLEAR -> {
-                world.setStorm(false);
-                world.setThundering(false);
+                if (world.hasStorm()) {
+                    world.setStorm(false);
+                }
+                if (world.isThundering()) {
+                    world.setThundering(false);
+                }
                 world.setClearWeatherDuration(Integer.MAX_VALUE);
             }
             case RAIN -> {
-                world.setStorm(true);
-                world.setThundering(false);
+                if (!world.hasStorm()) {
+                    world.setStorm(true);
+                }
+                if (world.isThundering()) {
+                    world.setThundering(false);
+                }
                 world.setWeatherDuration(Integer.MAX_VALUE);
             }
             case THUNDER -> {
-                world.setStorm(true);
-                world.setThundering(true);
+                if (!world.hasStorm()) {
+                    world.setStorm(true);
+                }
+                if (!world.isThundering()) {
+                    world.setThundering(true);
+                }
                 world.setWeatherDuration(Integer.MAX_VALUE);
                 world.setThunderDuration(Integer.MAX_VALUE);
             }

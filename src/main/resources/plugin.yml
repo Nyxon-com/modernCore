@@ -66,13 +66,13 @@ permissions:
     description: Ricarica i file di configurazione
     default: op
   valary.spawn:
-    description: Teletrasporto allo spawn del mondo
+    description: Teletrasporto allo spawn globale
     default: true
   valary.spawn.others:
     description: Teletrasporta altri giocatori allo spawn
     default: op
   valary.setspawn:
-    description: Imposta lo spawn del mondo corrente
+    description: Imposta lo spawn globale
     default: op
   valary.weather.lock:
     description: Blocca o sblocca il meteo di un mondo

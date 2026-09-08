@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Spawn indipendente per ogni mondo, persistito in worlds.yml.
+ * Spawn globale da /setspawn: /spawn ci porta da qualsiasi mondo.
  */
 public final class SpawnService {
 
@@ -35,12 +35,9 @@ public final class SpawnService {
         }
 
         FileConfiguration yaml = this.plugin.configs().worlds();
-        String path = "spawns." + world.getName();
-        yaml.set(path + ".x", location.getX());
-        yaml.set(path + ".y", location.getY());
-        yaml.set(path + ".z", location.getZ());
-        yaml.set(path + ".yaw", location.getYaw());
-        yaml.set(path + ".pitch", location.getPitch());
+        writeLocation(yaml, "spawn", world.getName(), location);
+        writeLocation(yaml, "spawns." + world.getName(), null, location);
+        yaml.set("settings.default-world", world.getName());
         this.plugin.configs().saveWorlds();
         world.setSpawnLocation(location);
 
@@ -54,15 +51,15 @@ public final class SpawnService {
     }
 
     public void teleport(CommandSender initiator, Player target) {
-        World world = resolveWorld(target);
-        if (world == null) {
+        Location destination = globalLocation();
+        if (destination == null || destination.getWorld() == null) {
             this.plugin.messages().send(initiator, "general.invalid-world", Map.of(
                     "world", this.plugin.configs().worlds().getString("settings.default-world", "world")
             ));
             return;
         }
 
-        Location destination = locationOf(world);
+        World world = destination.getWorld();
         boolean staffTeleport = initiator != target;
         int warmup = staffTeleport ? 0 : this.plugin.configs().worlds().getInt("settings.warmup-seconds", 0);
 
@@ -92,32 +89,53 @@ public final class SpawnService {
         if (section == null) {
             return world.getSpawnLocation().clone().add(0.5, 0.0, 0.5);
         }
-        return new Location(
-                world,
-                section.getDouble("x"),
-                section.getDouble("y"),
-                section.getDouble("z"),
-                (float) section.getDouble("yaw"),
-                (float) section.getDouble("pitch")
-        );
+        return locationFrom(section, world);
+    }
+
+    /**
+     * Join/respawn: spawn del mondo attuale solo se use-current-world-spawn è true.
+     * Altrimenti lo spawn globale di /setspawn.
+     */
+    public Location spawnLocation(Player player) {
+        FileConfiguration yaml = this.plugin.configs().worlds();
+        if (yaml.getBoolean("settings.use-current-world-spawn", false) && player.getWorld() != null) {
+            return locationOf(player.getWorld());
+        }
+        return globalLocation();
     }
 
     public World resolveWorld(Player player) {
-        FileConfiguration yaml = this.plugin.configs().worlds();
-        if (yaml.getBoolean("settings.use-current-world-spawn", true) && player.getWorld() != null) {
-            return player.getWorld();
-        }
-        String defaultWorld = yaml.getString("settings.default-world", "world");
-        return Bukkit.getWorld(defaultWorld);
+        Location location = spawnLocation(player);
+        return location == null ? null : location.getWorld();
     }
 
     public void cancelWarmup(UUID uuid) {
         this.warmupOrigin.remove(uuid);
     }
 
+    private Location globalLocation() {
+        FileConfiguration yaml = this.plugin.configs().worlds();
+        ConfigurationSection section = yaml.getConfigurationSection("spawn");
+        if (section != null) {
+            String worldName = section.getString("world");
+            if (worldName != null && !worldName.isBlank()) {
+                World world = Bukkit.getWorld(worldName);
+                if (world != null) {
+                    return locationFrom(section, world);
+                }
+            }
+        }
+        String defaultWorld = yaml.getString("settings.default-world", "world");
+        World world = Bukkit.getWorld(defaultWorld);
+        if (world == null) {
+            return null;
+        }
+        return locationOf(world);
+    }
+
     private void completeTeleport(CommandSender initiator, Player target, World world, Location destination) {
         this.plugin.lastLocations().remember(target);
-        boolean custom = this.plugin.configs().worlds().contains("spawns." + world.getName());
+        boolean custom = this.plugin.configs().worlds().contains("spawn.world");
         if (!custom) {
             this.plugin.messages().send(initiator, "spawn.not-set", Map.of("world", world.getName()));
         }
@@ -139,6 +157,28 @@ public final class SpawnService {
                 ));
             }
         });
+    }
+
+    private static void writeLocation(FileConfiguration yaml, String path, String worldName, Location location) {
+        if (worldName != null) {
+            yaml.set(path + ".world", worldName);
+        }
+        yaml.set(path + ".x", location.getX());
+        yaml.set(path + ".y", location.getY());
+        yaml.set(path + ".z", location.getZ());
+        yaml.set(path + ".yaw", location.getYaw());
+        yaml.set(path + ".pitch", location.getPitch());
+    }
+
+    private static Location locationFrom(ConfigurationSection section, World world) {
+        return new Location(
+                world,
+                section.getDouble("x"),
+                section.getDouble("y"),
+                section.getDouble("z"),
+                (float) section.getDouble("yaw"),
+                (float) section.getDouble("pitch")
+        );
     }
 
     private static boolean moved(Location from, Location to) {
