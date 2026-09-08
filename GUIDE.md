@@ -23,19 +23,22 @@ Disattiva un modulo in `config.yml` → `modules.<id>: false`.
 
 ## File
 
-| File | Contenuto |
+I YAML stanno in cartelle, non tutti in root. Al primo avvio (o al reload) i file vecchi in root vengono spostati da soli.
+
+| Path | Contenuto |
 |---|---|
-| `config.yml` | moduli, nomi comandi, alias, nodi permesso, suoni |
-| `messages.yml` | tutti i testi MiniMessage |
+| `config.yml` | moduli, nomi comandi, alias, permessi, HUD teleport |
 | `storage.yml` | SQLITE / MYSQL / MARIADB |
-| `worlds.yml` | spawn, meteo lock, ora lock, catalogo mondi |
-| `homes.yml` | limiti home per gruppo |
-| `warps.yml` | elenco warp |
-| `players.yml` | join/quit, nick, msg, fly, heal/feed |
-| `moderation.yml` | motivi default, mute blocked-commands, vanish, layout invsee |
-| `mechanics.yml` | LimitY, hologram drop, morti, long-jump, portali |
-| `kits.yml` | GUI kit + contenuto kit |
-| `prices.yml` | GUI sell, prezzi vanilla/MMOItems, reward custom |
+| `lang/messages.yml` | tutti i testi MiniMessage |
+| `sounds/sounds.yml` | suoni (ID namespaced, volume, pitch) |
+| `modules/worlds.yml` | spawn, meteo lock, ora lock, catalogo mondi |
+| `modules/homes.yml` | limiti home, warmup/cooldown |
+| `modules/warps.yml` | elenco warp, warmup/cooldown |
+| `modules/players.yml` | join/quit, nick, msg, fly, heal/feed |
+| `modules/moderation.yml` | motivi default, mute, vanish, layout invsee |
+| `modules/mechanics.yml` | LimitY, hologram drop, morti, long-jump, portali |
+| `modules/kits.yml` | GUI kit + contenuto kit |
+| `modules/prices.yml` | GUI sell, prezzi vanilla/MMOItems, reward custom |
 
 Permessi: cambia il nodo in `config.yml` → `permissions.*`, non nel Java. Default in `plugin.yml`.
 
@@ -59,7 +62,10 @@ PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary
 ## Home e warp
 
 - `/sethome [nome]` `/home [nome]` `/delhome [nome]` `/homes`
-- Limite: permesso `valary.home.limit.<gruppo>` (vedi `homes.yml`). `valary.home.unlimited` = infinito
+- Limite: permesso `valary.home.limit.<gruppo>` (vedi `modules/homes.yml`). `valary.home.unlimited` = infinito
+- Warmup/cooldown in YAML; countdown in action bar (`config.yml` → `teleport.hud`). Bypass cooldown: `valary.teleport.cooldown.bypass`
+- Suoni in `sounds/sounds.yml` (volume/pitch/ID pack)
+- Niente virgolette nei nomi: messaggio `general.quotes` in `lang/messages.yml`
 - `/setwarp <nome>` `/warp <nome>` `/warp <nome> <player>` `/delwarp` `/warps`
 - Da console: `/warp <nome> <player>` (nick, non `@p`)
 
@@ -67,7 +73,7 @@ PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary
 
 ## Player
 
-- Join/quit in `messages.yml` → `join-quit.*`. Stringa vuota = nessun messaggio
+- Join/quit in `lang/messages.yml` → `join-quit.*`. Stringa vuota = nessun messaggio
 - `/nick <testo|off>` MiniMessage. Colori: `valary.nick.color`. Altri: `valary.nick.others`
 - `/msg` `/tell` `/w` `/whisper` `/m` (sostituiscono i vanilla) `/r` `/socialspy`
 - `/fly` `/god` `/heal` `/feed` `/back`

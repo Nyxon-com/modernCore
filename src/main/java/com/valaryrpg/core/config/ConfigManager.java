@@ -1,10 +1,11 @@
 package com.valaryrpg.core.config;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 /**
- * Carica e valida tutti i YAML del plugin.
+ * Carica i YAML: config/storage in root, testi in lang/, suoni in sounds/, moduli in modules/.
  */
 public final class ConfigManager {
 
@@ -12,6 +13,7 @@ public final class ConfigManager {
     private YamlFile root;
     private YamlFile messages;
     private YamlFile storage;
+    private YamlFile sounds;
     private YamlFile worlds;
     private YamlFile homes;
     private YamlFile warps;
@@ -27,16 +29,18 @@ public final class ConfigManager {
 
     public void loadAll() {
         this.root = load("config.yml");
-        this.messages = load("messages.yml");
         this.storage = load("storage.yml");
-        this.worlds = load("worlds.yml");
-        this.homes = load("homes.yml");
-        this.warps = load("warps.yml");
-        this.players = load("players.yml");
-        this.moderation = load("moderation.yml");
-        this.mechanics = load("mechanics.yml");
-        this.kits = load("kits.yml");
-        this.prices = load("prices.yml");
+        this.messages = load("lang/messages.yml");
+        this.sounds = load("sounds/sounds.yml");
+        this.worlds = load("modules/worlds.yml");
+        this.homes = load("modules/homes.yml");
+        this.warps = load("modules/warps.yml");
+        this.players = load("modules/players.yml");
+        this.moderation = load("modules/moderation.yml");
+        this.mechanics = load("modules/mechanics.yml");
+        this.kits = load("modules/kits.yml");
+        this.prices = load("modules/prices.yml");
+        migrateLegacySounds();
         this.plugin.getLogger().info("Configurazioni caricate.");
     }
 
@@ -50,6 +54,10 @@ public final class ConfigManager {
 
     public FileConfiguration storage() {
         return this.storage.config();
+    }
+
+    public FileConfiguration sounds() {
+        return this.sounds.config();
     }
 
     public FileConfiguration worlds() {
@@ -94,6 +102,27 @@ public final class ConfigManager {
 
     public void saveMechanics() {
         this.mechanics.save();
+    }
+
+    private void migrateLegacySounds() {
+        ConfigurationSection old = this.root.config().getConfigurationSection("sounds");
+        if (old == null) {
+            return;
+        }
+        boolean changed = false;
+        for (String key : old.getKeys(false)) {
+            if (this.sounds.config().contains(key)) {
+                continue;
+            }
+            this.sounds.config().set(key + ".sound", old.getString(key));
+            this.sounds.config().set(key + ".volume", 1.0);
+            this.sounds.config().set(key + ".pitch", 1.0);
+            changed = true;
+        }
+        if (changed) {
+            this.sounds.save();
+            this.plugin.getLogger().info("Suoni migrati da config.yml a sounds/sounds.yml");
+        }
     }
 
     private YamlFile load(String fileName) {

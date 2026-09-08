@@ -1,6 +1,6 @@
 # =============================================================================
-# ValaryRPG-Core — config principale (comandi, permessi, moduli, suoni)
-# I testi stanno in messages.yml. I layout GUI in kits.yml / prices.yml / moderation.yml
+# ValaryRPG-Core — config principale (moduli, comandi, permessi, HUD teleport)
+# Testi: lang/messages.yml   Suoni: sounds/sounds.yml   Moduli: modules/<nome>.yml
 # Disattiva un modulo con false: non registra comandi/eventi.
 # Permessi: cambia il nodo qui, non nel Java. Alias comandi: liste sotto commands.*
 # =============================================================================
@@ -185,14 +185,18 @@ permissions:
   feed-others: valary.feed.others
   portal: valary.portal
   pressureplayerjump: valary.pressureplayerjump
+  teleport-cooldown-bypass: valary.teleport.cooldown.bypass
 
-sounds:
-  teleport-success: ENTITY_ENDERMAN_TELEPORT
-  spawn-set: BLOCK_NOTE_BLOCK_PLING
-  command-denied: ENTITY_VILLAGER_NO
-  reload-success: ENTITY_PLAYER_LEVELUP
-  msg-send: ENTITY_EXPERIENCE_ORB_PICKUP
-  msg-receive: ENTITY_EXPERIENCE_ORB_PICKUP
+# Countdown a schermo per warmup/cooldown di /home /warp /spawn
+teleport:
+  hud:
+    enabled: true
+    # ACTION_BAR oppure TITLE
+    type: ACTION_BAR
+    interval-ticks: 20
+    title-fade-in-ticks: 0
+    title-stay-ticks: 25
+    title-fade-out-ticks: 5
 
 delays:
   command-cooldown-millis: 250

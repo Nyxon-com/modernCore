@@ -6,6 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.warps.WarpService;
 import com.valaryrpg.core.module.warps.WarpsModule;
+import com.valaryrpg.core.util.CommandText;
 import com.valaryrpg.core.util.Perms;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -40,9 +41,9 @@ final class WarpsCommands {
                     this.plugin.messages().send(ctx.getSource().getSender(), "warps.usage", Map.of("label", name));
                     return Command.SINGLE_SUCCESS;
                 })
-                .then(Commands.argument("nomewarp", StringArgumentType.word())
+                .then(Commands.argument("args", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> {
-                            String remaining = builder.getRemainingLowerCase();
+                            String remaining = CommandText.firstToken(builder.getRemainingLowerCase());
                             for (String warp : warps().names()) {
                                 if (warp.startsWith(remaining)) {
                                     builder.suggest(warp);
@@ -50,23 +51,7 @@ final class WarpsCommands {
                             }
                             return builder.buildFuture();
                         })
-                        .executes(ctx -> teleportSelf(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "nomewarp")))
-                        .then(Commands.argument("player", StringArgumentType.word())
-                                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "warp-others"))
-                                .suggests((ctx, builder) -> {
-                                    String remaining = builder.getRemainingLowerCase();
-                                    for (Player online : Bukkit.getOnlinePlayers()) {
-                                        if (online.getName().toLowerCase(Locale.ROOT).startsWith(remaining)) {
-                                            builder.suggest(online.getName());
-                                        }
-                                    }
-                                    return builder.buildFuture();
-                                })
-                                .executes(ctx -> teleportOther(
-                                        ctx.getSource().getSender(),
-                                        StringArgumentType.getString(ctx, "nomewarp"),
-                                        StringArgumentType.getString(ctx, "player")
-                                ))))
+                        .executes(ctx -> warpArgs(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "args"), name)))
                 .build();
     }
 
@@ -78,14 +63,18 @@ final class WarpsCommands {
                     this.plugin.messages().send(ctx.getSource().getSender(), "warps.set-usage", Map.of("label", name));
                     return Command.SINGLE_SUCCESS;
                 })
-                .then(Commands.argument("name", StringArgumentType.word())
+                .then(Commands.argument("name", StringArgumentType.greedyString())
                         .executes(ctx -> {
                             CommandSender sender = ctx.getSource().getSender();
                             if (!(sender instanceof Player player)) {
                                 this.plugin.messages().send(sender, "general.player-only");
                                 return 0;
                             }
-                            warps().setWarp(player, StringArgumentType.getString(ctx, "name"));
+                            String warpName = CommandText.nameOrNull(sender, this.plugin, StringArgumentType.getString(ctx, "name"));
+                            if (warpName == null) {
+                                return 0;
+                            }
+                            warps().setWarp(player, warpName);
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();
@@ -99,9 +88,9 @@ final class WarpsCommands {
                     this.plugin.messages().send(ctx.getSource().getSender(), "warps.del-usage", Map.of("label", name));
                     return Command.SINGLE_SUCCESS;
                 })
-                .then(Commands.argument("name", StringArgumentType.word())
+                .then(Commands.argument("name", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> {
-                            String remaining = builder.getRemainingLowerCase();
+                            String remaining = CommandText.firstToken(builder.getRemainingLowerCase());
                             for (String warp : warps().names()) {
                                 if (warp.startsWith(remaining)) {
                                     builder.suggest(warp);
@@ -110,7 +99,15 @@ final class WarpsCommands {
                             return builder.buildFuture();
                         })
                         .executes(ctx -> {
-                            warps().delete(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "name"));
+                            String warpName = CommandText.nameOrNull(
+                                    ctx.getSource().getSender(),
+                                    this.plugin,
+                                    StringArgumentType.getString(ctx, "name")
+                            );
+                            if (warpName == null) {
+                                return 0;
+                            }
+                            warps().delete(ctx.getSource().getSender(), warpName);
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();
@@ -125,6 +122,27 @@ final class WarpsCommands {
                     return Command.SINGLE_SUCCESS;
                 })
                 .build();
+    }
+
+    private int warpArgs(CommandSender sender, String raw, String label) {
+        if (CommandText.hasStrayQuotes(raw)) {
+            this.plugin.messages().send(sender, "general.quotes");
+            return 0;
+        }
+        java.util.List<String> tokens = CommandText.tokens(raw);
+        if (tokens.isEmpty()) {
+            this.plugin.messages().send(sender, "warps.usage", Map.of("label", label));
+            return 0;
+        }
+        String warpName = tokens.getFirst().toLowerCase(Locale.ROOT);
+        if (tokens.size() == 1) {
+            return teleportSelf(sender, warpName);
+        }
+        if (!Perms.has(this.plugin, sender, "warp-others")) {
+            this.plugin.messages().send(sender, "general.no-permission");
+            return 0;
+        }
+        return teleportOther(sender, warpName, tokens.get(1));
     }
 
     private int teleportSelf(CommandSender sender, String warpName) {

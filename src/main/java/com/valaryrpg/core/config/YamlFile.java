@@ -8,13 +8,27 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * YAML su disco con default dal JAR: se manca o è corrotto viene rigenerato,
- * se mancano solo alcune chiavi vengono aggiunte senza sovrascrivere i valori utente.
+ * YAML su disco con default dal JAR: path nidificati, migrazione dai file piatti vecchi,
+ * backup se corrotto, merge chiavi mancanti senza toccare i valori utente.
  */
 public final class YamlFile {
+
+    private static final Map<String, String> LEGACY = Map.ofEntries(
+            Map.entry("lang/messages.yml", "messages.yml"),
+            Map.entry("modules/worlds.yml", "worlds.yml"),
+            Map.entry("modules/homes.yml", "homes.yml"),
+            Map.entry("modules/warps.yml", "warps.yml"),
+            Map.entry("modules/players.yml", "players.yml"),
+            Map.entry("modules/moderation.yml", "moderation.yml"),
+            Map.entry("modules/mechanics.yml", "mechanics.yml"),
+            Map.entry("modules/kits.yml", "kits.yml"),
+            Map.entry("modules/prices.yml", "prices.yml")
+    );
 
     private final JavaPlugin plugin;
     private final String fileName;
@@ -29,7 +43,14 @@ public final class YamlFile {
     public void load() {
         this.plugin.getDataFolder().mkdirs();
         this.file = new File(this.plugin.getDataFolder(), this.fileName);
+        File parent = this.file.getParentFile();
+        if (parent != null) {
+            parent.mkdirs();
+        }
 
+        if (!this.file.exists()) {
+            migrateLegacy();
+        }
         if (!this.file.exists()) {
             this.plugin.saveResource(this.fileName, false);
         }
@@ -40,8 +61,8 @@ public final class YamlFile {
             this.config = loaded;
         } catch (Exception exception) {
             File backup = new File(
-                    this.plugin.getDataFolder(),
-                    this.fileName + ".broken." + System.currentTimeMillis() + ".yml"
+                    this.file.getParentFile(),
+                    this.file.getName() + ".broken." + System.currentTimeMillis() + ".yml"
             );
             if (this.file.renameTo(backup)) {
                 this.plugin.getLogger().warning("File " + this.fileName + " corrotto, backup: " + backup.getName());
@@ -66,6 +87,23 @@ public final class YamlFile {
 
     public FileConfiguration config() {
         return this.config;
+    }
+
+    private void migrateLegacy() {
+        String legacyName = LEGACY.get(this.fileName);
+        if (legacyName == null) {
+            return;
+        }
+        File legacy = new File(this.plugin.getDataFolder(), legacyName);
+        if (!legacy.exists()) {
+            return;
+        }
+        try {
+            Files.move(legacy.toPath(), this.file.toPath());
+            this.plugin.getLogger().info("Spostato " + legacyName + " → " + this.fileName);
+        } catch (Exception exception) {
+            this.plugin.getLogger().log(Level.WARNING, "Impossibile migrare " + legacyName, exception);
+        }
     }
 
     private void mergeMissingKeys() {

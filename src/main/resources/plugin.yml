@@ -28,6 +28,7 @@ permissions:
       valary.weather.lock: true
       valary.time.lock: true
       valary.home.unlimited: true
+      valary.teleport.cooldown.bypass: true
       valary.warp.others: true
       valary.warp.set: true
       valary.warp.delete: true
@@ -91,6 +92,9 @@ permissions:
     default: true
   valary.home.unlimited:
     description: Home senza limite numerico
+    default: op
+  valary.teleport.cooldown.bypass:
+    description: Ignora il cooldown dei teleport
     default: op
   valary.home.limit.default:
     description: Limite home del gruppo default

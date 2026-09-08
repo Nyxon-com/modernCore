@@ -2,7 +2,6 @@ package com.valaryrpg.core.module.homes;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.Module;
-import com.valaryrpg.core.util.Teleports;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -12,7 +11,6 @@ public final class HomesModule implements Module, Listener {
 
     private final ValaryCorePlugin plugin;
     private HomeService homes;
-    private Teleports teleports;
 
     public HomesModule(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -25,8 +23,7 @@ public final class HomesModule implements Module, Listener {
 
     @Override
     public void enable() {
-        this.teleports = new Teleports(this.plugin);
-        this.homes = new HomeService(this.plugin, this.teleports);
+        this.homes = new HomeService(this.plugin, this.plugin.teleports());
         this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     }
 
@@ -47,8 +44,6 @@ public final class HomesModule implements Module, Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        if (this.teleports != null) {
-            this.teleports.cancel(event.getPlayer().getUniqueId());
-        }
+        this.plugin.teleports().cancel(event.getPlayer().getUniqueId());
     }
 }

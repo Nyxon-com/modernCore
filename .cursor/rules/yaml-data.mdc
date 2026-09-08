@@ -6,7 +6,7 @@ alwaysApply: false
 
 # YAML
 
-Ogni comportamento nuovo = chiave nel file del modulo (`kits.yml`, `prices.yml`, `mechanics.yml`, …) **e** messaggio in `messages.yml` **e** permesso/comando in `config.yml` se è un comando.
+Ogni comportamento nuovo = chiave nel file del modulo (`modules/kits.yml`, `modules/prices.yml`, `modules/mechanics.yml`, …) **e** messaggio in `lang/messages.yml` **e** permesso/comando in `config.yml` se è un comando. Suoni in `sounds/sounds.yml`.
 
 - Default in italiano MiniMessage. Placeholder `{player}` `{prefix}` ecc.
 - GUI: `rows`, `slot`, `fill-material`, suoni, cooldown nel YAML del modulo.

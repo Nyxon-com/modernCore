@@ -11,6 +11,7 @@ general:
   module-disabled: "{prefix} <red>Il modulo <white>{module}</white> è disabilitato."
   unknown-subcommand: "{prefix} <gray>Uso: <white>/{label} reload</white>"
   cooldown: "{prefix} <red>Attendi un attimo prima di riusare il comando."
+  quotes: "{prefix} <red>Non usare virgolette. Esempio: <white>/warp spawn</white> non <white>/warp \"spawn\"</white>."
 
 duration:
   permanent: permanente
@@ -32,6 +33,9 @@ spawn:
 teleport:
   warmup: "{prefix} <gray>Teletrasporto tra <white>{seconds}</white>s. Non muoverti."
   cancelled-move: "{prefix} <red>Teletrasporto annullato: ti sei mosso."
+  cooldown: "{prefix} <red>Teleport in cooldown: ancora <white>{seconds}</white>s."
+  hud-warmup: "<gold>Teleport tra <white>{seconds}s"
+  hud-cooldown: "<gray>Cooldown teleport <white>{seconds}s"
 
 homes:
   set: "{prefix} <green>Home <white>{home}</white> impostata in <white>{world}</white> <gray>({x}, {y}, {z})."

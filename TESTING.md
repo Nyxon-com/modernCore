@@ -5,22 +5,22 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 ## 0. Avvio
 - [x] Il plugin si abilita, storage SQLITE ok
 - [x] Cartella `plugins/ValaryRPG-Core/` con tutti i YAML
-- [x] Cancella una chiave da `messages.yml`, `/valary reload` → la chiave torna, i tuoi testi restano
+- [x] Cancella una chiave da `lang/messages.yml`, `/valary reload` → la chiave torna, i tuoi testi restano
 - [x] Rinomina `config.yml` in modo da corromperlo, reload/restart → backup `*.broken.*.yml` + file nuovo
 
 ## 1. Mondi
-- [ ] `/setspawn` nel overworld, vai in un altro mondo, `/spawn` ti riporta al punto del `/setspawn` (non allo spawn del mondo in cui sei)
-- [ ] `/spawn <altro>` con permesso
-- [ ] `/weatherlock rain` → resta pioggia; `/weatherlock unlock`
-- [ ] `/timelock noon` → ora ferma; `/time add 1000` non deve avanzare; `/timelock unlock`
-- [ ] Con Multiverse: un mondo extra compare in `worlds.yml` senza sovrascrivere alias già scritti
+- [x] `/setspawn` nel overworld, vai in un altro mondo, `/spawn` ti riporta al punto del `/setspawn` (non allo spawn del mondo in cui sei)
+- [x] `/spawn <altro>` con permesso
+- [x] `/weatherlock rain` → resta pioggia; `/weatherlock unlock`
+- [x] `/timelock noon` → ora ferma; `/time add 1000` non deve avanzare; `/timelock unlock`
+- [x] Con Multiverse: un mondo extra compare in `worlds.yml` senza sovrascrivere alias già scritti
 
 ## 2. Home / warp
-- [ ] `/sethome`, `/home`, `/delhome`, `/homes`
-- [ ] Secondo home senza VIP → limite
-- [ ] Permesso `valary.home.limit.vip` → 3 home
-- [ ] `/setwarp prova`, `/warp prova`, `/warp prova <player>` da console
-- [ ] Nome warp invalido (`prova!`) rifiutato
+- [x] `/sethome`, `/home`, `/delhome`, `/homes`
+- [x] Secondo home senza VIP → limite
+- [x] Permesso `valary.home.limit.vip` → 3 home
+- [x] `/setwarp prova`, `/warp prova`, `/warp prova <player>` da console
+- [x] Nome warp invalido (`prova!`) rifiutato
 
 ## 3. Player
 - [ ] Join/quit MiniMessage; primo join usa `first-join`

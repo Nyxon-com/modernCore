@@ -19,6 +19,9 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Home per-player su SQL, limiti da modules/homes.yml.
+ */
 public final class HomeService {
 
     private final ValaryCorePlugin plugin;
@@ -82,8 +85,9 @@ public final class HomeService {
                     return;
                 }
                 int warmup = this.plugin.configs().homes().getInt("settings.warmup-seconds", 3);
+                int cooldown = this.plugin.configs().homes().getInt("settings.cooldown-seconds", 5);
                 boolean cancel = this.plugin.configs().homes().getBoolean("settings.cancel-on-move", true);
-                this.teleports.go(player, destination, warmup, cancel, target ->
+                this.teleports.go(player, destination, warmup, cooldown, cancel, target ->
                         this.plugin.messages().send(target, "homes.teleported", Map.of("home", name)));
             });
         });

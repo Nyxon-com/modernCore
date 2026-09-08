@@ -10,7 +10,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -21,7 +20,6 @@ import java.util.UUID;
 public final class SpawnService {
 
     private final ValaryCorePlugin plugin;
-    private final Map<UUID, Location> warmupOrigin = new HashMap<>();
 
     public SpawnService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -62,26 +60,23 @@ public final class SpawnService {
         World world = destination.getWorld();
         boolean staffTeleport = initiator != target;
         int warmup = staffTeleport ? 0 : this.plugin.configs().worlds().getInt("settings.warmup-seconds", 0);
-
-        if (warmup <= 0) {
-            completeTeleport(initiator, target, world, destination);
-            return;
+        int cooldown = staffTeleport ? 0 : this.plugin.configs().worlds().getInt("settings.cooldown-seconds", 0);
+        boolean cancelOnMove = this.plugin.configs().worlds().getBoolean("settings.cancel-on-move", false);
+        if (!this.plugin.configs().worlds().contains("spawn.world")) {
+            this.plugin.messages().send(initiator, "spawn.not-set", Map.of("world", world.getName()));
         }
-
-        this.plugin.messages().send(target, "spawn.warmup", Map.of("seconds", String.valueOf(warmup)));
-        this.warmupOrigin.put(target.getUniqueId(), target.getLocation().clone());
-        Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
-            Location origin = this.warmupOrigin.remove(target.getUniqueId());
-            if (origin == null || !target.isOnline()) {
-                return;
+        this.plugin.teleports().go(target, destination, warmup, cooldown, cancelOnMove, player -> {
+            this.plugin.messages().send(player, "spawn.teleported", Map.of("world", world.getName()));
+            if (initiator != player) {
+                this.plugin.messages().send(initiator, "spawn.teleported-other", Map.of(
+                        "target", player.getName(),
+                        "world", world.getName()
+                ));
+                this.plugin.messages().send(player, "spawn.teleported-by-staff", Map.of(
+                        "player", initiator.getName()
+                ));
             }
-            boolean cancelOnMove = this.plugin.configs().worlds().getBoolean("settings.cancel-on-move", false);
-            if (cancelOnMove && moved(origin, target.getLocation())) {
-                this.plugin.messages().send(target, "spawn.cancelled-move");
-                return;
-            }
-            completeTeleport(initiator, target, world, destination);
-        }, warmup * 20L);
+        });
     }
 
     public Location locationOf(World world) {
@@ -110,7 +105,7 @@ public final class SpawnService {
     }
 
     public void cancelWarmup(UUID uuid) {
-        this.warmupOrigin.remove(uuid);
+        this.plugin.teleports().cancel(uuid);
     }
 
     private Location globalLocation() {
@@ -133,32 +128,6 @@ public final class SpawnService {
         return locationOf(world);
     }
 
-    private void completeTeleport(CommandSender initiator, Player target, World world, Location destination) {
-        this.plugin.lastLocations().remember(target);
-        boolean custom = this.plugin.configs().worlds().contains("spawn.world");
-        if (!custom) {
-            this.plugin.messages().send(initiator, "spawn.not-set", Map.of("world", world.getName()));
-        }
-        target.teleportAsync(destination).thenAccept(success -> {
-            if (!Boolean.TRUE.equals(success) || !target.isOnline()) {
-                return;
-            }
-            this.plugin.messages().send(target, "spawn.teleported", Map.of("world", world.getName()));
-            if (this.plugin.configs().worlds().getBoolean("settings.teleport-sound", true)) {
-                Sounds.play(this.plugin, target, "teleport-success");
-            }
-            if (initiator != target) {
-                this.plugin.messages().send(initiator, "spawn.teleported-other", Map.of(
-                        "target", target.getName(),
-                        "world", world.getName()
-                ));
-                this.plugin.messages().send(target, "spawn.teleported-by-staff", Map.of(
-                        "player", initiator.getName()
-                ));
-            }
-        });
-    }
-
     private static void writeLocation(FileConfiguration yaml, String path, String worldName, Location location) {
         if (worldName != null) {
             yaml.set(path + ".world", worldName);
@@ -179,13 +148,6 @@ public final class SpawnService {
                 (float) section.getDouble("yaw"),
                 (float) section.getDouble("pitch")
         );
-    }
-
-    private static boolean moved(Location from, Location to) {
-        if (from.getWorld() == null || to.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
-            return true;
-        }
-        return from.toVector().distanceSquared(to.toVector()) > 0.04D;
     }
 
     private static String format(double value) {

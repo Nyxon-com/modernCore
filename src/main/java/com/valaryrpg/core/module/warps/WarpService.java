@@ -70,8 +70,9 @@ public final class WarpService {
 
         boolean staff = initiator != target;
         int warmup = staff ? 0 : this.plugin.configs().warps().getInt("settings.warmup-seconds", 3);
+        int cooldown = staff ? 0 : this.plugin.configs().warps().getInt("settings.cooldown-seconds", 5);
         boolean cancel = this.plugin.configs().warps().getBoolean("settings.cancel-on-move", true);
-        this.teleports.go(target, destination, warmup, cancel, player -> {
+        this.teleports.go(target, destination, warmup, cooldown, cancel, player -> {
             this.plugin.messages().send(player, "warps.teleported", Map.of("warp", name));
             if (staff) {
                 this.plugin.messages().send(initiator, "warps.teleported-other", Map.of(

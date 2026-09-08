@@ -1,0 +1,45 @@
+# =============================================================================
+# Suoni. Chiave vuota = nessun suono.
+# sound: ID namespaced (minecraft:entity.enderman.teleport) oppure ENUM Bukkit
+# volume / pitch: 0.0–2.0 circa. I pack custom usano namespace proprio (es. valary:whoosh)
+# =============================================================================
+
+teleport-success:
+  sound: minecraft:entity.enderman.teleport
+  volume: 1.0
+  pitch: 1.0
+
+teleport-tick:
+  sound: minecraft:block.note_block.hat
+  volume: 0.4
+  pitch: 1.4
+
+teleport-cancelled:
+  sound: minecraft:entity.villager.no
+  volume: 1.0
+  pitch: 1.0
+
+spawn-set:
+  sound: minecraft:block.note_block.pling
+  volume: 1.0
+  pitch: 1.2
+
+command-denied:
+  sound: minecraft:entity.villager.no
+  volume: 1.0
+  pitch: 0.8
+
+reload-success:
+  sound: minecraft:entity.player.levelup
+  volume: 0.8
+  pitch: 1.2
+
+msg-send:
+  sound: minecraft:entity.experience_orb.pickup
+  volume: 0.5
+  pitch: 1.4
+
+msg-receive:
+  sound: minecraft:entity.experience_orb.pickup
+  volume: 0.7
+  pitch: 0.8

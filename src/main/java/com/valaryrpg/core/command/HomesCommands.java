@@ -6,6 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.homes.HomeService;
 import com.valaryrpg.core.module.homes.HomesModule;
+import com.valaryrpg.core.util.CommandText;
 import com.valaryrpg.core.util.Perms;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -35,7 +36,7 @@ final class HomesCommands {
         return Commands.literal(name)
                 .requires(stack -> Perms.has(this.plugin, stack.getSender(), "home"))
                 .executes(ctx -> teleport(ctx.getSource().getSender(), null))
-                .then(Commands.argument("name", StringArgumentType.word())
+                .then(Commands.argument("name", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> suggestHomes(ctx.getSource().getSender(), builder.getRemainingLowerCase())
                                 .thenCompose(names -> {
                                     names.forEach(builder::suggest);
@@ -50,7 +51,7 @@ final class HomesCommands {
         return Commands.literal(name)
                 .requires(stack -> Perms.has(this.plugin, stack.getSender(), "sethome"))
                 .executes(ctx -> set(ctx.getSource().getSender(), null))
-                .then(Commands.argument("name", StringArgumentType.word())
+                .then(Commands.argument("name", StringArgumentType.greedyString())
                         .executes(ctx -> set(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "name"))))
                 .build();
     }
@@ -60,7 +61,7 @@ final class HomesCommands {
         return Commands.literal(name)
                 .requires(stack -> Perms.has(this.plugin, stack.getSender(), "delhome"))
                 .executes(ctx -> delete(ctx.getSource().getSender(), null))
-                .then(Commands.argument("name", StringArgumentType.word())
+                .then(Commands.argument("name", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> suggestHomes(ctx.getSource().getSender(), builder.getRemainingLowerCase())
                                 .thenCompose(names -> {
                                     names.forEach(builder::suggest);
@@ -91,7 +92,11 @@ final class HomesCommands {
             this.plugin.messages().send(sender, "general.player-only");
             return 0;
         }
-        homes().teleport(player, homeName);
+        String name = homeName == null ? null : CommandText.nameOrNull(sender, this.plugin, homeName);
+        if (homeName != null && name == null) {
+            return 0;
+        }
+        homes().teleport(player, name);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -100,7 +105,11 @@ final class HomesCommands {
             this.plugin.messages().send(sender, "general.player-only");
             return 0;
         }
-        homes().setHome(player, homeName);
+        String name = homeName == null ? null : CommandText.nameOrNull(sender, this.plugin, homeName);
+        if (homeName != null && name == null) {
+            return 0;
+        }
+        homes().setHome(player, name);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -109,7 +118,11 @@ final class HomesCommands {
             this.plugin.messages().send(sender, "general.player-only");
             return 0;
         }
-        homes().delete(player, homeName);
+        String name = homeName == null ? null : CommandText.nameOrNull(sender, this.plugin, homeName);
+        if (homeName != null && name == null) {
+            return 0;
+        }
+        homes().delete(player, name);
         return Command.SINGLE_SUCCESS;
     }
 

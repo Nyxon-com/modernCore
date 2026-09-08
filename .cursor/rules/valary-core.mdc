@@ -15,7 +15,7 @@ Plugin Paper **1.21.11**, Java 21, Gradle. Sostituisce CMI/Essentials: nativo (`
 - Non chiedere di buildare. Non force-push su `main`.
 
 ## Architettura
-Un `Module` per dominio (worlds, homes, warps, players, moderation, mechanics, kits, sell). Flag in `config.yml` `modules.*`. Messaggi in `messages.yml`. Comandi/permessi in `config.yml`.
+Un `Module` per dominio (worlds, homes, warps, players, moderation, mechanics, kits, sell). Flag in `config.yml` `modules.*`. Messaggi in `lang/messages.yml`. Suoni in `sounds/sounds.yml`. YAML modulo in `modules/`. Comandi/permessi in `config.yml`.
 
 `/warp <nomewarp> <player>` usa il **nome player**, non un selettore. I comandi vanilla (`msg`, `tell`, `w`, `kick`, `ban`, …) si registrano nel **bootstrap** Paper.
 
