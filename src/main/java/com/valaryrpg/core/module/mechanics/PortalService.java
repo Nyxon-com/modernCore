@@ -1,14 +1,12 @@
 package com.valaryrpg.core.module.mechanics;
 
 import com.valaryrpg.core.ValaryCorePlugin;
-import com.valaryrpg.core.gui.PanelItems;
 import com.valaryrpg.core.util.ActionCommands;
 import com.valaryrpg.core.util.MmoItems;
 import com.valaryrpg.core.util.Sounds;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -17,7 +15,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,15 +31,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class PortalService {
 
     private final ValaryCorePlugin plugin;
-    private final Map<UUID, Location> pos1 = new ConcurrentHashMap<>();
-    private final Map<UUID, Location> pos2 = new ConcurrentHashMap<>();
-    private final Map<UUID, Location> dest = new ConcurrentHashMap<>();
+    private final PortalSelection selection;
     private final Map<UUID, Long> cooldownUntil = new ConcurrentHashMap<>();
     private final Set<UUID> pending = ConcurrentHashMap.newKeySet();
     private final List<Region> regions = new CopyOnWriteArrayList<>();
 
     public PortalService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
+        this.selection = new PortalSelection(plugin);
         rebuild();
     }
 
@@ -74,34 +70,29 @@ public final class PortalService {
     }
 
     public void unload(UUID uuid) {
-        this.pos1.remove(uuid);
-        this.pos2.remove(uuid);
-        this.dest.remove(uuid);
+        this.selection.forget(uuid);
         this.cooldownUntil.remove(uuid);
         this.pending.remove(uuid);
     }
 
     public void markPos1(Player player) {
-        markPos1(player, player.getLocation());
+        this.selection.markPos1(player);
     }
 
     public void markPos1(Player player, Location location) {
-        this.pos1.put(player.getUniqueId(), blockOf(location));
-        this.plugin.messages().send(player, "portals.pos1");
+        this.selection.markPos1(player, location);
     }
 
     public void markPos2(Player player) {
-        markPos2(player, player.getLocation());
+        this.selection.markPos2(player);
     }
 
     public void markPos2(Player player, Location location) {
-        this.pos2.put(player.getUniqueId(), blockOf(location));
-        this.plugin.messages().send(player, "portals.pos2");
+        this.selection.markPos2(player, location);
     }
 
     public void markDest(Player player) {
-        this.dest.put(player.getUniqueId(), player.getLocation().clone());
-        this.plugin.messages().send(player, "portals.dest");
+        this.selection.markDest(player);
     }
 
     public void create(Player player, String name) {
@@ -110,9 +101,9 @@ public final class PortalService {
             this.plugin.messages().send(player, "portals.invalid-name");
             return;
         }
-        Location first = this.pos1.get(player.getUniqueId());
-        Location second = this.pos2.get(player.getUniqueId());
-        Location destination = this.dest.get(player.getUniqueId());
+        Location first = this.selection.pos1(player.getUniqueId());
+        Location second = this.selection.pos2(player.getUniqueId());
+        Location destination = this.selection.dest(player.getUniqueId());
         if (first == null || second == null || first.getWorld() == null || second.getWorld() == null) {
             this.plugin.messages().send(player, "portals.incomplete");
             return;
@@ -214,33 +205,15 @@ public final class PortalService {
     }
 
     public void giveWand(Player player) {
-        ConfigurationSection wand = this.plugin.configs().mechanics().getConfigurationSection("portal-wand");
-        ItemStack item = wand == null
-                ? PanelItems.named("BLAZE_ROD", Material.BLAZE_ROD)
-                : PanelItems.from(this.plugin, wand, player);
-        item.editMeta(meta -> meta.getPersistentDataContainer().set(wandKey(), PersistentDataType.BYTE, (byte) 1));
-        player.getInventory().addItem(item);
-        this.plugin.messages().send(player, "portals.wand-given");
+        this.selection.giveWand(player);
     }
 
     public boolean isWand(ItemStack item) {
-        if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
-            return false;
-        }
-        return item.getItemMeta().getPersistentDataContainer().has(wandKey(), PersistentDataType.BYTE);
+        return this.selection.isWand(item);
     }
 
     public void handleWand(Player player, Block block, boolean sneak, boolean leftClick) {
-        Location location = block.getLocation();
-        if (leftClick && sneak) {
-            markDest(player);
-            return;
-        }
-        if (sneak) {
-            markPos2(player, location);
-            return;
-        }
-        markPos1(player, location);
+        this.selection.handleWand(player, block, sneak, leftClick);
     }
 
     public void setCommand(CommandSender sender, String name, String command) {
@@ -344,10 +317,6 @@ public final class PortalService {
         this.plugin.teleports().safeLand(player);
     }
 
-    private NamespacedKey wandKey() {
-        return new NamespacedKey(this.plugin, "portal_wand");
-    }
-
     private String requirePortal(CommandSender sender, String name) {
         String id = normalize(name);
         if (this.plugin.configs().mechanics().getConfigurationSection("portals." + id) == null) {
@@ -372,13 +341,6 @@ public final class PortalService {
         yaml.set(path + ".z", location.getZ());
         yaml.set(path + ".yaw", location.getYaw());
         yaml.set(path + ".pitch", location.getPitch());
-    }
-
-    private static Location blockOf(Location location) {
-        if (location.getWorld() == null) {
-            return location.clone();
-        }
-        return new Location(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     private static String normalize(String name) {
