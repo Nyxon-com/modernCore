@@ -2,8 +2,8 @@
 # Utility: LimitY, hologram item a terra, morti, long-jump, portali item.
 # =============================================================================
 #
-# LimitY: mondi senza sezione = nessun limite. Bypass: valary.limity.bypass
-# /limity <min> <max> [mondo] scrive qui. /limity remove [mondo] cancella la sezione.
+# LimitY: SOLO i mondi elencati sotto hanno un limite. Mondo assente = nessun LimitY.
+# /limity <min> <max> scrive la sezione del mondo IN CUI SEI, non tutti i mondi.
 #   commands            lista ActionCommands al superamento Y
 #   notify              false = niente messaggio "sei fuori dal limite"
 #   teleport-spawn      true = tp spawn mondo (default true se commands è vuoto)
@@ -32,19 +32,7 @@ limity:
   check-interval-ticks: 10
   notify-cooldown-millis: 3000
   command-cooldown-millis: 3000
-  worlds:
-    world:
-      min: -64
-      max: 320
-      teleport-spawn: false
-      commands:
-        - "[player] spawn"
-        - "[message] <red>Sei uscito dal limite Y ({min} → {max})"
-    world_nether:
-      min: 0
-      max: 127
-      teleport-spawn: true
-      commands: []
+  worlds: {}
 
 ground-items:
   enabled: true

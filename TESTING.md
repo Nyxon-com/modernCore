@@ -62,13 +62,12 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 - [ ] Sezione `custom` in `prices.yml`: vendi quell'item → money + comando + xp
 
 ## 7. LimitY / drop / morti / coords
-- [ ] `/limity -5 20` nel mondo test
+- [ ] `/limity -5 20` nel mondo in cui sei → vale **solo** quel mondo (overworld/nether senza sezione = nessun limite)
+- [ ] Vai in un altro mondo: niente LimitY se non l'hai impostato lì
 - [ ] `/limity remove` (mondo in cui sei) o `/limity remove <mondo>` → niente più limite (anche se il mondo non è caricato)
-- [ ] `/limity command spawn {player}` → console fa `/spawn <nick>` (mondo corrente; `spawn` non è il nome mondo)
-- [ ] `/limity command in spawn spawn {player}` se il comando è per il mondo chiamato spawn
+- [ ] `/limity command spawn {player}` → comando sul mondo corrente (`spawn` non è il nome mondo)
 - [ ] `/limity notify off` silenzia il messaggio "sei fuori dal limite"
 - [ ] `/limity command [player] spawn` → vola fuori range esegue spawn (come il player)
-- [ ] `/limity command world_nether [message] <red>nether` → solo in nether
 - [ ] Bypass `valary.limity.bypass` ignora
 - [ ] Droppa un diamond: hologram piccolo con nome e countdown ~300s; `show-lore: true` mostra lore
 - [ ] Dopo il tempo l'item sparisce

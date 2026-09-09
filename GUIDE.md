@@ -131,11 +131,11 @@ Senza Vault il comando avvisa `sell.no-economy`.
 
 ### LimitY
 `/limity` mostra range e comando del mondo in cui sei.
-`/limity <min> <max> [mondo]` imposta il range.
-`/limity command [mondo] <comando>` imposta **il comando** eseguito appena si esce dal range (uno per mondo). Esempi:
+`/limity <min> <max>` imposta il range **solo** in quel mondo (in game ignora un eventuale terzo argomento). Da console: `/limity <min> <max> <mondo>`.
+`/limity command <comando>` imposta il comando sul mondo in cui sei. Esempi:
 - `/limity command [player] spawn`
-- `/limity command world_nether [console] warp netherhub {player}`
-`/limity clearcommand [mondo]` toglie il comando.
+- `/limity command [console] warp netherhub {player}`
+`/limity clearcommand [mondo]` toglie il comando. Mondi senza sezione in `mechanics.yml` = nessun limite.
 
 `teleport-spawn` viene spento quando setti un comando, così non conflitto col comando.
 

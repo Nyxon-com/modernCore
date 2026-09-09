@@ -333,9 +333,18 @@ final class MechanicsCommands {
     }
 
     private int setLimit(CommandSender sender, double min, double max, String worldName) {
-        World world = worldOf(sender, worldName);
-        if (world == null) {
-            return 0;
+        World world;
+        if (sender instanceof Player player) {
+            world = player.getWorld();
+            if (world == null) {
+                this.plugin.messages().send(sender, "limity.usage");
+                return 0;
+            }
+        } else {
+            world = worldOf(sender, worldName);
+            if (world == null) {
+                return 0;
+            }
         }
         double low = Math.min(min, max);
         double high = Math.max(min, max);
@@ -354,36 +363,14 @@ final class MechanicsCommands {
             this.plugin.messages().send(sender, "limity.command-usage");
             return 0;
         }
-        World world;
-        String command;
-        String lower = trimmed.toLowerCase(Locale.ROOT);
-        if (lower.startsWith("in ")) {
-            String after = trimmed.substring(3).trim();
-            int space = after.indexOf(' ');
-            if (space <= 0) {
-                this.plugin.messages().send(sender, "limity.command-usage");
-                return 0;
-            }
-            world = worldOf(sender, after.substring(0, space));
-            command = after.substring(space + 1).trim();
-        } else {
-            String[] parts = trimmed.split("\\s+", 2);
-            World named = Bukkit.getWorld(parts[0]);
-            if (named != null && parts.length >= 2 && parts[1].startsWith("[")) {
-                world = named;
-                command = parts[1];
-            } else {
-                world = worldOf(sender, null);
-                command = trimmed;
-            }
-        }
-        if (world == null || command.isBlank()) {
+        World world = worldOf(sender, null);
+        if (world == null) {
             return 0;
         }
-        module().limitY().setCommand(world, command);
+        module().limitY().setCommand(world, trimmed);
         this.plugin.messages().send(sender, "limity.command-set", Map.of(
                 "world", world.getName(),
-                "command", command
+                "command", trimmed
         ));
         return Command.SINGLE_SUCCESS;
     }

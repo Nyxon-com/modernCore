@@ -38,6 +38,7 @@ public final class LimitYService {
         this.lastNotify.clear();
         this.lastAction.clear();
         this.lastRelocate.clear();
+        clearShippedExampleWorlds();
         if (!this.plugin.configs().mechanics().getBoolean("limity.enabled", true)) {
             return;
         }
@@ -71,6 +72,54 @@ public final class LimitYService {
         this.plugin.configs().mechanics().set(path + ".max", max);
         this.plugin.configs().saveMechanics();
         this.rules.remove(world.getName());
+    }
+
+    /** Toglie una tantum i limiti di esempio world/world_nether copiati dal JAR. */
+    private void clearShippedExampleWorlds() {
+        var yaml = this.plugin.configs().mechanics();
+        if (yaml.getBoolean("limity.example-worlds-cleared", false)) {
+            return;
+        }
+        boolean removed = false;
+        if (isShippedOverworldExample()) {
+            yaml.set("limity.worlds.world", null);
+            this.rules.remove("world");
+            removed = true;
+        }
+        if (isShippedNetherExample()) {
+            yaml.set("limity.worlds.world_nether", null);
+            this.rules.remove("world_nether");
+            removed = true;
+        }
+        yaml.set("limity.example-worlds-cleared", true);
+        this.plugin.configs().saveMechanics();
+        if (removed) {
+            this.plugin.getLogger().info("LimitY: rimossi i limiti di esempio da world/world_nether. Resta solo ciò che imposti con /limity nel mondo in cui sei.");
+        }
+    }
+
+    private boolean isShippedOverworldExample() {
+        ConfigurationSection section = this.plugin.configs().mechanics().getConfigurationSection("limity.worlds.world");
+        if (section == null) {
+            return false;
+        }
+        List<String> commands = section.getStringList("commands");
+        return section.getDouble("min") == -64
+                && section.getDouble("max") == 320
+                && commands.size() == 2
+                && "[player] spawn".equals(commands.get(0))
+                && commands.get(1).contains("Sei uscito dal limite Y");
+    }
+
+    private boolean isShippedNetherExample() {
+        ConfigurationSection section = this.plugin.configs().mechanics().getConfigurationSection("limity.worlds.world_nether");
+        if (section == null) {
+            return false;
+        }
+        return section.getDouble("min") == 0
+                && section.getDouble("max") == 127
+                && section.getStringList("commands").isEmpty()
+                && section.getBoolean("teleport-spawn", true);
     }
 
     public void remove(String worldName) {
