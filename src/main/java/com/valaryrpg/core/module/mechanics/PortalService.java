@@ -4,6 +4,7 @@ import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.gui.PanelItems;
 import com.valaryrpg.core.util.ActionCommands;
 import com.valaryrpg.core.util.MmoItems;
+import com.valaryrpg.core.util.Sounds;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,75 +19,66 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Portali cuboidi: ingresso su cambio blocco, azioni al tick successivo (non in move).
+ */
 public final class PortalService {
 
     private final ValaryCorePlugin plugin;
     private final Map<UUID, Location> pos1 = new ConcurrentHashMap<>();
     private final Map<UUID, Location> pos2 = new ConcurrentHashMap<>();
     private final Map<UUID, Location> dest = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> cooldownUntil = new ConcurrentHashMap<>();
+    private final Set<UUID> pending = ConcurrentHashMap.newKeySet();
+    private final List<Region> regions = new CopyOnWriteArrayList<>();
 
     public PortalService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
+        rebuild();
+    }
+
+    public void rebuild() {
+        List<Region> next = new ArrayList<>();
+        ConfigurationSection portals = this.plugin.configs().mechanics().getConfigurationSection("portals");
+        if (portals != null) {
+            for (String name : portals.getKeys(false)) {
+                ConfigurationSection portal = portals.getConfigurationSection(name);
+                Region region = regionOf(name, portal);
+                if (region != null) {
+                    next.add(region);
+                }
+            }
+        }
+        this.regions.clear();
+        this.regions.addAll(next);
     }
 
     public void tryEnter(Player player, Location from, Location to) {
-        if (to.getWorld() == null) {
+        if (player == null || to == null || to.getWorld() == null) {
             return;
         }
         String entered = nameAt(to);
         if (entered == null || entered.equals(nameAt(from))) {
             return;
         }
-        ConfigurationSection portal = this.plugin.configs().mechanics().getConfigurationSection("portals." + entered);
-        if (portal == null || !portal.getBoolean("enabled", true)) {
-            return;
-        }
-        String permission = portal.getString("permission", "");
-        if (permission != null && !permission.isBlank() && !player.hasPermission(permission)) {
-            this.plugin.messages().send(player, "portals.no-permission", Map.of("portal", entered));
-            return;
-        }
-        ConfigurationSection item = portal.getConfigurationSection("item");
-        if (item != null && !consumeOrMatch(player, item)) {
-            this.plugin.messages().send(player, "portals.need-item", Map.of("portal", entered));
-            return;
-        }
-        this.plugin.lastLocations().remember(player);
-        List<String> commands = portal.getStringList("commands");
-        if (!commands.isEmpty()) {
-            ActionCommands.run(this.plugin, player, commands, Map.of("portal", entered));
-        }
-        Location destination = destinationOf(portal);
-        if (destination == null) {
-            if (commands.isEmpty()) {
-                this.plugin.messages().send(player, "portals.invalid-destination", Map.of("portal", entered));
-            } else {
-                this.plugin.messages().send(player, "portals.used", Map.of("portal", entered));
-            }
-            return;
-        }
-        int warmup = portal.getInt("warmup-seconds", 0);
-        if (warmup > 0) {
-            this.plugin.messages().send(player, "portals.warmup", Map.of(
-                    "portal", entered,
-                    "seconds", String.valueOf(warmup)
-            ));
-            Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
-                if (player.isOnline()) {
-                    player.teleport(destination);
-                }
-            }, warmup * 20L);
-        } else {
-            player.teleport(destination);
-        }
-        this.plugin.messages().send(player, "portals.used", Map.of("portal", entered));
+        activateLater(player, entered);
+    }
+
+    public void unload(UUID uuid) {
+        this.pos1.remove(uuid);
+        this.pos2.remove(uuid);
+        this.dest.remove(uuid);
+        this.cooldownUntil.remove(uuid);
+        this.pending.remove(uuid);
     }
 
     public void markPos1(Player player) {
@@ -94,7 +86,7 @@ public final class PortalService {
     }
 
     public void markPos1(Player player, Location location) {
-        this.pos1.put(player.getUniqueId(), location.clone());
+        this.pos1.put(player.getUniqueId(), blockOf(location));
         this.plugin.messages().send(player, "portals.pos1");
     }
 
@@ -103,7 +95,7 @@ public final class PortalService {
     }
 
     public void markPos2(Player player, Location location) {
-        this.pos2.put(player.getUniqueId(), location.clone());
+        this.pos2.put(player.getUniqueId(), blockOf(location));
         this.plugin.messages().send(player, "portals.pos2");
     }
 
@@ -121,8 +113,7 @@ public final class PortalService {
         Location first = this.pos1.get(player.getUniqueId());
         Location second = this.pos2.get(player.getUniqueId());
         Location destination = this.dest.get(player.getUniqueId());
-        if (first == null || second == null
-                || first.getWorld() == null || second.getWorld() == null) {
+        if (first == null || second == null || first.getWorld() == null || second.getWorld() == null) {
             this.plugin.messages().send(player, "portals.incomplete");
             return;
         }
@@ -132,22 +123,19 @@ public final class PortalService {
         }
         FileConfiguration yaml = this.plugin.configs().mechanics();
         String base = "portals." + id;
+        yaml.set(base, null);
         yaml.set(base + ".enabled", true);
         yaml.set(base + ".world", first.getWorld().getName());
-        writeLocation(yaml, base + ".pos1", first, false);
-        writeLocation(yaml, base + ".pos2", second, false);
+        writeBlock(yaml, base + ".pos1", first);
+        writeBlock(yaml, base + ".pos2", second);
         if (destination != null && destination.getWorld() != null) {
-            writeLocation(yaml, base + ".destination", destination, true);
+            writeDestination(yaml, base + ".destination", destination);
         }
         yaml.set(base + ".commands", List.of());
-        yaml.set(base + ".item.material", "AIR");
-        yaml.set(base + ".item.mmoitem-type", "");
-        yaml.set(base + ".item.mmoitem-id", "");
-        yaml.set(base + ".item.consume", false);
-        yaml.set(base + ".item.amount", 1);
         yaml.set(base + ".permission", "");
         yaml.set(base + ".warmup-seconds", 0);
         this.plugin.configs().saveMechanics();
+        rebuild();
         this.plugin.messages().send(player, "portals.created", Map.of("portal", id));
     }
 
@@ -160,10 +148,7 @@ public final class PortalService {
         FileConfiguration yaml = this.plugin.configs().mechanics();
         String base = "portals." + id + ".item";
         if (hand == null || hand.getType().isAir()) {
-            yaml.set(base + ".material", "AIR");
-            yaml.set(base + ".mmoitem-type", "");
-            yaml.set(base + ".mmoitem-id", "");
-            yaml.set(base + ".consume", false);
+            yaml.set("portals." + id + ".item", null);
             this.plugin.configs().saveMechanics();
             this.plugin.messages().send(player, "portals.item-cleared", Map.of("portal", id));
             return;
@@ -190,6 +175,7 @@ public final class PortalService {
         }
         this.plugin.configs().mechanics().set("portals." + id + ".enabled", enabled);
         this.plugin.configs().saveMechanics();
+        rebuild();
         this.plugin.messages().send(sender, enabled ? "portals.enabled" : "portals.disabled", Map.of("portal", id));
     }
 
@@ -200,18 +186,25 @@ public final class PortalService {
         }
         this.plugin.configs().mechanics().set("portals." + id, null);
         this.plugin.configs().saveMechanics();
+        rebuild();
         this.plugin.messages().send(sender, "portals.deleted", Map.of("portal", id));
     }
 
     public void list(CommandSender sender) {
-        Set<String> names = names();
-        if (names.isEmpty()) {
+        ConfigurationSection portals = this.plugin.configs().mechanics().getConfigurationSection("portals");
+        if (portals == null || portals.getKeys(false).isEmpty()) {
             this.plugin.messages().send(sender, "portals.list-empty");
             return;
         }
+        List<String> lines = new ArrayList<>();
+        for (String name : portals.getKeys(false)) {
+            ConfigurationSection portal = portals.getConfigurationSection(name);
+            boolean on = portal == null || portal.getBoolean("enabled", true);
+            lines.add(name + (on ? "" : " (off)"));
+        }
         this.plugin.messages().send(sender, "portals.list", Map.of(
-                "count", String.valueOf(names.size()),
-                "portals", String.join(", ", names)
+                "count", String.valueOf(lines.size()),
+                "portals", String.join(", ", lines)
         ));
     }
 
@@ -238,10 +231,9 @@ public final class PortalService {
     }
 
     public void handleWand(Player player, Block block, boolean sneak, boolean leftClick) {
-        Location location = block.getLocation().add(0.5D, 0.0D, 0.5D);
+        Location location = block.getLocation();
         if (leftClick && sneak) {
-            this.dest.put(player.getUniqueId(), player.getLocation().clone());
-            this.plugin.messages().send(player, "portals.dest");
+            markDest(player);
             return;
         }
         if (sneak) {
@@ -256,14 +248,18 @@ public final class PortalService {
         if (id == null) {
             return;
         }
-        List<String> commands = this.plugin.configs().mechanics().getStringList("portals." + id + ".commands");
-        commands = new java.util.ArrayList<>(commands);
-        commands.add(command);
+        String value = command == null ? "" : command.trim();
+        if (value.isBlank()) {
+            this.plugin.messages().send(sender, "portals.command-usage", Map.of("label", "portal"));
+            return;
+        }
+        List<String> commands = new ArrayList<>(this.plugin.configs().mechanics().getStringList("portals." + id + ".commands"));
+        commands.add(value);
         this.plugin.configs().mechanics().set("portals." + id + ".commands", commands);
         this.plugin.configs().saveMechanics();
         this.plugin.messages().send(sender, "portals.command-set", Map.of(
                 "portal", id,
-                "command", command
+                "command", value
         ));
     }
 
@@ -275,6 +271,77 @@ public final class PortalService {
         this.plugin.configs().mechanics().set("portals." + id + ".commands", List.of());
         this.plugin.configs().saveMechanics();
         this.plugin.messages().send(sender, "portals.commands-cleared", Map.of("portal", id));
+    }
+
+    private void activateLater(Player player, String portalId) {
+        UUID uuid = player.getUniqueId();
+        long now = System.currentTimeMillis();
+        Long until = this.cooldownUntil.get(uuid);
+        if (until != null && until > now) {
+            return;
+        }
+        if (!this.pending.add(uuid)) {
+            return;
+        }
+        Bukkit.getScheduler().runTask(this.plugin, () -> {
+            this.pending.remove(uuid);
+            if (player.isOnline()) {
+                activate(player, portalId);
+            }
+        });
+    }
+
+    private void activate(Player player, String entered) {
+        ConfigurationSection portal = this.plugin.configs().mechanics().getConfigurationSection("portals." + entered);
+        if (portal == null || !portal.getBoolean("enabled", true)) {
+            return;
+        }
+        String permission = portal.getString("permission", "");
+        if (permission != null && !permission.isBlank() && !player.hasPermission(permission)) {
+            this.plugin.messages().send(player, "portals.no-permission", Map.of("portal", entered));
+            return;
+        }
+        ConfigurationSection item = portal.getConfigurationSection("item");
+        if (item != null && !consumeOrMatch(player, item)) {
+            this.plugin.messages().send(player, "portals.need-item", Map.of("portal", entered));
+            return;
+        }
+        this.plugin.lastLocations().remember(player);
+        List<String> commands = portal.getStringList("commands");
+        Location destination = destinationOf(portal);
+        if (destination == null && commands.isEmpty()) {
+            this.plugin.messages().send(player, "portals.invalid-destination", Map.of("portal", entered));
+            return;
+        }
+        long cooldown = Math.max(0L, this.plugin.configs().mechanics().getLong("portal-settings.enter-cooldown-millis", 1500L));
+        this.cooldownUntil.put(player.getUniqueId(), System.currentTimeMillis() + cooldown);
+        if (!commands.isEmpty()) {
+            ActionCommands.run(this.plugin, player, commands, Map.of("portal", entered));
+        }
+        Sounds.play(this.plugin, player, "portals-enter");
+        if (destination == null) {
+            this.plugin.messages().send(player, "portals.used", Map.of("portal", entered));
+            return;
+        }
+        int warmup = Math.max(0, portal.getInt("warmup-seconds", 0));
+        if (warmup > 0) {
+            this.plugin.messages().send(player, "portals.warmup", Map.of(
+                    "portal", entered,
+                    "seconds", String.valueOf(warmup)
+            ));
+            Bukkit.getScheduler().runTaskLater(this.plugin, () -> teleport(player, destination), warmup * 20L);
+        } else {
+            teleport(player, destination);
+        }
+        this.plugin.messages().send(player, "portals.used", Map.of("portal", entered));
+    }
+
+    private void teleport(Player player, Location destination) {
+        if (!player.isOnline() || destination.getWorld() == null) {
+            return;
+        }
+        player.teleport(destination);
+        this.plugin.teleports().safeLand(player);
     }
 
     private NamespacedKey wandKey() {
@@ -290,21 +357,32 @@ public final class PortalService {
         return id;
     }
 
-    private static void writeLocation(FileConfiguration yaml, String path, Location location, boolean withWorld) {
-        if (withWorld && location.getWorld() != null) {
+    private static void writeBlock(FileConfiguration yaml, String path, Location location) {
+        yaml.set(path + ".x", location.getBlockX());
+        yaml.set(path + ".y", location.getBlockY());
+        yaml.set(path + ".z", location.getBlockZ());
+    }
+
+    private static void writeDestination(FileConfiguration yaml, String path, Location location) {
+        if (location.getWorld() != null) {
             yaml.set(path + ".world", location.getWorld().getName());
         }
         yaml.set(path + ".x", location.getX());
         yaml.set(path + ".y", location.getY());
         yaml.set(path + ".z", location.getZ());
-        if (withWorld) {
-            yaml.set(path + ".yaw", location.getYaw());
-            yaml.set(path + ".pitch", location.getPitch());
+        yaml.set(path + ".yaw", location.getYaw());
+        yaml.set(path + ".pitch", location.getPitch());
+    }
+
+    private static Location blockOf(Location location) {
+        if (location.getWorld() == null) {
+            return location.clone();
         }
+        return new Location(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     private static String normalize(String name) {
-        return name == null ? "" : name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "");
+        return name == null ? "" : name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_-]", "");
     }
 
     private static boolean isMmoId(String value) {
@@ -312,40 +390,51 @@ public final class PortalService {
     }
 
     private String nameAt(Location location) {
-        ConfigurationSection portals = this.plugin.configs().mechanics().getConfigurationSection("portals");
-        if (portals == null || location.getWorld() == null) {
+        if (location == null || location.getWorld() == null) {
             return null;
         }
-        for (String name : portals.getKeys(false)) {
-            ConfigurationSection portal = portals.getConfigurationSection(name);
-            if (portal != null && portal.getBoolean("enabled", true) && inside(portal, location)) {
-                return name;
+        int padding = Math.max(0, this.plugin.configs().mechanics().getInt("portal-settings.y-padding", 1));
+        String world = location.getWorld().getName();
+        int x = location.getBlockX();
+        int y = location.getBlockY();
+        int z = location.getBlockZ();
+        for (Region region : this.regions) {
+            if (region.contains(world, x, y, z, padding)) {
+                return region.id;
             }
         }
         return null;
     }
 
-    private boolean inside(ConfigurationSection portal, Location location) {
-        String worldName = portal.getString("world", "");
-        World world = location.getWorld();
-        if (world == null || !world.getName().equalsIgnoreCase(worldName)) {
-            return false;
+    private Region regionOf(String name, ConfigurationSection portal) {
+        if (portal == null || !portal.getBoolean("enabled", true)) {
+            return null;
         }
         ConfigurationSection pos1 = portal.getConfigurationSection("pos1");
         ConfigurationSection pos2 = portal.getConfigurationSection("pos2");
         if (pos1 == null || pos2 == null) {
-            return false;
+            return null;
         }
-        double minX = Math.min(pos1.getDouble("x"), pos2.getDouble("x"));
-        double maxX = Math.max(pos1.getDouble("x"), pos2.getDouble("x"));
-        double minY = Math.min(pos1.getDouble("y"), pos2.getDouble("y"));
-        double maxY = Math.max(pos1.getDouble("y"), pos2.getDouble("y"));
-        double minZ = Math.min(pos1.getDouble("z"), pos2.getDouble("z"));
-        double maxZ = Math.max(pos1.getDouble("z"), pos2.getDouble("z"));
-        double x = location.getX();
-        double y = location.getY();
-        double z = location.getZ();
-        return x >= minX && x <= maxX + 1.0D && y >= minY && y <= maxY + 1.0D && z >= minZ && z <= maxZ + 1.0D;
+        String world = portal.getString("world", "");
+        if (world == null || world.isBlank()) {
+            return null;
+        }
+        int x1 = pos1.getInt("x", (int) Math.floor(pos1.getDouble("x")));
+        int y1 = pos1.getInt("y", (int) Math.floor(pos1.getDouble("y")));
+        int z1 = pos1.getInt("z", (int) Math.floor(pos1.getDouble("z")));
+        int x2 = pos2.getInt("x", (int) Math.floor(pos2.getDouble("x")));
+        int y2 = pos2.getInt("y", (int) Math.floor(pos2.getDouble("y")));
+        int z2 = pos2.getInt("z", (int) Math.floor(pos2.getDouble("z")));
+        return new Region(
+                name,
+                world,
+                Math.min(x1, x2),
+                Math.max(x1, x2),
+                Math.min(y1, y2),
+                Math.max(y1, y2),
+                Math.min(z1, z2),
+                Math.max(z1, z2)
+        );
     }
 
     private Location destinationOf(ConfigurationSection portal) {
@@ -412,5 +501,14 @@ public final class PortalService {
             return i;
         }
         return -1;
+    }
+
+    private record Region(String id, String world, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+        private boolean contains(String worldName, int x, int y, int z, int yPadding) {
+            return this.world.equalsIgnoreCase(worldName)
+                    && x >= this.minX && x <= this.maxX
+                    && z >= this.minZ && z <= this.maxZ
+                    && y >= this.minY && y <= this.maxY + yPadding;
+        }
     }
 }

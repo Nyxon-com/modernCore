@@ -9,13 +9,15 @@
 #   teleport-spawn      true = tp spawn mondo (default true se commands è vuoto)
 #                       se lo spawn è fuori range, clamp Y su min/max (niente loop tp)
 #
-# Portali: cubo pos1-pos2 nel world. Si attiva ENTRANDO (non ogni tick).
-# /portal wand dà l'item. Destro = pos1, Shift+destro = pos2, Shift+sinistro = dest.
-# /portal command <nome> <comando> aggiunge un'azione (stessa sintassi GUI).
-#   item.material       vanilla richiesto in inventario (AIR / vuoto = nessun item)
-#   item.mmoitem-type   + mmoitem-id = richiede quell'MMOItem
-#   item.consume        true = toglie amount copie
+# Portali: cubo di BLOCCHI pos1-pos2 (inclusi). Camminare SOPRA o DENTRO attiva.
+# L'azione parte al tick successivo (i comandi in PlayerMoveEvent su Paper non partono).
+# /portal wand: Destro = pos1, Shift+destro = pos2, Shift+sinistro = dest (dove sei tu).
+# /portal command <nome> [player] spawn
+# /portal command <nome> [message] <green>ok
+# /portal command <nome> [console] say {player} è entrato
+#   item                assente / AIR = nessun oggetto richiesto
 #   commands            eseguite all'ingresso. Destinazione opzionale se ci sono solo comandi
+# portal-settings.y-padding  blocchi extra in alto (1 = resti dentro anche in piedi sul pavimento)
 #
 # Long-jump: solo CALPESTANDO la plate (look-trigger deve restare false).
 # /pressureplayerjump set <preset> associa IL blocco mirato a un preset (non salta mirando)
@@ -108,6 +110,10 @@ long-jump:
       vertical: 0.55
       worlds: []
   locations: {}
+
+portal-settings:
+  y-padding: 1
+  enter-cooldown-millis: 1500
 
 portal-wand:
   material: BLAZE_ROD

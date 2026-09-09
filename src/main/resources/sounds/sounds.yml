@@ -58,3 +58,8 @@ kits-deny:
   sound: minecraft:entity.villager.no
   volume: 1.0
   pitch: 0.8
+
+portals-enter:
+  sound: minecraft:entity.enderman.teleport
+  volume: 0.7
+  pitch: 1.2

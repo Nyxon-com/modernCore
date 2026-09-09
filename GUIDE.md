@@ -163,13 +163,14 @@ Piastre per materiale in `long-jump.plates`.
 
 ### Portali
 1. `/portal wand` — prendi la wand
-2. Destro su un blocco = pos1, Shift+destro = pos2, Shift+sinistro = dest (posizione tua)
-3. `/portal create <nome>`
-4. `/portal command <nome> [console] warp spawn` (o `[player] spawn`, `[message] ...`)
-5. `/portal item <nome>` con l'oggetto in mano (MMOItems riconosciuto)
-6. `/portal enable|disable|delete|list`
+2. Destro su un blocco = pos1, Shift+destro = pos2 (i **blocchi** sono il cubo, anche camminandoci sopra)
+3. Shift+sinistro = dest (la tua posizione + sguardo), oppure `/portal dest`
+4. `/portal create <nome>`
+5. `/portal command <nome> [player] spawn` — oppure `[message] <green>ok</green>`, `[console] say {player}`
+6. `/portal item <nome>` con l'oggetto in mano (mano vuota = niente item). MMOItems riconosciuto
+7. `/portal enable|disable|delete|list`  `/portal clearcommands <nome>`
 
-Se non imposti dest, il portale esegue solo i comandi.
+Senza dest il portale esegue solo i comandi. I comandi partono **dopo** il tick di movimento, altrimenti Paper li ignora. `portal-settings.y-padding` in `mechanics.yml` (default 1) fa sì che resti attivo anche in piedi sul pavimento selezionato.
 
 ---
 
@@ -181,6 +182,7 @@ Se non imposti dest, il portale esegue solo i comandi.
 - "[player] spawn"
 - "[sound] UI_BUTTON_CLICK"
 - "[message] <green>Fatto"
+- "[msg] <gray>alias di message"
 - "eco give {player} 10"   # senza tag = console
 ```
 

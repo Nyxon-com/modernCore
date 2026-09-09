@@ -49,15 +49,19 @@ public final class ActionCommands {
                 continue;
             }
             if (lower.startsWith("[player]")) {
-                player.performCommand(command(line.substring("[player]".length())));
+                String asPlayer = command(line.substring("[player]".length()));
+                if (!asPlayer.isBlank() && !player.performCommand(asPlayer)) {
+                    Bukkit.dispatchCommand(player, asPlayer);
+                }
                 continue;
             }
             if (lower.startsWith("[sound]")) {
                 Sounds.playRaw(plugin, player, line.substring("[sound]".length()).trim(), "action.sound");
                 continue;
             }
-            if (lower.startsWith("[message]")) {
-                player.sendMessage(plugin.messages().deserialize(line.substring("[message]".length()).trim()));
+            if (lower.startsWith("[message]") || lower.startsWith("[msg]")) {
+                int cut = lower.startsWith("[message]") ? "[message]".length() : "[msg]".length();
+                player.sendMessage(plugin.messages().deserialize(line.substring(cut).trim()));
                 continue;
             }
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command(line));

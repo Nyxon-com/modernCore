@@ -234,8 +234,16 @@ final class MechanicsCommands {
                             return Command.SINGLE_SUCCESS;
                         }))
                 .then(Commands.literal("command")
+                        .executes(ctx -> {
+                            this.plugin.messages().send(ctx.getSource().getSender(), "portals.command-usage", Map.of("label", name));
+                            return Command.SINGLE_SUCCESS;
+                        })
                         .then(Commands.argument("name", StringArgumentType.word())
                                 .suggests((ctx, builder) -> suggestPortals(builder))
+                                .executes(ctx -> {
+                                    this.plugin.messages().send(ctx.getSource().getSender(), "portals.command-usage", Map.of("label", name));
+                                    return Command.SINGLE_SUCCESS;
+                                })
                                 .then(Commands.argument("command", StringArgumentType.greedyString())
                                         .executes(ctx -> {
                                             module().portals().setCommand(
