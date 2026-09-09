@@ -23,24 +23,29 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 - [x] Nome warp invalido (`prova!`) rifiutato
 
 ## 3. Player
-- [ ] Join/quit MiniMessage; primo join usa `first-join`
+- [x] Join/quit MiniMessage; primo join usa `first-join`
 - [ ] `/nick <gradient:#ff0:#f0f>Test` senza `valary.nick.color` → niente colori; con permesso → ok
-- [ ] `/nick off` reset
-- [ ] `/msg`, `/r`, `/socialspy` (due account)
-- [ ] Vanilla `/tell` è quello Valary
-- [ ] `/fly` persiste al relog se `players.yml` `fly.persist: true`
-- [ ] `/god` ignora danno e fame; `/heal` `/feed` `/back`
+- [x] `/nick off` reset
+- [x] Nick in **chat**
+- [ ] Nick in **tab** (TAB plugin: deve comparire il nick, non lo username)
+- [ ] `/msg`, `/r`, `/socialspy` (due account): `[SS]` anche sui tuoi msg se `spy-self: true`
+- [x] Vanilla `/tell` è quello Valary
+- [x] `/fly` persiste al relog se `players.yml` `fly.persist: true`
+- [ ] `/gamemode creative` nello spawn, `/mvtp` (o warp) in un altro mondo → resti creative
+- [x] `/god` ignora danno e fame; `/heal` `/feed` `/back`
 
 ## 4. Moderazione
 - [ ] `/kick <player> test` schermata custom
-- [ ] `/ban <player> 10s motivo` → kick + non entra; dopo 10s entra
+- [ ] `/ban <player> 10s motivo` → dialog countdown; dopo 10s entra
 - [ ] `/banlist`, `/pardon <player>`
 - [ ] `/ipban <player>` → altri account stesso IP kickati
+- [ ] `/unbanip <player>` o `/unban <player>` toglie anche l'IP ban
+- [ ] `/history <player>` mostra kick/ban/mute/warn
 - [ ] `/mute 5m` blocca chat e `/msg`; `/unmute`
 - [ ] `/warn` + `/warnings` (i warn NON scadono subito)
-- [ ] `/dupeip <player>`: online/offline, BAN, MUTE, warn
+- [x] `/dupeip <player>`: online/offline, BAN, MUTE, warn (layout HISTORY/DUPEIP)
 - [ ] `/vanish` invisibile, tab, no pickup se flag; `/vanishedit pickup`
-- [ ] `/invsee <player>` modifica zaino/armatura
+- [ ] `/invsee <player>` modifica zaino/armaturastop
 
 ## 5. Kit
 - [ ] Account nuovo: kit `starter` in mano entro ~1s

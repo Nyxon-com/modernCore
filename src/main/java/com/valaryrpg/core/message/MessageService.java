@@ -44,13 +44,21 @@ public final class MessageService {
     }
 
     public String text(String key, Map<String, String> placeholders) {
-        String raw = this.plugin.configs().messages().getString(key, "<red>Messaggio mancante: " + key);
+        String raw = raw(key);
         String prefix = this.plugin.configs().root().getString("plugin.prefix", "");
         raw = raw.replace("{prefix}", prefix);
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-            raw = raw.replace("{" + entry.getKey() + "}", entry.getValue());
+            raw = raw.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "" : entry.getValue());
         }
-        return raw;
+        return raw.replace("\r\n", "\n").replace("\n", "<newline>");
+    }
+
+    private String raw(String key) {
+        var yaml = this.plugin.configs().messages();
+        if (yaml.isList(key)) {
+            return String.join("\n", yaml.getStringList(key));
+        }
+        return yaml.getString(key, "<red>Messaggio mancante: " + key);
     }
 
     public Component component(String key, Map<String, String> placeholders) {

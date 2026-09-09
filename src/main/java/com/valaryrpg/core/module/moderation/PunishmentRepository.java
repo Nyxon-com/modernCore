@@ -53,6 +53,8 @@ public final class PunishmentRepository {
                 + table() + " WHERE active = 1 AND type = ? AND ("
                 + "(target_uuid IS NOT NULL AND target_uuid = ?) OR lower(target_name) = lower(?) OR (target_ip <> '' AND target_ip = ?)"
                 + ") ORDER BY id DESC";
+        List<Long> expired = new ArrayList<>();
+        Optional<Punishment> found = Optional.empty();
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, type.name());
@@ -63,22 +65,25 @@ public final class PunishmentRepository {
                 while (result.next()) {
                     Punishment punishment = read(result);
                     if (punishment.expired()) {
-                        deactivate(punishment.id());
+                        expired.add(punishment.id());
                         continue;
                     }
-                    return Optional.of(punishment);
+                    found = Optional.of(punishment);
+                    break;
                 }
             }
         } catch (SQLException exception) {
             throw new StorageException("Lettura punizione fallita.", exception);
         }
-        return Optional.empty();
+        deactivateAll(expired);
+        return found;
     }
 
     public List<Punishment> listActive(PunishmentType type) {
         String sql = "SELECT id, type, target_uuid, target_name, target_ip, staff, reason, created_at, expires_at, active FROM "
                 + table() + " WHERE active = 1 AND type = ? ORDER BY id DESC";
         List<Punishment> list = new ArrayList<>();
+        List<Long> expired = new ArrayList<>();
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, type.name());
@@ -86,7 +91,7 @@ public final class PunishmentRepository {
                 while (result.next()) {
                     Punishment punishment = read(result);
                     if (punishment.expired()) {
-                        deactivate(punishment.id());
+                        expired.add(punishment.id());
                         continue;
                     }
                     list.add(punishment);
@@ -94,6 +99,28 @@ public final class PunishmentRepository {
             }
         } catch (SQLException exception) {
             throw new StorageException("Lista punizioni fallita.", exception);
+        }
+        deactivateAll(expired);
+        return list;
+    }
+
+    public List<Punishment> history(UUID uuid, String name, String ip) {
+        String sql = "SELECT id, type, target_uuid, target_name, target_ip, staff, reason, created_at, expires_at, active FROM "
+                + table() + " WHERE (target_uuid IS NOT NULL AND target_uuid = ?) OR lower(target_name) = lower(?) "
+                + "OR (target_ip <> '' AND target_ip = ?) ORDER BY id DESC";
+        List<Punishment> list = new ArrayList<>();
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid == null ? "" : uuid.toString());
+            statement.setString(2, name == null ? "" : name);
+            statement.setString(3, ip == null ? "" : ip);
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    list.add(read(result));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Storico punizioni fallito.", exception);
         }
         return list;
     }
@@ -134,11 +161,21 @@ public final class PunishmentRepository {
     }
 
     public void deactivate(long id) {
+        deactivateAll(List.of(id));
+    }
+
+    private void deactivateAll(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
         String sql = "UPDATE " + table() + " SET active = 0 WHERE id = ?";
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, id);
-            statement.executeUpdate();
+            for (Long id : ids) {
+                statement.setLong(1, id);
+                statement.addBatch();
+            }
+            statement.executeBatch();
         } catch (SQLException exception) {
             throw new StorageException("Revoca punizione fallita.", exception);
         }

@@ -3,6 +3,7 @@ package com.valaryrpg.core.util;
 import com.valaryrpg.core.ValaryCorePlugin;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -65,13 +66,25 @@ public final class Durations {
         long days = TimeUnit.MILLISECONDS.toDays(remaining);
         long hours = TimeUnit.MILLISECONDS.toHours(remaining) % 24;
         long minutes = TimeUnit.MILLISECONDS.toMinutes(remaining) % 60;
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(remaining) % 60;
+        Map<String, String> parts = Map.of(
+                "days", String.valueOf(days),
+                "hours", String.valueOf(hours),
+                "minutes", String.valueOf(minutes),
+                "seconds", String.valueOf(seconds)
+        );
         if (days > 0) {
-            return days + "d " + hours + "h";
+            return plugin.messages().text("duration.days", parts);
         }
         if (hours > 0) {
-            return hours + "h " + minutes + "m";
+            return plugin.messages().text("duration.hours", parts);
         }
-        return Math.max(1, minutes) + "m";
+        if (minutes > 0) {
+            return plugin.messages().text("duration.minutes", parts);
+        }
+        return plugin.messages().text("duration.seconds", Map.of(
+                "seconds", String.valueOf(Math.max(1, TimeUnit.MILLISECONDS.toSeconds(remaining)))
+        ));
     }
 
     private static long toMillis(long amount, String unit) {

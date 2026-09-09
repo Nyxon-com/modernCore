@@ -48,6 +48,12 @@ final class PlayersCommands {
         registrar.register(godCommand(), "Attiva o disattiva il god mode", aliases("commands.god-aliases"));
         registrar.register(healCommand(), "Cura un giocatore", aliases("commands.heal-aliases"));
         registrar.register(feedCommand(), "Riempie la fame", aliases("commands.feed-aliases"));
+        for (String alias : aliases("commands.give-aliases")) {
+            if (alias.isBlank() || alias.equalsIgnoreCase("give") || alias.equalsIgnoreCase("i")) {
+                continue;
+            }
+            registrar.register(GiveCommands.giveNode(alias), "Give Valary", List.of());
+        }
     }
 
     private LiteralCommandNode<CommandSourceStack> replyCommand() {

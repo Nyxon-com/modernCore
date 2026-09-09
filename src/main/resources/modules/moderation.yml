@@ -24,12 +24,25 @@ mute:
 warn:
   default-reason: Warning
   max-listed: 10
+history:
+  max-listed: 25
 vanish:
   hide-from-tab: true
   fake-join-quit: false
   night-vision: true
   no-pickup: true
   silent-join: true
+
+# Schermata ban. Connection Lost vanilla NON può aggiornare il tempo: è un frame fisso.
+# live-countdown true = dialog nativo Minecraft (1.21.6+) col countdown che scende ogni secondo.
+# Testi/colori/spazi: lang/messages.yml → moderation.ban-dialog-* e moderation.*-screen
+screen:
+  live-countdown: true
+  tick-ticks: 20
+  dialog-width: 320
+  hide-from-tab: true
+  gamemode: SPECTATOR
+  leave-click: valaryrpg:ban-leave
 
 # /invsee layout. Title MiniMessage, {player} = target.
 # contents-start: i 36 slot inventario (hotbar 0-8 + zaino) partono da qui.

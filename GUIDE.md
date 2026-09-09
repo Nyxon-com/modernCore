@@ -55,7 +55,7 @@ MiniMessage: `<red>`, `<gradient:#8B5CF6:#EC4899>`, `&#FF00AA`, `<lang:item.mine
 
 Se **Multiverse-Core** è presente, pvp, difficulty, gamemode, hunger e flight restano quelli di MV: non serve rifarli in `worlds.yml`. Valary usa `/setspawn`, weatherlock e timelock. Senza MV, il catalogo in `worlds.yml` viene applicato come prima.
 
-PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary_god%` `%valary_vanished%` `%valary_fly%`
+PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary_nick_mm%` `%valary_god%` `%valary_vanished%` `%valary_fly%`
 
 ---
 
@@ -75,18 +75,28 @@ PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary
 
 - Join/quit in `lang/messages.yml` → `join-quit.*`. Stringa vuota = nessun messaggio
 - `/nick <testo|off>` MiniMessage. Colori: `valary.nick.color`. Altri: `valary.nick.others`
-- `/msg` `/tell` `/w` `/whisper` `/m` (sostituiscono i vanilla) `/r` `/socialspy`
-- `/fly` `/god` `/heal` `/feed` `/back`
+  - Chat: `modules/players.yml` → `chat.format` (`{displayname}` `{message}` `%luckperms_prefix%`)
+  - Tab vanilla: `playerListName`. Se usi **TAB** (NEZNAMY), Valary imposta il nome via API; in config TAB puoi anche usare `%valary_nick%` / `%valary_nick_mm%`
+- `/msg` `/tell` `/w` `/whisper` `/m` `/r` — testi in `lang/messages.yml` → `msg.*` (`to-sender`, `to-target`, `spy`)
+- `/socialspy` (`/ss`): vedi i privati in `[SS]`. `msg.spy-self: true` mostra anche i tuoi (test a 2 account). `false` = solo gli altri
+- `/fly` persiste al relog. `/gamemode` persiste **tra i mondi** (anche Multiverse), tranne se `worlds.<mondo>.force-gamemode: true`
+- `/god` `/heal` `/feed` `/back`
 
 ---
 
 ## Moderazione (override vanilla)
 
-`/kick` `/ban [durata] [motivo]` `/banlist` `/pardon` `/pardon-ip` `/ipban` `/mute` `/unmute` `/warn` `/warnings` `/dupeip` `/vanish` `/vanishedit` `/invsee`
+`/kick` `/ban [durata] [motivo]` `/banlist` `/pardon` `/pardon-ip` `/unban` `/unbanip` `/ipban` `/mute` `/unmute` `/warn` `/warnings` `/history` `/dupeip` `/vanish` `/vanishedit` `/invsee`
 
 Durate: `10s` `5m` `2h` `7d` `2w` `1mo` `1y` `perm`. Vuoto = permanente.
 
-`/dupeip <player|ip>` mostra gli account sullo stesso IP **e** se sono online, bannati, ipban, mutati, quanti warn.
+**Togliere un IP ban:** `/unbanip <player|ip>` oppure `/unban <player>` (toglie anche l’IP ban di quell’account) o `/pardon-ip <ip>`.
+
+`/history <player>` — kick, ban, ipban, mute, warn (attivi e chiusi). Limite: `modules/moderation.yml` → `history.max-listed`.
+
+`/dupeip <player|ip>` — account sullo stesso IP, online/ban/mute/warn. Testi in `moderation.dupeip*`.
+
+Schermata ban a tempo: dialog nativo col countdown (`screen.live-countdown`). Layout: `lang/messages.yml` → `moderation.ban-dialog-*`.
 
 `/vanishedit nightvision|pickup`
 

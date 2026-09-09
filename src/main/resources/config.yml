@@ -1,6 +1,6 @@
 # =============================================================================
 # ValaryRPG-Core — config principale (moduli, comandi, permessi, HUD teleport)
-# Testi: lang/messages.yml   Suoni: sounds/sounds.yml   Moduli: modules/<nome>.yml
+# Testi: lang/messages.yml, lang/vanilla.yml   Suoni: sounds/sounds.yml   Moduli: modules/<nome>.yml
 # Disattiva un modulo con false: non registra comandi/eventi.
 # Permessi: cambia il nodo qui, non nel Java. Alias comandi: liste sotto commands.*
 # =============================================================================
@@ -8,6 +8,8 @@
 plugin:
   prefix: "<gradient:#8B5CF6:#EC4899><bold>Valary</bold></gradient> <dark_gray>»"
   language: it
+  # Sostituisce i testi vanilla (give, gamemode, time, weather, tp, advancement…) con lang/vanilla.yml
+  vanilla-messages: true
 
 modules:
   worlds: true
@@ -73,6 +75,9 @@ commands:
   banlist-aliases: []
   unban: unban
   unban-aliases: []
+  unbanip: unbanip
+  unbanip-aliases:
+    - pardonip
   ipban: ipban
   ipban-aliases: []
   mute: mute
@@ -83,6 +88,9 @@ commands:
   warn-aliases: []
   warnings: warnings
   warnings-aliases: []
+  history: history
+  history-aliases:
+    - hist
   dupeip: dupeip
   dupeip-aliases: []
   vanish: vanish
@@ -118,6 +126,9 @@ commands:
   heal-aliases: []
   feed: feed
   feed-aliases: []
+  give: give
+  give-aliases:
+    - i
   portal: portal
   portal-aliases:
     - portals
@@ -158,6 +169,7 @@ permissions:
   unmute: valary.unmute
   warn: valary.warn
   warnings: valary.warnings
+  history: valary.history
   dupeip: valary.dupeip
   vanish: valary.vanish
   vanish-others: valary.vanish.others
@@ -183,6 +195,7 @@ permissions:
   heal-others: valary.heal.others
   feed: valary.feed
   feed-others: valary.feed.others
+  give: valary.give
   portal: valary.portal
   pressureplayerjump: valary.pressureplayerjump
   teleport-cooldown-bypass: valary.teleport.cooldown.bypass

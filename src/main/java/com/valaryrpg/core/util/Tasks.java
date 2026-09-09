@@ -23,6 +23,14 @@ public final class Tasks {
         Bukkit.getScheduler().runTask(plugin, () -> runQuiet(plugin, task));
     }
 
+    public static void nextTick(Plugin plugin, Runnable task) {
+        Bukkit.getScheduler().runTask(plugin, () -> runQuiet(plugin, task));
+    }
+
+    public static void later(Plugin plugin, long ticks, Runnable task) {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> runQuiet(plugin, task), Math.max(1L, ticks));
+    }
+
     private static void runQuiet(Plugin plugin, Runnable task) {
         try {
             task.run();

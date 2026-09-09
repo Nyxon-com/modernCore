@@ -3,6 +3,7 @@ package com.valaryrpg.core.module.players;
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.util.Perms;
 import com.valaryrpg.core.util.Sounds;
+import com.valaryrpg.core.util.Tasks;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -80,13 +81,16 @@ public final class PrivateMessageService {
     public void toggleSpy(Player player) {
         boolean next = !isSpy(player);
         this.spyCache.put(player.getUniqueId(), next);
-        this.repository.updateSocialSpy(player.getUniqueId(), next);
+        Tasks.async(this.plugin, () -> this.repository.updateSocialSpy(player.getUniqueId(), player.getName(), next));
         this.plugin.messages().send(player, next ? "msg.spy-on" : "msg.spy-off");
     }
 
+    public void loadSpy(Player player, boolean enabled) {
+        this.spyCache.put(player.getUniqueId(), enabled);
+    }
+
     public void loadSpy(Player player) {
-        this.repository.find(player.getUniqueId()).ifPresent(profile ->
-                this.spyCache.put(player.getUniqueId(), profile.socialSpy()));
+        this.repository.find(player.getUniqueId()).ifPresent(profile -> loadSpy(player, profile.socialSpy()));
     }
 
     public void unload(UUID uuid) {
@@ -102,14 +106,16 @@ public final class PrivateMessageService {
         if (!this.plugin.configs().players().getBoolean("msg.socialspy", true)) {
             return;
         }
+        boolean spySelf = this.plugin.configs().players().getBoolean("msg.spy-self", true);
         for (Player staff : Bukkit.getOnlinePlayers()) {
             if (!Perms.has(this.plugin, staff, "socialspy") || !isSpy(staff)) {
                 continue;
             }
-            if (staff.equals(sender) || staff.equals(target)) {
+            boolean involved = staff.equals(sender) || staff.equals(target);
+            if (involved && !spySelf) {
                 continue;
             }
-            this.plugin.messages().send(staff, "msg.spy", Map.of(
+            this.plugin.messages().send(staff, involved ? "msg.spy-self-line" : "msg.spy", Map.of(
                     "player", senderName,
                     "target", targetName,
                     "message", escaped

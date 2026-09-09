@@ -18,7 +18,10 @@
 # Long-jump: solo CALPESTANDO la plate (look-trigger deve restare false).
 # /pressureplayerjump set <preset> associa IL blocco mirato a un preset (non salta mirando)
 #
-# Hologram a terra: font piccolo + countdown despawn. show-lore = lore dell'item
+# Hologram a terra (TextDisplay): MiniMessage, niente box nametag se background=0.
+#   font vuoto = font Minecraft normale. minecraft:uniform = testo minuscolo.
+#   background ARGB: 0 = trasparente. 1073741824 = riquadro nero vanilla.
+#   {name} = nome item (lang vanilla o MiniMessage custom). {amount} {seconds} {line}
 # =============================================================================
 
 limity:
@@ -45,18 +48,27 @@ ground-items:
   show-name: true
   show-lore: false
   show-despawn: true
+  hide-amount-when-one: true
   despawn-seconds: 300
   update-interval-ticks: 20
-  scale: 0.45
-  font: minecraft:uniform
+  scale: 0.8
+  offset-y: 0.32
+  font: ""
   max-lore-lines: 4
   max-holograms: 80
-  name-format: "<white>{name} <gray>x{amount}"
-  lore-format: "<dark_gray>{line}"
+  vanilla-name: "<gradient:#FFE08A:#E2A84A>{name}</gradient>"
+  name-format: "{name} <dark_gray>×<white>{amount}"
+  name-format-one: "{name}"
+  lore-format: "<gray>{line}"
   despawn-format: "<dark_gray>{seconds}s"
-  background: 1073741824
-  see-through: true
-  line-width: 200
+  background: 0
+  default-background: false
+  shadowed: true
+  see-through: false
+  line-width: 140
+  text-opacity: -1
+  billboard: CENTER
+  alignment: CENTER
 
 copycoord:
   decimals: 1

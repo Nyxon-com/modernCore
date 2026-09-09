@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Sostituisce i comandi vanilla (msg/tell/w, kick, ban, ban-ip, banlist, pardon).
+ * Sostituisce i comandi vanilla (msg/tell/w, kick, ban, give, pardon).
  */
 public final class VanillaCommandOverrides {
 
@@ -35,6 +35,8 @@ public final class VanillaCommandOverrides {
         registrar.register(ModerationCommands.banListNode("banlist"), "Lista ban Valary", List.of());
         registrar.register(ModerationCommands.unbanNode("pardon"), "Unban Valary", List.of());
         registrar.register(ModerationCommands.unbanNode("pardon-ip"), "Unban IP Valary", List.of());
+        registrar.register(GiveCommands.giveNode("give"), "Give Valary", List.of());
+        registrar.register(GiveCommands.selfNode("i"), "Give a te stesso", List.of());
     }
 
     public static LiteralCommandNode<CommandSourceStack> privateMessage(String literal) {

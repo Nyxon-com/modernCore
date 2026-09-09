@@ -30,6 +30,8 @@ public final class ModerationCommands {
 
     void register(Commands registrar) {
         registrar.register(unbanNode("unban"), "Unban Valary", aliases("commands.unban-aliases"));
+        registrar.register(unbanNode(string("commands.unbanip", "unbanip")), "Unban IP Valary", aliases("commands.unbanip-aliases"));
+        registrar.register(historyNode(string("commands.history", "history")), "Storico punizioni", aliases("commands.history-aliases"));
         registrar.register(banIpNode("ipban"), "IP ban Valary", aliases("commands.ipban-aliases"));
         registrar.register(muteNode("mute"), "Mute Valary", aliases("commands.mute-aliases"));
         registrar.register(unmuteNode("unmute"), "Unmute Valary", aliases("commands.unmute-aliases"));
@@ -159,6 +161,23 @@ public final class ModerationCommands {
                                 return 0;
                             }
                             service.warnings(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "player"));
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .build();
+    }
+
+    private LiteralCommandNode<CommandSourceStack> historyNode(String literal) {
+        return Commands.literal(literal)
+                .requires(stack -> has("history", stack.getSender()))
+                .executes(ctx -> usage(ctx.getSource().getSender(), "moderation.history-usage", literal))
+                .then(Commands.argument("player", StringArgumentType.word())
+                        .suggests((ctx, builder) -> suggestOnline(builder))
+                        .executes(ctx -> {
+                            ModerationService service = moderation();
+                            if (service == null) {
+                                return 0;
+                            }
+                            service.history(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "player"));
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();
@@ -415,6 +434,11 @@ public final class ModerationCommands {
 
     private List<String> aliases(String path) {
         return this.plugin.configs().root().getStringList(path);
+    }
+
+    private String string(String path, String fallback) {
+        String value = this.plugin.configs().root().getString(path, fallback);
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     @FunctionalInterface

@@ -1,7 +1,8 @@
 # =============================================================================
-# Player: join/quit MiniMessage (messages.yml join-quit.*), nick, msg, fly.
+# Player: join/quit, nick (chat/tab), msg, fly e gamemode persistenti, give in inventario.
 # nick.blocked-words: sottostringhe case-insensitive. max-length = caratteri visibili.
-# fly.persist: salva su SQL. start-flying: se persist=on, vola subito al login.
+# chat.format: MiniMessage + PlaceholderAPI. {displayname} {name} {message}
+# fly.persist / gamemode.persist: salva su SQL e ripristina a relog e /valary reload.
 # =============================================================================
 
 join-quit:
@@ -10,15 +11,32 @@ join-quit:
 nick:
   max-length: 32
   change-tablist: true
+  change-nametag: true
+  change-chat: true
   blocked-words: []
+
+chat:
+  enabled: true
+  format: "%luckperms_prefix%{displayname} <dark_gray>» <reset>{message}"
 
 msg:
   allow-self: false
   socialspy: true
+  # true = anche i tuoi /msg appaiono in [SS] (utile in test a 2 account)
+  spy-self: true
 
 fly:
   persist: true
   start-flying: true
+
+gamemode:
+  persist: true
+
+give:
+  # false = l'item resta in inventario; se è pieno NON viene droppato a terra
+  drop-overflow: false
+  notify-target: true
+  max-amount: 2304
 
 back:
   include-death: true

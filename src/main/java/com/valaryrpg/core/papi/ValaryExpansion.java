@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Placeholder RAM-only: %valary_nick%, %valary_god%, %valary_vanished%, %valary_world%, %valary_world_alias%, %valary_fly%.
+ * Placeholder RAM-only: %valary_nick%, %valary_nick_mm%, %valary_god%, %valary_vanished%, %valary_world%, %valary_world_alias%, %valary_fly%.
  */
 public final class ValaryExpansion extends PlaceholderExpansion {
 
@@ -50,6 +50,7 @@ public final class ValaryExpansion extends PlaceholderExpansion {
         Player online = player.getPlayer();
         return switch (params.toLowerCase()) {
             case "nick" -> nick(online, player);
+            case "nick_mm" -> nickMini(online, player);
             case "god" -> flag(online != null && god(online));
             case "vanished" -> flag(online != null && vanished(online));
             case "fly" -> flag(online != null && online.getAllowFlight());
@@ -61,7 +62,22 @@ public final class ValaryExpansion extends PlaceholderExpansion {
 
     private String nick(Player online, OfflinePlayer offline) {
         if (online != null) {
+            PlayersModule module = this.plugin.modules().get("players");
+            if (module != null && module.nicks() != null) {
+                return PlainTextComponentSerializer.plainText().serialize(module.nicks().displayComponent(online));
+            }
             return PlainTextComponentSerializer.plainText().serialize(online.displayName());
+        }
+        String name = offline.getName();
+        return name == null ? "" : name;
+    }
+
+    private String nickMini(Player online, OfflinePlayer offline) {
+        if (online != null) {
+            PlayersModule module = this.plugin.modules().get("players");
+            if (module != null && module.nicks() != null) {
+                return module.nicks().displayMini(online);
+            }
         }
         String name = offline.getName();
         return name == null ? "" : name;

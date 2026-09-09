@@ -21,7 +21,7 @@ public final class PlayerDataRepository {
     }
 
     public Optional<PlayerProfile> find(UUID uuid) {
-        String sql = "SELECT name, nick, fly, social_spy, first_join, last_join, last_ip FROM " + table() + " WHERE uuid = ?";
+        String sql = "SELECT name, nick, fly, social_spy, gamemode, first_join, last_join, last_ip FROM " + table() + " WHERE uuid = ?";
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, uuid.toString());
@@ -35,6 +35,7 @@ public final class PlayerDataRepository {
                         result.getString("nick"),
                         result.getInt("fly") == 1,
                         result.getInt("social_spy") == 1,
+                        result.getString("gamemode"),
                         result.getLong("first_join"),
                         result.getLong("last_join"),
                         result.getString("last_ip")
@@ -64,20 +65,24 @@ public final class PlayerDataRepository {
         }
     }
 
-    public void updateNick(UUID uuid, String nick) {
-        updateColumn(uuid, "nick", nick);
+    public void updateNick(UUID uuid, String name, String nick) {
+        upsertString(uuid, name, "nick", nick);
     }
 
-    public void updateFly(UUID uuid, boolean fly) {
-        updateFlag(uuid, "fly", fly);
+    public void updateFly(UUID uuid, String name, boolean fly) {
+        upsertFlag(uuid, name, "fly", fly);
     }
 
-    public void updateSocialSpy(UUID uuid, boolean spy) {
-        updateFlag(uuid, "social_spy", spy);
+    public void updateSocialSpy(UUID uuid, String name, boolean spy) {
+        upsertFlag(uuid, name, "social_spy", spy);
     }
 
-    public void updateGod(UUID uuid, boolean god) {
-        updateFlag(uuid, "god", god);
+    public void updateGod(UUID uuid, String name, boolean god) {
+        upsertFlag(uuid, name, "god", god);
+    }
+
+    public void updateGamemode(UUID uuid, String name, String gamemode) {
+        upsertString(uuid, name, "gamemode", gamemode);
     }
 
     public boolean god(UUID uuid) {
@@ -198,6 +203,48 @@ public final class PlayerDataRepository {
 
     private static String empty(String value) {
         return value == null ? "" : value;
+    }
+
+    private void upsertString(UUID uuid, String name, String column, String value) {
+        long now = System.currentTimeMillis();
+        String sql = this.plugin.storage().type().isRemote()
+                ? "INSERT INTO " + table() + " (uuid, name, first_join, last_join, last_ip, " + column + ") VALUES (?,?,?,?,?,?) "
+                + "ON DUPLICATE KEY UPDATE name=VALUES(name), " + column + "=VALUES(" + column + ")"
+                : "INSERT INTO " + table() + " (uuid, name, first_join, last_join, last_ip, " + column + ") VALUES (?,?,?,?,?,?) "
+                + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, " + column + "=excluded." + column;
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid.toString());
+            statement.setString(2, name == null || name.isBlank() ? "-" : name);
+            statement.setLong(3, now);
+            statement.setLong(4, now);
+            statement.setString(5, "");
+            statement.setString(6, value);
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Aggiornamento " + column + " fallito.", exception);
+        }
+    }
+
+    private void upsertFlag(UUID uuid, String name, String column, boolean value) {
+        long now = System.currentTimeMillis();
+        String sql = this.plugin.storage().type().isRemote()
+                ? "INSERT INTO " + table() + " (uuid, name, first_join, last_join, last_ip, " + column + ") VALUES (?,?,?,?,?,?) "
+                + "ON DUPLICATE KEY UPDATE name=VALUES(name), " + column + "=VALUES(" + column + ")"
+                : "INSERT INTO " + table() + " (uuid, name, first_join, last_join, last_ip, " + column + ") VALUES (?,?,?,?,?,?) "
+                + "ON CONFLICT(uuid) DO UPDATE SET name=excluded.name, " + column + "=excluded." + column;
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid.toString());
+            statement.setString(2, name == null || name.isBlank() ? "-" : name);
+            statement.setLong(3, now);
+            statement.setLong(4, now);
+            statement.setString(5, "");
+            statement.setInt(6, value ? 1 : 0);
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Aggiornamento " + column + " fallito.", exception);
+        }
     }
 
     private void updateColumn(UUID uuid, String column, String value) {

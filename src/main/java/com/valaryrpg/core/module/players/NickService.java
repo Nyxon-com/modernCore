@@ -2,8 +2,13 @@ package com.valaryrpg.core.module.players;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.util.Perms;
+import com.valaryrpg.core.util.Placeholders;
+import com.valaryrpg.core.util.Tasks;
+import io.papermc.paper.chat.ChatRenderer;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -11,29 +16,38 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Nickname in RAM, tab, nametag e chat. SQL solo async.
+ */
 public final class NickService {
 
     private final ValaryCorePlugin plugin;
     private final PlayerDataRepository repository;
+    private final Map<UUID, String> nicks = new ConcurrentHashMap<>();
 
     public NickService(ValaryCorePlugin plugin, PlayerDataRepository repository) {
         this.plugin = plugin;
         this.repository = repository;
     }
 
+    public void applyStored(Player player, String stored) {
+        apply(player, stored == null || stored.isBlank() ? null : stored);
+    }
+
     public void applyStored(Player player) {
-        this.repository.find(player.getUniqueId()).ifPresent(profile -> apply(player, profile.nick()));
+        this.repository.find(player.getUniqueId()).ifPresent(profile -> applyStored(player, profile.nick()));
     }
 
     public void show(Player player) {
-        this.repository.find(player.getUniqueId()).ifPresentOrElse(profile -> {
-            if (profile.nick() == null || profile.nick().isBlank()) {
-                this.plugin.messages().send(player, "nick.none");
-                return;
-            }
-            this.plugin.messages().send(player, "nick.current", Map.of("nick", profile.nick()));
-        }, () -> this.plugin.messages().send(player, "nick.none"));
+        String nick = this.nicks.get(player.getUniqueId());
+        if (nick == null || nick.isBlank()) {
+            this.plugin.messages().send(player, "nick.none");
+            return;
+        }
+        this.plugin.messages().send(player, "nick.current", Map.of("nick", nick));
     }
 
     public void set(Player target, String rawNick, CommandSender initiator) {
@@ -41,8 +55,8 @@ public final class NickService {
         if (sanitized == null) {
             return;
         }
-        this.repository.updateNick(target.getUniqueId(), sanitized);
         apply(target, sanitized);
+        Tasks.async(this.plugin, () -> this.repository.updateNick(target.getUniqueId(), target.getName(), sanitized));
         boolean self = initiator instanceof Player player && player.getUniqueId().equals(target.getUniqueId());
         this.plugin.messages().send(initiator, "nick.set", Map.of("player", target.getName(), "nick", sanitized));
         if (!self) {
@@ -54,8 +68,8 @@ public final class NickService {
     }
 
     public void clear(Player target, CommandSender initiator) {
-        this.repository.updateNick(target.getUniqueId(), null);
         apply(target, null);
+        Tasks.async(this.plugin, () -> this.repository.updateNick(target.getUniqueId(), target.getName(), null));
         boolean self = initiator instanceof Player player && player.getUniqueId().equals(target.getUniqueId());
         this.plugin.messages().send(initiator, "nick.cleared", Map.of("player", target.getName()));
         if (!self) {
@@ -64,26 +78,112 @@ public final class NickService {
     }
 
     public String displayMini(Player player) {
-        return this.repository.find(player.getUniqueId())
-                .map(PlayerProfile::nick)
-                .filter(nick -> nick != null && !nick.isBlank())
-                .orElseGet(() -> this.plugin.messages().escape(player.getName()));
+        String nick = this.nicks.get(player.getUniqueId());
+        if (nick != null && !nick.isBlank()) {
+            return nick;
+        }
+        return this.plugin.messages().escape(player.getName());
+    }
+
+    public Component displayComponent(Player player) {
+        String nick = this.nicks.get(player.getUniqueId());
+        if (nick != null && !nick.isBlank()) {
+            return this.plugin.messages().deserialize(nick);
+        }
+        return Component.text(player.getName());
+    }
+
+    public void formatChat(AsyncChatEvent event) {
+        Player player = event.getPlayer();
+        Component nick = displayComponent(player);
+        if (this.plugin.configs().players().getBoolean("chat.enabled", true)) {
+            String format = this.plugin.configs().players().getString(
+                    "chat.format",
+                    "%luckperms_prefix%{displayname} <dark_gray>» <reset>{message}"
+            );
+            event.renderer(formatted(player, nick, format));
+            return;
+        }
+        if (!this.plugin.configs().players().getBoolean("nick.change-chat", true)) {
+            return;
+        }
+        ChatRenderer previous = event.renderer();
+        event.renderer((source, sourceDisplayName, message, viewer) -> previous.render(source, nick, message, viewer));
+    }
+
+    public void reapply(Player player) {
+        apply(player, this.nicks.get(player.getUniqueId()));
+    }
+
+    public void unload(UUID uuid) {
+        this.nicks.remove(uuid);
+    }
+
+    private ChatRenderer formatted(Player player, Component nick, String format) {
+        return (source, sourceDisplayName, message, viewer) -> {
+            String filled = Placeholders.apply(player, format == null ? "" : format);
+            filled = filled
+                    .replace("{displayname}", MiniMessage.miniMessage().serialize(nick))
+                    .replace("{player}", this.plugin.messages().escape(player.getName()))
+                    .replace("{name}", this.plugin.messages().escape(player.getName()));
+            int split = filled.indexOf("{message}");
+            if (split < 0) {
+                return parse(filled).append(Component.space()).append(message);
+            }
+            Component left = parse(filled.substring(0, split));
+            Component right = parse(filled.substring(split + "{message}".length()));
+            return left.append(message).append(right);
+        };
+    }
+
+    private Component parse(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return Component.empty();
+        }
+        if (raw.indexOf('&') >= 0 || raw.indexOf('§') >= 0) {
+            return LegacyComponentSerializer.legacySection().deserialize(raw.replace('&', '§'));
+        }
+        return this.plugin.messages().deserialize(raw);
     }
 
     private void apply(Player player, String nick) {
-        boolean tab = this.plugin.configs().players().getBoolean("nick.change-tablist", true);
         if (nick == null || nick.isBlank()) {
+            this.nicks.remove(player.getUniqueId());
             player.displayName(null);
-            if (tab) {
-                player.playerListName(null);
-            }
+            player.playerListName(null);
+            player.customName(null);
+            player.setCustomNameVisible(false);
+            pushTab(player, null);
             return;
         }
+        this.nicks.put(player.getUniqueId(), nick);
         Component component = this.plugin.messages().deserialize(nick);
         player.displayName(component);
-        if (tab) {
+        if (this.plugin.configs().players().getBoolean("nick.change-tablist", true)) {
             player.playerListName(component);
+            pushTab(player, nick);
         }
+        if (this.plugin.configs().players().getBoolean("nick.change-nametag", true)) {
+            player.customName(component);
+            player.setCustomNameVisible(true);
+        }
+    }
+
+    private void pushTab(Player player, String nickOrNull) {
+        TabNickHook.apply(player, nickOrNull);
+        Tasks.later(this.plugin, 20L, () -> {
+            if (player.isOnline()) {
+                TabNickHook.apply(player, nickOrNull);
+                if (nickOrNull != null) {
+                    player.playerListName(this.plugin.messages().deserialize(nickOrNull));
+                }
+            }
+        });
+        Tasks.later(this.plugin, 40L, () -> {
+            if (player.isOnline()) {
+                TabNickHook.apply(player, nickOrNull);
+            }
+        });
     }
 
     private String sanitize(CommandSender initiator, String rawNick) {

@@ -20,6 +20,7 @@ public final class YamlFile {
 
     private static final Map<String, String> LEGACY = Map.ofEntries(
             Map.entry("lang/messages.yml", "messages.yml"),
+            Map.entry("lang/vanilla.yml", "vanilla.yml"),
             Map.entry("modules/worlds.yml", "worlds.yml"),
             Map.entry("modules/homes.yml", "homes.yml"),
             Map.entry("modules/warps.yml", "warps.yml"),

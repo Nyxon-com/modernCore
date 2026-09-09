@@ -1,0 +1,92 @@
+# =============================================================================
+# Testi vanilla (MiniMessage). Chiave = translation key di Minecraft.
+# Placeholder: {prefix}  {0} {1} {2} = argomenti vanilla in MiniMessage.
+# Stringa vuota = nasconde il messaggio. Chiave assente = testo vanilla originale.
+# Aggiungi qualsiasi chiave (gamemode, tp, weather, advancement, death.attack.* …).
+# Elenco: https://github.com/InventivetalentDev/minecraft-assets (lang/en_us.json)
+# =============================================================================
+
+commands:
+  give:
+    success:
+      single: "{prefix} <green>Dato {0} a <white>{2}</white>."
+      multiple: "{prefix} <green>Dato {0} ×{1} a <white>{2}</white>."
+  gamemode:
+    success:
+      self: "{prefix} <gray>Gamemode: <white>{0}</white>."
+      other: "{prefix} <gray>Gamemode di <white>{1}</white>: <white>{0}</white>."
+  teleport:
+    success:
+      entity:
+        single: "{prefix} <gray>Teletrasportato <white>{0}</white> da <white>{1}</white>."
+        multiple: "{prefix} <gray>Teletrasportati <white>{0}</white> giocatori da <white>{1}</white>."
+      location:
+        single: "{prefix} <gray>Teletrasportato <white>{0}</white> a <white>{1}</white>."
+        multiple: "{prefix} <gray>Teletrasportati <white>{0}</white> giocatori."
+  time:
+    set: "{prefix} <gray>Ora impostata a <white>{0}</white>."
+    query: "{prefix} <gray>Ora: <white>{0}</white>."
+    add: "{prefix} <gray>Aggiunti <white>{0}</white> tick."
+  weather:
+    set:
+      clear: "{prefix} <gray>Meteo: <white>sereno</white>."
+      rain: "{prefix} <gray>Meteo: <white>pioggia</white>."
+      thunder: "{prefix} <gray>Meteo: <white>tempesta</white>."
+  clear:
+    success:
+      single: "{prefix} <gray>Rimossi <white>{1}</white> item da <white>{0}</white>."
+      multiple: "{prefix} <gray>Rimossi item da <white>{0}</white> giocatori."
+  kill:
+    success:
+      single: "{prefix} <red>Ucciso <white>{0}</white>."
+      multiple: "{prefix} <red>Uccise <white>{0}</white> entità."
+  difficulty:
+    success: "{prefix} <gray>Difficoltà: <white>{0}</white>."
+  defaultgamemode:
+    success: "{prefix} <gray>Gamemode default: <white>{0}</white>."
+  effect:
+    give:
+      success:
+        single: "{prefix} <green>Effetto {0} dato a <white>{1}</white>."
+        multiple: "{prefix} <green>Effetto {0} dato a <white>{1}</white> entità."
+    clear:
+      everything:
+        success:
+          single: "{prefix} <gray>Effetti rimossi da <white>{0}</white>."
+  enchant:
+    success: "{prefix} <green>Incantesimo applicato a {0}."
+  experience:
+    add:
+      success:
+        single: "{prefix} <green>+{0} XP a <white>{1}</white>."
+        multiple: "{prefix} <green>+{0} XP a <white>{1}</white> giocatori."
+  list:
+    players: "{prefix} <gray>Online <white>{0}</white>/<white>{1}</white>: <white>{2}</white>"
+  setworldspawn:
+    success: "{prefix} <green>World spawn: <white>{0}</white> {1} {2} {3}."
+  spawnpoint:
+    success:
+      single: "{prefix} <green>Spawn di <white>{0}</white> impostato."
+  help:
+    failed: "{prefix} <red>Comando sconosciuto."
+
+sleep:
+  players_sleeping: "<gray>Stanno dormendo <white>{0}</white>/<white>{1}</white>."
+  skipping_night: "<gray>La notte viene saltata."
+
+chat:
+  type:
+    advancement:
+      task: "<gray>{0} ha completato <green>{1}"
+      challenge: "<gray>{0} ha completato la sfida <gold>{1}"
+      goal: "<gray>{0} ha raggiunto l'obiettivo <aqua>{1}"
+    emote: "<gray>* {0} {1}"
+    announcement: "{prefix} <white>{1}"
+
+argument:
+  entity:
+    notfound:
+      player: "{prefix} <red>Giocatore non trovato."
+      entity: "{prefix} <red>Entità non trovata."
+  item:
+    notfound: "{prefix} <red>Item sconosciuto: <white>{0}</white>."

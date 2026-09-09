@@ -4,6 +4,7 @@ import com.valaryrpg.core.command.CommandService;
 import com.valaryrpg.core.config.ConfigManager;
 import com.valaryrpg.core.economy.EconomyService;
 import com.valaryrpg.core.message.MessageService;
+import com.valaryrpg.core.message.VanillaTranslator;
 import com.valaryrpg.core.module.ModuleManager;
 import com.valaryrpg.core.module.homes.HomesModule;
 import com.valaryrpg.core.module.kits.KitsModule;
@@ -26,6 +27,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
 
     private ConfigManager configs;
     private MessageService messages;
+    private VanillaTranslator vanillaTranslator;
     private StorageManager storage;
     private EconomyService economy;
     private ModuleManager modules;
@@ -38,6 +40,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
         this.configs = new ConfigManager(this);
         this.configs.loadAll();
         this.messages = new MessageService(this);
+        this.vanillaTranslator = new VanillaTranslator(this);
     }
 
     @Override
@@ -61,8 +64,8 @@ public final class ValaryCorePlugin extends JavaPlugin {
         this.modules.register(new WorldsModule(this));
         this.modules.register(new HomesModule(this));
         this.modules.register(new WarpsModule(this));
-        this.modules.register(new PlayersModule(this));
         this.modules.register(new ModerationModule(this));
+        this.modules.register(new PlayersModule(this));
         this.modules.register(new MechanicsModule(this));
         this.modules.register(new KitsModule(this));
         this.modules.register(new SellModule(this));
@@ -71,12 +74,18 @@ public final class ValaryCorePlugin extends JavaPlugin {
         this.commands = new CommandService(this);
         this.commands.register();
         PlaceholderHook.register(this);
+        if (this.vanillaTranslator != null) {
+            this.vanillaTranslator.sync();
+        }
 
         getLogger().info("ValaryRPG-Core " + getPluginMeta().getVersion() + " abilitato.");
     }
 
     @Override
     public void onDisable() {
+        if (this.vanillaTranslator != null) {
+            this.vanillaTranslator.unregister();
+        }
         if (this.modules != null) {
             this.modules.disableAll();
         }
@@ -93,6 +102,9 @@ public final class ValaryCorePlugin extends JavaPlugin {
         try {
             this.configs.loadAll();
             this.messages.reload();
+            if (this.vanillaTranslator != null) {
+                this.vanillaTranslator.sync();
+            }
             if (this.modules != null) {
                 this.modules.reloadAll();
             }

@@ -24,10 +24,14 @@ public final class GodService {
         this.repository = repository;
     }
 
-    public void restore(Player player) {
-        if (this.repository.god(player.getUniqueId())) {
+    public void restore(Player player, boolean enabled) {
+        if (enabled) {
             this.gods.add(player.getUniqueId());
         }
+    }
+
+    public void restore(Player player) {
+        restore(player, this.repository.god(player.getUniqueId()));
     }
 
     public boolean isGod(Player player) {
@@ -46,7 +50,7 @@ public final class GodService {
         } else {
             this.gods.remove(target.getUniqueId());
         }
-        Tasks.async(this.plugin, () -> this.repository.updateGod(target.getUniqueId(), enabled));
+        Tasks.async(this.plugin, () -> this.repository.updateGod(target.getUniqueId(), target.getName(), enabled));
         boolean self = initiator instanceof Player player && player.getUniqueId().equals(target.getUniqueId());
         String key = enabled ? "god.enabled" : "god.disabled";
         if (self) {

@@ -1,23 +1,32 @@
 package com.valaryrpg.core.module.players;
 
 import com.valaryrpg.core.ValaryCorePlugin;
-import com.valaryrpg.core.module.players.DeathSnapshot;
+import com.valaryrpg.core.module.moderation.ModerationModule;
 import com.valaryrpg.core.util.Tasks;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Join/quit, nick in chat/tab, fly/gamemode persistenti, god in combattimento.
+ */
 public final class PlayersListener implements Listener {
 
     private final ValaryCorePlugin plugin;
@@ -25,6 +34,7 @@ public final class PlayersListener implements Listener {
     private final NickService nicks;
     private final FlyService fly;
     private final GodService god;
+    private final GameModeService gamemodes;
     private final PrivateMessageService messages;
 
     public PlayersListener(
@@ -33,6 +43,7 @@ public final class PlayersListener implements Listener {
             NickService nicks,
             FlyService fly,
             GodService god,
+            GameModeService gamemodes,
             PrivateMessageService messages
     ) {
         this.plugin = plugin;
@@ -40,46 +51,170 @@ public final class PlayersListener implements Listener {
         this.nicks = nicks;
         this.fly = fly;
         this.god = god;
+        this.gamemodes = gamemodes;
         this.messages = messages;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+        String name = player.getName();
         String ip = ipOf(player);
-        this.repository.touchJoin(player.getUniqueId(), player.getName(), ip, System.currentTimeMillis());
-        this.nicks.applyStored(player);
-        this.fly.restore(player);
-        this.god.restore(player);
-        this.messages.loadSpy(player);
+        long now = System.currentTimeMillis();
+        event.joinMessage(null);
+        Tasks.async(this.plugin, () -> {
+            Optional<PlayerProfile> profile = Optional.empty();
+            boolean godMode = false;
+            try {
+                this.repository.touchJoin(uuid, name, ip, now);
+                profile = this.repository.find(uuid);
+                godMode = this.repository.god(uuid);
+            } catch (Exception exception) {
+                this.plugin.getLogger().warning("Join SQL fallito per " + name + ": " + exception.getMessage());
+            }
+            Optional<PlayerProfile> loaded = profile;
+            boolean restoreGod = godMode;
+            Tasks.later(this.plugin, 2L, () -> restore(player, loaded, restoreGod));
+        });
         restoreDeathBack(player);
+    }
 
-        if (!this.plugin.configs().players().getBoolean("join-quit.enabled", true)) {
-            return;
-        }
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoinAnnounce(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
         boolean first = !player.hasPlayedBefore();
-        String key = first ? "join-quit.first-join" : "join-quit.join";
-        Component message = this.plugin.messages().component(key, Map.of(
-                "player", this.plugin.messages().escape(player.getName()),
-                "displayname", this.nicks.displayMini(player)
-        ));
-        event.joinMessage(blank(key) ? null : message);
+        Tasks.later(this.plugin, 2L, () -> {
+            if (!player.isOnline()) {
+                return;
+            }
+            if (bannedHold(player)) {
+                return;
+            }
+            announce(player, first ? "join-quit.first-join" : "join-quit.join");
+        });
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
+        if (!bannedHold(player)) {
+            this.gamemodes.remember(player);
+        }
         this.messages.unload(player.getUniqueId());
         this.god.unload(player.getUniqueId());
+        this.fly.unload(player.getUniqueId());
+        this.nicks.unload(player.getUniqueId());
+        this.gamemodes.unload(player.getUniqueId());
         this.plugin.lastLocations().clear(player.getUniqueId());
+        event.quitMessage(null);
+        if (!bannedHold(player)) {
+            announce(player, "join-quit.quit");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onChat(AsyncChatEvent event) {
+        this.nicks.formatChat(event);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onGameMode(PlayerGameModeChangeEvent event) {
+        Player player = event.getPlayer();
+        Tasks.nextTick(this.plugin, () -> {
+            if (!player.isOnline() || bannedHold(player)) {
+                return;
+            }
+            this.gamemodes.remember(player);
+            this.fly.reapply(player);
+            this.nicks.reapply(player);
+        });
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onWorldTeleport(PlayerTeleportEvent event) {
+        if (event.getFrom().getWorld() == null || event.getTo() == null || event.getTo().getWorld() == null) {
+            return;
+        }
+        if (event.getFrom().getWorld().equals(event.getTo().getWorld())) {
+            return;
+        }
+        this.gamemodes.followWorld(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onWorldChange(PlayerChangedWorldEvent event) {
+        Player player = event.getPlayer();
+        Tasks.nextTick(this.plugin, () -> {
+            if (!player.isOnline() || bannedHold(player)) {
+                return;
+            }
+            this.fly.reapply(player);
+            this.nicks.reapply(player);
+            this.gamemodes.reapply(player);
+        });
+    }
+
+    private void restore(Player player, Optional<PlayerProfile> profile, boolean godMode) {
+        if (!player.isOnline() || bannedHold(player)) {
+            return;
+        }
+        try {
+            this.nicks.applyStored(player, profile.map(PlayerProfile::nick).orElse(null));
+            this.fly.restore(player, profile.map(PlayerProfile::fly).orElse(false));
+            this.gamemodes.restore(player, profile.map(PlayerProfile::gamemode).orElse(null));
+            this.fly.reapply(player);
+            this.god.restore(player, godMode);
+            this.messages.loadSpy(player, profile.map(PlayerProfile::socialSpy).orElse(false));
+        } catch (Exception exception) {
+            this.plugin.getLogger().warning("Restore player fallito per " + player.getName() + ": " + exception.getMessage());
+        }
+    }
+
+    private void announce(Player player, String key) {
         if (!this.plugin.configs().players().getBoolean("join-quit.enabled", true)) {
             return;
         }
-        Component message = this.plugin.messages().component("join-quit.quit", Map.of(
+        if (silentVanished(player)) {
+            return;
+        }
+        if (!this.plugin.configs().messages().isSet(key)) {
+            this.plugin.getLogger().warning("Manca " + key + " in lang/messages.yml");
+            return;
+        }
+        String raw = this.plugin.configs().messages().getString(key);
+        if (raw == null || raw.isBlank()) {
+            return;
+        }
+        Component message = this.plugin.messages().component(key, Map.of(
                 "player", this.plugin.messages().escape(player.getName()),
-                "displayname", this.nicks.displayMini(player)
+                "displayname", displayName(player)
         ));
-        event.quitMessage(blank("join-quit.quit") ? null : message);
+        Bukkit.getServer().sendMessage(message);
+    }
+
+    private String displayName(Player player) {
+        try {
+            return MiniMessage.miniMessage().serialize(this.nicks.displayComponent(player));
+        } catch (Exception exception) {
+            return this.plugin.messages().escape(player.getName());
+        }
+    }
+
+    private boolean silentVanished(Player player) {
+        if (bannedHold(player)) {
+            return true;
+        }
+        if (!this.plugin.configs().moderation().getBoolean("vanish.silent-join", true)) {
+            return false;
+        }
+        ModerationModule moderation = this.plugin.modules().get("moderation");
+        return moderation != null && moderation.vanish() != null && moderation.vanish().isVanished(player);
+    }
+
+    private boolean bannedHold(Player player) {
+        ModerationModule moderation = this.plugin.modules().get("moderation");
+        return moderation != null && moderation.holds() != null && moderation.holds().holding(player.getUniqueId());
     }
 
     private void restoreDeathBack(Player player) {
@@ -111,11 +246,6 @@ public final class PlayersListener implements Listener {
         if (event.getEntity() instanceof Player player && this.god.isGod(player)) {
             event.setCancelled(true);
         }
-    }
-
-    private boolean blank(String key) {
-        String raw = this.plugin.configs().messages().getString(key, "");
-        return raw == null || raw.isBlank();
     }
 
     private static String ipOf(Player player) {

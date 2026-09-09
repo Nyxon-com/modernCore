@@ -78,6 +78,7 @@ public final class StorageManager {
         File database = new File(this.plugin.getDataFolder(), yaml.getString("storage.sqlite.file", "data.db"));
         database.getParentFile().mkdirs();
         hikari.setJdbcUrl("jdbc:sqlite:" + database.getAbsolutePath());
+        // SQLite: una sola connessione. Mai aprire una seconda query mentre la prima è ancora aperta.
         hikari.setMaximumPoolSize(1);
         hikari.setMinimumIdle(1);
         hikari.setConnectionTestQuery("SELECT 1");
@@ -169,6 +170,7 @@ public final class StorageManager {
             addColumn(statement, table("players"), "death_cause VARCHAR(64)");
             addColumn(statement, table("players"), "death_killer VARCHAR(64)");
             addColumn(statement, table("players"), "death_inventory TEXT");
+            addColumn(statement, table("players"), "gamemode VARCHAR(16)");
             statement.execute("CREATE TABLE IF NOT EXISTS " + table("kit_claims") + " ("
                     + "uuid VARCHAR(36) NOT NULL,"
                     + "kit VARCHAR(32) NOT NULL,"
@@ -185,7 +187,7 @@ public final class StorageManager {
         try (Connection connection = connection();
              PreparedStatement statement = connection.prepareStatement(upsert)) {
             statement.setString(1, "schema_version");
-            statement.setString(2, "8");
+            statement.setString(2, "9");
             statement.executeUpdate();
         } catch (SQLException exception) {
             throw new StorageException("Scrittura versione schema fallita.", exception);
@@ -201,6 +203,6 @@ public final class StorageManager {
     }
 
     private int currentVersion() {
-        return 8;
+        return 9;
     }
 }

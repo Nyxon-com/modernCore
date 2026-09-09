@@ -11,6 +11,7 @@ public final class ModerationModule implements Module {
     private ModerationService moderation;
     private VanishService vanish;
     private InvseeService invsee;
+    private BanHoldService holds;
     private ModerationListener listener;
 
     public ModerationModule(ValaryCorePlugin plugin) {
@@ -25,15 +26,20 @@ public final class ModerationModule implements Module {
     @Override
     public void enable() {
         PlayerDataRepository players = new PlayerDataRepository(this.plugin);
-        this.moderation = new ModerationService(this.plugin, new PunishmentRepository(this.plugin), players);
+        this.holds = new BanHoldService(this.plugin);
+        this.moderation = new ModerationService(this.plugin, new PunishmentRepository(this.plugin), players, this.holds);
         this.vanish = new VanishService(this.plugin, players);
         this.invsee = new InvseeService(this.plugin);
-        this.listener = new ModerationListener(this.plugin, this.moderation, this.vanish, this.invsee);
+        this.listener = new ModerationListener(this.plugin, this.moderation, this.vanish, this.invsee, this.holds);
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
+        this.holds.startTimer();
     }
 
     @Override
     public void disable() {
+        if (this.holds != null) {
+            this.holds.stopTimer();
+        }
         if (this.listener != null) {
             HandlerList.unregisterAll(this.listener);
         }
@@ -55,5 +61,9 @@ public final class ModerationModule implements Module {
 
     public InvseeService invsee() {
         return this.invsee;
+    }
+
+    public BanHoldService holds() {
+        return this.holds;
     }
 }

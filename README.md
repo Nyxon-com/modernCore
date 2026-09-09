@@ -15,8 +15,9 @@ Feature complete rispetto alla spec, con perfezionamento (step 2):
 
 - Spawn per mondo, lock meteo **e** lock ora (`/timelock`)
 - Home / warp (console: `/warp <nome> <player>`)
-- Join/quit, nick MiniMessage, msg/r, fly, god, heal, feed, back
-- Moderazione nativa: kick, ban, ipban, mute, warn, dupeip (stato ban/mute), vanish, invsee
+- Join/quit, nick MiniMessage (chat + tab/TAB), msg/tell/r, socialspy, fly, god, heal, feed, back, gamemode persistente tra mondi
+- Moderazione nativa: kick, ban (dialog countdown), ipban, mute, warn, `/history`, dupeip, vanish, invsee
+- `/unban` / `/unbanip` / `/pardon-ip` per togliere ban e IP ban
 - Kit GUI + first-join + MMOItems
 - Sell GUI + `prices.yml` + reward custom (money/xp/comandi/item)
 - LimitY con comandi YAML, hologram drop (font piccolo + despawn 5 min), morti configurabili, `/checkdeath` con inventario, `/copycoord`

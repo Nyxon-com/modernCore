@@ -8,6 +8,7 @@ public record PlayerProfile(
         String nick,
         boolean fly,
         boolean socialSpy,
+        String gamemode,
         long firstJoin,
         long lastJoin,
         String lastIp

@@ -65,7 +65,8 @@ weather: {}
 #   alias               nome visibile (PlaceholderAPI %valary_world_alias%)
 #   environment         NORMAL | NETHER | THE_END
 #   pvp / difficulty / gamemode
-#   force-gamemode      false = non cambiare il gamemode del player
+#   force-gamemode      true = questo mondo impone worlds.<name>.gamemode (ignora /gamemode del player)
+#                       false (default) = il creative/survival del player resta anche cambiando mondo
 #   spawn-monsters / spawn-animals / hunger / allow-flight
 #   keep-spawn-in-memory / hidden / auto-heal / portal-forming
 #   weather             UNSET | CLEAR | RAIN | THUNDER  (solo se weather.<mondo>.lock è assente)

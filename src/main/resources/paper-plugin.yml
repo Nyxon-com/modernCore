@@ -38,6 +38,10 @@ dependencies:
       required: false
       load: BEFORE
       join-classpath: true
+    TAB:
+      required: false
+      load: BEFORE
+      join-classpath: false
 permissions:
   valary.admin:
     description: Accesso completo alle funzioni di amministrazione
@@ -66,6 +70,7 @@ permissions:
       valary.unmute: true
       valary.warn: true
       valary.warnings: true
+      valary.history: true
       valary.dupeip: true
       valary.vanish: true
       valary.vanish.others: true
@@ -82,6 +87,7 @@ permissions:
       valary.god.others: true
       valary.heal.others: true
       valary.feed.others: true
+      valary.give: true
       valary.portal: true
       valary.pressureplayerjump: true
   valary.reload:
@@ -189,6 +195,9 @@ permissions:
   valary.warnings:
     description: Usa /warnings
     default: op
+  valary.history:
+    description: Usa /history (ban mute warn kick)
+    default: op
   valary.dupeip:
     description: Usa /dupeip
     default: op
@@ -266,6 +275,9 @@ permissions:
     default: op
   valary.feed.others:
     description: /feed <player>
+    default: op
+  valary.give:
+    description: Usa /give e /i (item in inventario, niente drop)
     default: op
   valary.portal:
     description: Usa /portal

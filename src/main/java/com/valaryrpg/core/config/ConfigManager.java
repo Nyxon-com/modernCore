@@ -3,6 +3,11 @@ package com.valaryrpg.core.config;
 import com.valaryrpg.core.ValaryCorePlugin;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Carica i YAML: config/storage in root, testi in lang/, suoni in sounds/, moduli in modules/.
@@ -12,6 +17,7 @@ public final class ConfigManager {
     private final ValaryCorePlugin plugin;
     private YamlFile root;
     private YamlFile messages;
+    private YamlFile vanilla;
     private YamlFile storage;
     private YamlFile sounds;
     private YamlFile worlds;
@@ -31,6 +37,7 @@ public final class ConfigManager {
         this.root = load("config.yml");
         this.storage = load("storage.yml");
         this.messages = load("lang/messages.yml");
+        this.vanilla = load("lang/vanilla.yml");
         this.sounds = load("sounds/sounds.yml");
         this.worlds = load("modules/worlds.yml");
         this.homes = load("modules/homes.yml");
@@ -41,6 +48,8 @@ public final class ConfigManager {
         this.kits = load("modules/kits.yml");
         this.prices = load("modules/prices.yml");
         migrateLegacySounds();
+        migrateGroundItemHologram();
+        migrateDisconnectScreens();
         this.plugin.getLogger().info("Configurazioni caricate.");
     }
 
@@ -50,6 +59,10 @@ public final class ConfigManager {
 
     public FileConfiguration messages() {
         return this.messages.config();
+    }
+
+    public FileConfiguration vanilla() {
+        return this.vanilla.config();
     }
 
     public FileConfiguration storage() {
@@ -122,6 +135,86 @@ public final class ConfigManager {
         if (changed) {
             this.sounds.save();
             this.plugin.getLogger().info("Suoni migrati da config.yml a sounds/sounds.yml");
+        }
+    }
+
+    /**
+     * Il primo hologram usava font uniform + box nero nametag: se i valori sono ancora quelli, passa allo stile senza riquadro.
+     */
+    private void migrateGroundItemHologram() {
+        FileConfiguration yaml = this.mechanics.config();
+        boolean changed = false;
+        if (yaml.getInt("ground-items.background") == 1073741824) {
+            yaml.set("ground-items.background", 0);
+            changed = true;
+        }
+        if ("minecraft:uniform".equals(yaml.getString("ground-items.font"))) {
+            yaml.set("ground-items.font", "");
+            changed = true;
+        }
+        if (yaml.getBoolean("ground-items.see-through") && yaml.getInt("ground-items.background") == 0) {
+            yaml.set("ground-items.see-through", false);
+            changed = true;
+        }
+        if (yaml.getDouble("ground-items.scale") == 0.45D) {
+            yaml.set("ground-items.scale", 0.8D);
+            changed = true;
+        }
+        if ("<white>{name} <gray>x{amount}".equals(yaml.getString("ground-items.name-format"))) {
+            yaml.set("ground-items.name-format", "{name} <dark_gray>×<white>{amount}");
+            changed = true;
+        }
+        if (changed) {
+            this.mechanics.save();
+            this.plugin.getLogger().info("Hologram item a terra aggiornato (niente box nametag).");
+        }
+    }
+
+    /**
+     * Le schermate vecchie erano stringhe: il merge non le converte in liste.
+     */
+    private void migrateDisconnectScreens() {
+        FileConfiguration yaml = this.messages.config();
+        YamlConfiguration defaults = jarMessages();
+        if (defaults == null) {
+            return;
+        }
+        boolean changed = false;
+        for (String key : new String[]{
+                "moderation.kick-screen",
+                "moderation.ban-screen",
+                "moderation.ipban-screen"
+        }) {
+            if (yaml.isList(key)) {
+                continue;
+            }
+            yaml.set(key, defaults.get(key));
+            changed = true;
+        }
+        if ("{hours}h {minutes}m".equals(yaml.getString("duration.hours"))) {
+            yaml.set("duration.hours", defaults.getString("duration.hours"));
+            changed = true;
+        }
+        if ("{days}d {hours}h".equals(yaml.getString("duration.days"))) {
+            yaml.set("duration.days", defaults.getString("duration.days"));
+            changed = true;
+        }
+        if (changed) {
+            this.messages.save();
+            this.plugin.getLogger().info("Schermate kick/ban migrate in lang/messages.yml");
+        }
+    }
+
+    private YamlConfiguration jarMessages() {
+        try (InputStream input = this.plugin.getResource("lang/messages.yml")) {
+            if (input == null) {
+                return null;
+            }
+            YamlConfiguration defaults = new YamlConfiguration();
+            defaults.load(new InputStreamReader(input, StandardCharsets.UTF_8));
+            return defaults;
+        } catch (Exception exception) {
+            return null;
         }
     }
 

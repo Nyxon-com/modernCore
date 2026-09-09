@@ -6,6 +6,7 @@ import com.valaryrpg.core.gui.MenuHolder;
 import com.valaryrpg.core.gui.PanelClicks;
 import com.valaryrpg.core.gui.PanelItems;
 import com.valaryrpg.core.gui.Panels;
+import com.valaryrpg.core.module.moderation.ModerationModule;
 import com.valaryrpg.core.util.MmoItems;
 import com.valaryrpg.core.util.Perms;
 import com.valaryrpg.core.util.Tasks;
@@ -208,7 +209,7 @@ public final class KitService {
         }
         int delay = Math.max(1, this.plugin.configs().kits().getInt("settings.first-join-delay-ticks", 20));
         Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
-            if (player.isOnline()) {
+            if (player.isOnline() && !held(player)) {
                 claim(player, kit, true);
             }
         }, delay);
@@ -274,6 +275,11 @@ public final class KitService {
         ItemStack item = new ItemStack(material);
         item.editMeta(meta -> meta.displayName(this.plugin.messages().deserialize(name)));
         return item;
+    }
+
+    private boolean held(Player player) {
+        ModerationModule moderation = this.plugin.modules().get("moderation");
+        return moderation != null && moderation.holds() != null && moderation.holds().holding(player.getUniqueId());
     }
 
     private static String asString(Object value) {
