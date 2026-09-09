@@ -79,7 +79,7 @@ PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary
   - Tab vanilla: `playerListName`. Se usi **TAB** (NEZNAMY), Valary imposta il nome via API; in config TAB puoi anche usare `%valary_nick%` / `%valary_nick_mm%`
 - `/msg` `/tell` `/w` `/whisper` `/m` `/r` — testi in `lang/messages.yml` → `msg.*` (`to-sender`, `to-target`, `spy`)
 - `/socialspy` (`/ss`): vedi i privati in `[SS]`. `msg.spy-self: true` mostra anche i tuoi (test a 2 account). `false` = solo gli altri
-- `/fly` persiste al relog. `/gamemode` persiste **tra i mondi** (anche Multiverse), tranne se `worlds.<mondo>.force-gamemode: true`
+- `/fly` persiste al relog e dopo la morte. `/gamemode` persiste **tra i mondi** e dopo respawn (anche Multiverse), tranne se `worlds.<mondo>.force-gamemode: true`
 - `/god` `/heal` `/feed` `/back`
 
 ---

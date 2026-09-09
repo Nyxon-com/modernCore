@@ -13,7 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Gamemode del player persistita su SQL; segue il player anche cambiando mondo (Multiverse).
+ * Gamemode persistita su SQL; segue il player tra mondi e dopo respawn.
  */
 public final class GameModeService {
 
@@ -56,13 +56,38 @@ public final class GameModeService {
         if (!this.plugin.configs().players().getBoolean("gamemode.persist", true)) {
             return;
         }
+        holdThenReapply(player);
+    }
+
+    /** Non salvare il survival che Paper/MV mettono in morte; rimetti il gamemode in RAM. */
+    public void pauseRespawn(Player player) {
+        if (!persistDeath()) {
+            return;
+        }
+        this.paused.add(player.getUniqueId());
+    }
+
+    public void restoreAfterRespawn(Player player) {
+        if (!persistDeath()) {
+            return;
+        }
+        holdThenReapply(player);
+    }
+
+    private void holdThenReapply(Player player) {
         UUID uuid = player.getUniqueId();
         this.paused.add(uuid);
+        reapply(player);
+        Tasks.nextTick(this.plugin, () -> reapply(player));
         Tasks.later(this.plugin, 2L, () -> reapply(player));
         Tasks.later(this.plugin, 10L, () -> {
             this.paused.remove(uuid);
             reapply(player);
         });
+    }
+
+    private boolean persistDeath() {
+        return this.plugin.configs().players().getBoolean("gamemode.persist-death", true);
     }
 
     public void reapply(Player player) {

@@ -12,7 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Fly in RAM + SQL. Resta attivo dopo relog anche se al login sei in creative.
+ * Fly in RAM + SQL. Resta attivo dopo relog e dopo respawn.
  */
 public final class FlyService {
 
@@ -41,6 +41,16 @@ public final class FlyService {
 
     public void reapply(Player player) {
         apply(player, this.flying.contains(player.getUniqueId()), false);
+    }
+
+    public void restoreAfterRespawn(Player player) {
+        if (!this.plugin.configs().players().getBoolean("fly.persist-death", true)) {
+            return;
+        }
+        reapply(player);
+        Tasks.nextTick(this.plugin, () -> reapply(player));
+        Tasks.later(this.plugin, 2L, () -> reapply(player));
+        Tasks.later(this.plugin, 10L, () -> reapply(player));
     }
 
     public void toggle(Player target, CommandSender initiator) {

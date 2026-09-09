@@ -31,7 +31,9 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 - [ ] `/msg`, `/r`, `/socialspy` (due account): `[SS]` anche sui tuoi msg se `spy-self: true`
 - [x] Vanilla `/tell` è quello Valary
 - [x] `/fly` persiste al relog se `players.yml` `fly.persist: true`
+- [ ] `/fly` + `/kill` (o morte) → dopo respawn voli ancora
 - [x] `/gamemode creative` nello spawn, `/mvtp` (o warp) in un altro mondo → resti creative
+- [ ] `/gamemode creative` + `/kill` → dopo respawn resti creative
 - [x] `/god` ignora danno e fame; `/heal` `/feed` `/back`
 
 ## 4. Moderazione

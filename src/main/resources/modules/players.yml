@@ -3,6 +3,7 @@
 # nick.blocked-words: sottostringhe case-insensitive. max-length = caratteri visibili.
 # chat.format: MiniMessage + PlaceholderAPI. {displayname} {name} {message}
 # fly.persist / gamemode.persist: salva su SQL e ripristina a relog e /valary reload.
+# fly.persist-death / gamemode.persist-death: dopo respawn resta fly e creative (RAM, niente SQL).
 # =============================================================================
 
 join-quit:
@@ -27,10 +28,12 @@ msg:
 
 fly:
   persist: true
+  persist-death: true
   start-flying: true
 
 gamemode:
   persist: true
+  persist-death: true
 
 give:
   # false = l'item resta in inventario; se è pieno NON viene droppato a terra

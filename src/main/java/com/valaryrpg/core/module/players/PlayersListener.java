@@ -13,10 +13,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.net.InetSocketAddress;
@@ -140,6 +142,23 @@ public final class PlayersListener implements Listener {
             return;
         }
         this.gamemodes.followWorld(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDeath(PlayerDeathEvent event) {
+        this.gamemodes.pauseRespawn(event.getEntity());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onRespawn(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+        Tasks.nextTick(this.plugin, () -> {
+            if (!player.isOnline() || bannedHold(player)) {
+                return;
+            }
+            this.gamemodes.restoreAfterRespawn(player);
+            this.fly.restoreAfterRespawn(player);
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
