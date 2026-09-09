@@ -43,3 +43,18 @@ msg-receive:
   sound: minecraft:entity.experience_orb.pickup
   volume: 0.7
   pitch: 0.8
+
+kits-claim:
+  sound: minecraft:entity.player.levelup
+  volume: 0.6
+  pitch: 1.3
+
+kits-preview:
+  sound: minecraft:item.book.page_turn
+  volume: 0.8
+  pitch: 1.2
+
+kits-deny:
+  sound: minecraft:entity.villager.no
+  volume: 1.0
+  pitch: 0.8

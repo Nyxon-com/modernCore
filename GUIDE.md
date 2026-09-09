@@ -105,14 +105,15 @@ Schermata ban a tempo: dialog nativo col countdown (`screen.live-countdown`). La
 
 ## Kit
 
-`/kit` `/kits` apre la GUI. **Sinistro** ritira, **destro** anteprima (niente bottone a parte). `/kit <id> [player]` da comando/console.
+`/kit` `/kits` apre la GUI. **Sinistro** ritira, **destro** anteprima del contenuto (niente bottone libro a parte). Dall’anteprima: **Indietro** torna alla pagina, **Ritira** prende il kit. `/kit <id> [player]` da comando/console.
 
-- Cooldown e one-time su SQL (`kit_claims`); in GUI vedi se è disponibile / in cooldown / bloccato
+- Cooldown e one-time su SQL (`kit_claims`), cache in RAM (niente SQL in chat/click)
+- In GUI: disponibile (glow) / cooldown leggibile / bloccato / già ritirato + elenco item
 - `settings.first-join-kit: starter` — dato al **primo join** (`hasPlayedBefore() == false`)
-- `settings.right-click-preview: true` — destro = anteprima. `close-on-claim` / `drop-overflow` in `kits.yml`
+- Click in `kits.yml` (`claim-clicks` / `preview-clicks`). Suoni in `sounds.yml` (`kits-claim`, `kits-preview`, `kits-deny`)
 - Item MMOItems: `mmoitem-type` + `mmoitem-id`
-- GUI: ogni slot ha `action`, `click-sound`, `commands` (`[close]` `[console]` `[player]` `[sound]` `[message]`)
-- Comandi del kit al claim: stessa sintassi ActionCommands
+- Staff `/kit <id> <player>` ignora permesso e cooldown del target
+- Comandi del kit al claim: `[console]` `[player]` `[sound]` `[message]`
 
 ---
 

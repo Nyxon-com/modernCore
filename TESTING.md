@@ -52,8 +52,8 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 
 ## 5. Kit
 - [ ] Account nuovo: kit `starter` in mano entro ~1s
-- [ ] `/kit` GUI: **sinistro** ritira, **destro** anteprima (niente bottone libro), chiudi, pagine
-- [ ] In GUI: stato disponibile / cooldown / no permesso
+- [ ] `/kit` GUI: **sinistro** ritira, **destro** anteprima (niente bottone libro), Indietro torna alla pagina, Ritira in anteprima, chiudi, pagine
+- [ ] In GUI: glow se disponibile, cooldown leggibile, daily grigio senza permesso, elenco item
 - [ ] `/kit daily` senza permesso → no; con `valary.kit.daily` → sì, cooldown
 - [ ] `/kit starter <player>` da console
 - [ ] Se MMOItems è presente, decommenta un item in `kits.yml` e ritira

@@ -7,42 +7,55 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Ultimo claim kit per giocatore (cooldown).
+ * Ultimo claim kit per giocatore. Cache RAM, SQL solo in async.
  */
 final class KitClaimRepository {
 
     private final ValaryCorePlugin plugin;
+    private final Map<UUID, ConcurrentHashMap<String, Long>> cache = new ConcurrentHashMap<>();
 
     KitClaimRepository(ValaryCorePlugin plugin) {
         this.plugin = plugin;
     }
 
+    boolean loaded(UUID uuid) {
+        return this.cache.containsKey(uuid);
+    }
+
+    Map<String, Long> snapshot(UUID uuid) {
+        ConcurrentHashMap<String, Long> cached = this.cache.get(uuid);
+        return cached == null ? Map.of() : Map.copyOf(cached);
+    }
+
+    void forget(UUID uuid) {
+        this.cache.remove(uuid);
+    }
+
+    void clear() {
+        this.cache.clear();
+    }
+
     Optional<Long> lastClaim(UUID uuid, String kit) {
-        String sql = "SELECT claimed_at FROM " + table() + " WHERE uuid = ? AND kit = ?";
-        try (Connection connection = this.plugin.storage().connection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, uuid.toString());
-            statement.setString(2, kit);
-            try (ResultSet result = statement.executeQuery()) {
-                if (!result.next()) {
-                    return Optional.empty();
-                }
-                return Optional.of(result.getLong("claimed_at"));
-            }
-        } catch (SQLException exception) {
-            throw new StorageException("Lettura kit claim fallita.", exception);
+        ConcurrentHashMap<String, Long> cached = this.cache.get(uuid);
+        if (cached == null) {
+            lastClaims(uuid);
+            cached = this.cache.get(uuid);
         }
+        if (cached == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(cached.get(kit));
     }
 
     Map<String, Long> lastClaims(UUID uuid) {
         String sql = "SELECT kit, claimed_at FROM " + table() + " WHERE uuid = ?";
-        Map<String, Long> last = new HashMap<>();
+        ConcurrentHashMap<String, Long> last = new ConcurrentHashMap<>();
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, uuid.toString());
@@ -54,7 +67,8 @@ final class KitClaimRepository {
         } catch (SQLException exception) {
             throw new StorageException("Lettura kit claim fallita.", exception);
         }
-        return last;
+        this.cache.put(uuid, last);
+        return Map.copyOf(last);
     }
 
     void mark(UUID uuid, String kit, long at) {
@@ -70,6 +84,11 @@ final class KitClaimRepository {
         } catch (SQLException exception) {
             throw new StorageException("Salvataggio kit claim fallito.", exception);
         }
+        this.cache.compute(uuid, (ignored, current) -> {
+            ConcurrentHashMap<String, Long> next = current == null ? new ConcurrentHashMap<>() : current;
+            next.put(kit, at);
+            return next;
+        });
     }
 
     private String table() {

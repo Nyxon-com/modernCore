@@ -8,9 +8,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
- * GUI kit: sinistro ritira, destro anteprima; kit welcome al primo join.
+ * GUI kit: sinistro ritira, destro anteprima; cache claim e kit welcome.
  */
 public final class KitsListener implements Listener {
 
@@ -28,9 +29,8 @@ public final class KitsListener implements Listener {
         if (KitService.PREVIEW.equals(holder.menu())) {
             event.setCancelled(true);
             if (event.getWhoClicked() instanceof Player player
-                    && event.getClickedInventory() == event.getView().getTopInventory()
-                    && this.kits.closePreviewSlot(event.getSlot())) {
-                this.kits.open(player);
+                    && event.getClickedInventory() == event.getView().getTopInventory()) {
+                this.kits.previewClick(player, event.getSlot(), holder);
             }
             return;
         }
@@ -54,8 +54,14 @@ public final class KitsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
+        this.kits.prefetch(event.getPlayer());
         if (!event.getPlayer().hasPlayedBefore()) {
             this.kits.firstJoin(event.getPlayer());
         }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        this.kits.forget(event.getPlayer());
     }
 }

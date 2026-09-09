@@ -34,6 +34,9 @@ public final class KitsModule implements Module {
         if (this.listener != null) {
             HandlerList.unregisterAll(this.listener);
         }
+        if (this.kits != null) {
+            this.kits.shutdown();
+        }
     }
 
     @Override

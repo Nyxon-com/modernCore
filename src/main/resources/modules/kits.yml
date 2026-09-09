@@ -51,8 +51,11 @@
 #
 # settings.mmoitems-give  comando se getItem() reflection fallisce
 # settings.right-click-preview  true = destro apre l'anteprima (niente bottone a parte)
+# settings.claim-clicks / preview-clicks  tipi Bukkit: LEFT, RIGHT, SHIFT_LEFT, SHIFT_RIGHT
 # settings.close-on-claim       chiude la GUI dopo il ritiro
 # settings.drop-overflow        zaino pieno → droppa a terra
+# settings.glow-when-ready      glow sull'icona se il kit è ritirabile
+# settings.show-contents        elenco item sotto lo stato in lore
 # =============================================================================
 
 settings:
@@ -60,8 +63,16 @@ settings:
   first-join-delay-ticks: 20
   mmoitems-give: "mi give {player} {type} {id} {amount}"
   right-click-preview: true
+  claim-clicks:
+    - LEFT
+    - SHIFT_LEFT
+  preview-clicks:
+    - RIGHT
+    - SHIFT_RIGHT
   close-on-claim: true
   drop-overflow: true
+  glow-when-ready: true
+  show-contents: true
 
 gui:
   title: "<dark_gray>Kit <white>{player}"
@@ -106,6 +117,7 @@ gui:
       name: "<gold>Daily"
       lore:
         - "<gray>Ricompensa giornaliera"
+      locked-material: GRAY_DYE
       commands: []
     16:
       action: page
@@ -146,6 +158,7 @@ preview:
   rows: 6
   content-slots: "10-16,19-25,28-34,37-43"
   close-slot: 49
+  claim-slot: 45
   fill:
     enabled: false
     material: GRAY_STAINED_GLASS_PANE
@@ -167,6 +180,13 @@ preview:
   close:
     material: ARROW
     name: "<gray>Indietro"
+    hide-flags: true
+    commands: []
+  claim:
+    material: LIME_DYE
+    name: "<green>Ritira"
+    lore:
+      - "<gray>Prendi questo kit"
     hide-flags: true
     commands: []
 

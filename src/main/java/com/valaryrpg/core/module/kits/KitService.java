@@ -10,6 +10,7 @@ import com.valaryrpg.core.gui.Panels;
 import com.valaryrpg.core.gui.SlotSpec;
 import com.valaryrpg.core.module.moderation.ModerationModule;
 import com.valaryrpg.core.util.ActionCommands;
+import com.valaryrpg.core.util.Durations;
 import com.valaryrpg.core.util.MmoItems;
 import com.valaryrpg.core.util.Perms;
 import com.valaryrpg.core.util.Sounds;
@@ -20,9 +21,11 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -35,7 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Claim kit da GUI o comando: sinistro ritira, destro anteprima, cooldown SQL.
+ * Claim kit da GUI o comando: sinistro ritira, destro anteprima, cooldown in cache.
  */
 public final class KitService {
 
@@ -56,21 +59,40 @@ public final class KitService {
     }
 
     public void open(Player player, int page) {
+        render(player, page, this.claims.snapshot(player.getUniqueId()));
+        if (this.claims.loaded(player.getUniqueId())) {
+            return;
+        }
         UUID uuid = player.getUniqueId();
         Tasks.async(this.plugin, () -> {
-            Map<String, Long> last = Map.of();
             try {
-                last = this.claims.lastClaims(uuid);
+                this.claims.lastClaims(uuid);
             } catch (Exception exception) {
                 this.plugin.getLogger().warning("Kit claims SQL fallito per " + player.getName() + ": " + exception.getMessage());
             }
-            Map<String, Long> loaded = last;
-            Tasks.sync(this.plugin, () -> {
-                if (player.isOnline()) {
-                    render(player, page, loaded);
-                }
-            });
+            Tasks.sync(this.plugin, () -> refreshOpenMenu(player, page));
         });
+    }
+
+    public void prefetch(Player player) {
+        UUID uuid = player.getUniqueId();
+        Tasks.async(this.plugin, () -> {
+            try {
+                this.claims.lastClaims(uuid);
+            } catch (Exception exception) {
+                this.plugin.getLogger().warning("Kit claims SQL fallito per " + player.getName() + ": " + exception.getMessage());
+            }
+        });
+    }
+
+    public void forget(Player player) {
+        this.claims.forget(player.getUniqueId());
+        this.claiming.remove(player.getUniqueId());
+    }
+
+    public void shutdown() {
+        this.claims.clear();
+        this.claiming.clear();
     }
 
     public void click(Player player, int slot, int page, ClickType click) {
@@ -85,12 +107,12 @@ public final class KitService {
             if (kitId == null || kitId.isBlank()) {
                 return;
             }
-            if (rightPreview(click)) {
+            if (previewClick(click)) {
                 Sounds.playRaw(this.plugin, player, button.getString("click-sound", ""), "gui.click-sound");
-                preview(player, kitId);
+                preview(player, kitId, page);
                 return;
             }
-            if (click.isLeftClick()) {
+            if (claimClick(click)) {
                 PanelClicks.run(this.plugin, player, button);
                 claim(player, kitId, false);
             }
@@ -100,7 +122,7 @@ public final class KitService {
         if (action.equals("preview")) {
             String kitId = button.getString("kit", "");
             if (kitId != null && !kitId.isBlank()) {
-                preview(player, kitId);
+                preview(player, kitId, page);
             }
             return;
         }
@@ -113,10 +135,24 @@ public final class KitService {
         }
     }
 
+    public void previewClick(Player player, int slot, MenuHolder holder) {
+        if (closePreviewSlot(slot)) {
+            open(player, holder.page());
+            return;
+        }
+        if (claimPreviewSlot(slot) && !holder.extra().isBlank()) {
+            claim(player, holder.extra(), false);
+        }
+    }
+
     public void preview(Player player, String kitId) {
+        preview(player, kitId, 1);
+    }
+
+    public void preview(Player player, String kitId, int fromPage) {
         ConfigurationSection kit = this.plugin.configs().kits().getConfigurationSection("kits." + kitId.toLowerCase(Locale.ROOT));
         if (kit == null) {
-            this.plugin.messages().send(player, "kits.unknown", Map.of("kit", kitId));
+            fail(player, "kits.unknown", Map.of("kit", kitId));
             return;
         }
         ConfigurationSection preview = this.plugin.configs().kits().getConfigurationSection("preview");
@@ -128,11 +164,12 @@ public final class KitService {
         } else {
             title = this.plugin.messages().deserialize(titleRaw.replace("{kit}", kitId).replace("{player}", player.getName()));
         }
-        MenuHolder holder = new MenuHolder(PREVIEW, 1, kitId);
+        MenuHolder holder = new MenuHolder(PREVIEW, fromPage, kitId);
         Inventory inventory = Bukkit.createInventory(holder, rows * 9, title);
         holder.inventory(inventory);
         PanelFrames.apply(this.plugin, inventory, preview);
-        int closeSlot = preview == null ? inventory.getSize() - 1 : preview.getInt("close-slot", inventory.getSize() - 1);
+        int closeSlot = previewSlot(preview, "close-slot", inventory.getSize() - 1);
+        int claimSlot = previewSlot(preview, "claim-slot", -1);
         List<Integer> content = SlotSpec.expand(preview == null ? "" : preview.getString("content-slots", ""));
         int cursor = 0;
         for (Map<?, ?> raw : kit.getMapList("items")) {
@@ -151,37 +188,38 @@ public final class KitService {
                 targetSlot = content.get(cursor);
                 cursor++;
             }
-            if (targetSlot < 0 || targetSlot >= inventory.getSize() || targetSlot == closeSlot) {
+            if (targetSlot < 0 || targetSlot >= inventory.getSize() || targetSlot == closeSlot || targetSlot == claimSlot) {
                 continue;
             }
             inventory.setItem(targetSlot, stack);
         }
-        if (closeSlot >= 0 && closeSlot < inventory.getSize()) {
-            ConfigurationSection close = preview == null ? null : preview.getConfigurationSection("close");
-            inventory.setItem(closeSlot, close == null
-                    ? named(Material.ARROW, this.plugin.messages().text("kits.preview-close-name"))
-                    : PanelItems.from(this.plugin, close, player));
-        }
+        placePreviewButton(inventory, player, preview, closeSlot, "close", Material.ARROW, "kits.preview-close-name");
+        placePreviewButton(inventory, player, preview, claimSlot, "claim", Material.LIME_DYE, "kits.preview-claim-name");
         player.openInventory(inventory);
         PanelClicks.openSound(this.plugin, player, preview);
+        Sounds.play(this.plugin, player, "kits-preview");
     }
 
     public boolean closePreviewSlot(int slot) {
-        ConfigurationSection preview = this.plugin.configs().kits().getConfigurationSection("preview");
-        int close = preview == null ? 53 : preview.getInt("close-slot", 53);
-        return slot == close;
+        return slot == previewSlot(this.plugin.configs().kits().getConfigurationSection("preview"), "close-slot", 53);
+    }
+
+    public boolean claimPreviewSlot(int slot) {
+        int claim = previewSlot(this.plugin.configs().kits().getConfigurationSection("preview"), "claim-slot", -1);
+        return claim >= 0 && slot == claim;
     }
 
     public void claim(CommandSender staff, Player target, String kitId, boolean ignoreCooldown) {
         ConfigurationSection kit = this.plugin.configs().kits().getConfigurationSection("kits." + kitId.toLowerCase(Locale.ROOT));
         if (kit == null) {
-            this.plugin.messages().send(staff, "kits.unknown", Map.of("kit", kitId));
+            fail(staff, "kits.unknown", Map.of("kit", kitId));
             return;
         }
+        boolean gifted = staff != target;
         String permission = kit.getString("permission", "");
         if (permission != null && !permission.isBlank() && !target.hasPermission(permission)
-                && !Perms.has(this.plugin, staff, "kit-bypass")) {
-            this.plugin.messages().send(staff, "kits.no-permission", Map.of("kit", kitId));
+                && !Perms.has(this.plugin, staff, "kit-bypass") && !gifted) {
+            fail(staff, "kits.no-permission", Map.of("kit", kitId));
             return;
         }
         if (this.claiming.contains(target.getUniqueId())) {
@@ -192,20 +230,23 @@ public final class KitService {
         String id = kitId.toLowerCase(Locale.ROOT);
         long cooldownMs = kit.getLong("cooldown-seconds", 0L) * 1000L;
         boolean oneTime = kit.getBoolean("one-time", false);
-        boolean bypass = ignoreCooldown || Perms.has(this.plugin, target, "kit-bypass") || Perms.has(this.plugin, staff, "kit-bypass");
+        boolean bypass = ignoreCooldown || gifted
+                || Perms.has(this.plugin, target, "kit-bypass")
+                || Perms.has(this.plugin, staff, "kit-bypass");
         Tasks.async(this.plugin, () -> {
             try {
                 Optional<Long> last = bypass ? Optional.empty() : this.claims.lastClaim(uuid, id);
                 if (!bypass && oneTime && last.isPresent()) {
-                    Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "kits.one-time", Map.of("kit", id)));
+                    Tasks.sync(this.plugin, () -> fail(staff, "kits.one-time", Map.of("kit", id)));
                     return;
                 }
                 long now = System.currentTimeMillis();
                 if (last.isPresent() && cooldownMs > 0 && now - last.get() < cooldownMs) {
-                    long left = (cooldownMs - (now - last.get()) + 999) / 1000;
-                    Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "kits.cooldown", Map.of(
+                    long readyAt = last.get() + cooldownMs;
+                    Tasks.sync(this.plugin, () -> fail(staff, "kits.cooldown", Map.of(
                             "kit", id,
-                            "seconds", String.valueOf(left)
+                            "duration", Durations.formatRemaining(this.plugin, readyAt),
+                            "seconds", String.valueOf((cooldownMs - (now - last.get()) + 999) / 1000)
                     )));
                     return;
                 }
@@ -218,6 +259,7 @@ public final class KitService {
                         target.closeInventory();
                     }
                     give(target, kit, id);
+                    Sounds.play(this.plugin, target, "kits-claim");
                     this.plugin.messages().send(target, "kits.received", Map.of("kit", id));
                     if (staff != target) {
                         this.plugin.messages().send(staff, "kits.given", Map.of("kit", id, "player", target.getName()));
@@ -249,6 +291,20 @@ public final class KitService {
     public Set<String> names() {
         ConfigurationSection kits = this.plugin.configs().kits().getConfigurationSection("kits");
         return kits == null ? Set.of() : kits.getKeys(false);
+    }
+
+    private void refreshOpenMenu(Player player, int page) {
+        if (!player.isOnline()) {
+            return;
+        }
+        if (!(player.getOpenInventory().getTopInventory().getHolder() instanceof MenuHolder holder)) {
+            return;
+        }
+        if (!MENU.equals(holder.menu()) || holder.page() != page) {
+            return;
+        }
+        ConfigurationSection layout = pageSection(this.plugin.configs().kits().getConfigurationSection("gui"), page);
+        decorateKitIcons(player, holder.getInventory(), layout, this.claims.snapshot(player.getUniqueId()));
     }
 
     private void render(Player player, int page, Map<String, Long> last) {
@@ -288,52 +344,120 @@ public final class KitService {
                 if (icon == null || icon.getType().isAir()) {
                     continue;
                 }
-                inventory.setItem(slot, withStatus(player, icon, kitId.toLowerCase(Locale.ROOT), last));
+                inventory.setItem(slot, withStatus(player, icon, button, kitId.toLowerCase(Locale.ROOT), last));
             }
         }
     }
 
-    private ItemStack withStatus(Player player, ItemStack icon, String kitId, Map<String, Long> last) {
+    private ItemStack withStatus(Player player, ItemStack icon, ConfigurationSection button, String kitId, Map<String, Long> last) {
         ItemStack copy = icon.clone();
+        KitStatus status = statusOf(player, kitId, last);
+        if (status == KitStatus.LOCKED) {
+            String locked = button.getString("locked-material", "");
+            Material material = locked == null || locked.isBlank() ? null : Material.matchMaterial(locked);
+            if (material != null && !material.isAir()) {
+                copy.setType(material);
+            }
+        }
         List<Component> lore = copy.lore() == null ? new ArrayList<>() : new ArrayList<>(copy.lore());
         lore.add(Component.empty());
         lore.add(this.plugin.messages().component("kits.hint-claim", Map.of()));
         lore.add(this.plugin.messages().component("kits.hint-preview", Map.of()));
-        lore.add(statusLine(player, kitId, last));
-        copy.editMeta(meta -> meta.lore(lore));
+        lore.add(status.line(this, kitId, last));
+        if (this.plugin.configs().kits().getBoolean("settings.show-contents", true)) {
+            appendContents(lore, kitId);
+        }
+        copy.editMeta(meta -> {
+            meta.lore(lore);
+            if (status == KitStatus.READY && this.plugin.configs().kits().getBoolean("settings.glow-when-ready", true)) {
+                meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            }
+        });
         return copy;
     }
 
-    private Component statusLine(Player player, String kitId, Map<String, Long> last) {
+    private void appendContents(List<Component> lore, String kitId) {
         ConfigurationSection kit = this.plugin.configs().kits().getConfigurationSection("kits." + kitId);
         if (kit == null) {
-            return this.plugin.messages().component("kits.status-ready", Map.of());
+            return;
+        }
+        int shown = 0;
+        for (Map<?, ?> raw : kit.getMapList("items")) {
+            if (shown >= 6) {
+                lore.add(this.plugin.messages().component("kits.contents-more", Map.of()));
+                break;
+            }
+            String item = asString(raw.get("mmoitem-id"));
+            if (item.isBlank()) {
+                item = asString(raw.get("material"));
+            }
+            if (item.isBlank()) {
+                continue;
+            }
+            lore.add(this.plugin.messages().component("kits.contents-line", Map.of(
+                    "item", item,
+                    "amount", String.valueOf(Math.max(1, asInt(raw.get("amount"), 1)))
+            )));
+            shown++;
+        }
+    }
+
+    private KitStatus statusOf(Player player, String kitId, Map<String, Long> last) {
+        ConfigurationSection kit = this.plugin.configs().kits().getConfigurationSection("kits." + kitId);
+        if (kit == null) {
+            return KitStatus.READY;
         }
         String permission = kit.getString("permission", "");
         if (permission != null && !permission.isBlank()
                 && !player.hasPermission(permission)
                 && !Perms.has(this.plugin, player, "kit-bypass")) {
-            return this.plugin.messages().component("kits.status-locked", Map.of());
+            return KitStatus.LOCKED;
         }
         Long claimed = last.get(kitId);
         if (kit.getBoolean("one-time", false) && claimed != null && !Perms.has(this.plugin, player, "kit-bypass")) {
-            return this.plugin.messages().component("kits.status-one-time-used", Map.of());
+            return KitStatus.USED;
         }
         long cooldownMs = kit.getLong("cooldown-seconds", 0L) * 1000L;
         if (claimed != null && cooldownMs > 0 && !Perms.has(this.plugin, player, "kit-bypass")) {
-            long left = (cooldownMs - (System.currentTimeMillis() - claimed) + 999) / 1000;
-            if (left > 0) {
-                return this.plugin.messages().component("kits.status-cooldown", Map.of("seconds", String.valueOf(left)));
+            if (System.currentTimeMillis() < claimed + cooldownMs) {
+                return KitStatus.COOLDOWN;
             }
         }
-        return this.plugin.messages().component("kits.status-ready", Map.of());
+        return KitStatus.READY;
     }
 
-    private boolean rightPreview(ClickType click) {
+    private boolean previewClick(ClickType click) {
         if (!this.plugin.configs().kits().getBoolean("settings.right-click-preview", true)) {
             return false;
         }
-        return click == ClickType.RIGHT || click == ClickType.SHIFT_RIGHT;
+        return matchesClick(click, "settings.preview-clicks", ClickType.RIGHT, ClickType.SHIFT_RIGHT);
+    }
+
+    private boolean claimClick(ClickType click) {
+        return matchesClick(click, "settings.claim-clicks", ClickType.LEFT, ClickType.SHIFT_LEFT);
+    }
+
+    private boolean matchesClick(ClickType click, String path, ClickType... defaults) {
+        List<String> names = this.plugin.configs().kits().getStringList(path);
+        if (names.isEmpty()) {
+            for (ClickType type : defaults) {
+                if (type == click) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        for (String name : names) {
+            try {
+                if (ClickType.valueOf(name.trim().toUpperCase(Locale.ROOT)) == click) {
+                    return true;
+                }
+            } catch (IllegalArgumentException ignored) {
+                // YAML ignora valori sconosciuti
+            }
+        }
+        return false;
     }
 
     private ConfigurationSection pageSection(ConfigurationSection root, int page) {
@@ -393,10 +517,39 @@ public final class KitService {
         return stack.getType().isAir() ? null : stack;
     }
 
+    private void placePreviewButton(
+            Inventory inventory,
+            Player player,
+            ConfigurationSection preview,
+            int slot,
+            String section,
+            Material fallback,
+            String nameKey
+    ) {
+        if (slot < 0 || slot >= inventory.getSize()) {
+            return;
+        }
+        ConfigurationSection button = preview == null ? null : preview.getConfigurationSection(section);
+        inventory.setItem(slot, button == null
+                ? named(fallback, this.plugin.messages().text(nameKey))
+                : PanelItems.from(this.plugin, button, player));
+    }
+
+    private static int previewSlot(ConfigurationSection preview, String key, int fallback) {
+        return preview == null ? fallback : preview.getInt(key, fallback);
+    }
+
     private ItemStack named(Material material, String name) {
         ItemStack item = new ItemStack(material);
         item.editMeta(meta -> meta.displayName(this.plugin.messages().deserialize(name)));
         return item;
+    }
+
+    private void fail(CommandSender staff, String key, Map<String, String> values) {
+        this.plugin.messages().send(staff, key, values);
+        if (staff instanceof Player player) {
+            Sounds.play(this.plugin, player, "kits-deny");
+        }
     }
 
     private boolean held(Player player) {
@@ -416,6 +569,31 @@ public final class KitService {
             return Integer.parseInt(String.valueOf(value));
         } catch (Exception ignored) {
             return fallback;
+        }
+    }
+
+    private enum KitStatus {
+        READY,
+        COOLDOWN,
+        LOCKED,
+        USED;
+
+        private Component line(KitService service, String kitId, Map<String, Long> last) {
+            return switch (this) {
+                case LOCKED -> service.plugin.messages().component("kits.status-locked", Map.of());
+                case USED -> service.plugin.messages().component("kits.status-one-time-used", Map.of());
+                case COOLDOWN -> {
+                    ConfigurationSection kit = service.plugin.configs().kits().getConfigurationSection("kits." + kitId);
+                    long cooldownMs = kit == null ? 0L : kit.getLong("cooldown-seconds", 0L) * 1000L;
+                    Long claimed = last.get(kitId);
+                    long readyAt = claimed == null ? System.currentTimeMillis() : claimed + cooldownMs;
+                    yield service.plugin.messages().component("kits.status-cooldown", Map.of(
+                            "duration", Durations.formatRemaining(service.plugin, readyAt),
+                            "seconds", String.valueOf(Math.max(1, (readyAt - System.currentTimeMillis() + 999) / 1000))
+                    ));
+                }
+                case READY -> service.plugin.messages().component("kits.status-ready", Map.of());
+            };
         }
     }
 }
