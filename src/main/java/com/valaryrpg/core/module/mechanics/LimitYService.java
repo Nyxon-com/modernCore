@@ -82,6 +82,12 @@ public final class LimitYService {
         this.lastRelocate.clear();
     }
 
+    public void setNotify(World world, boolean enabled) {
+        this.plugin.configs().mechanics().set("limity.worlds." + world.getName() + ".notify", enabled);
+        this.plugin.configs().saveMechanics();
+        this.rules.remove(world.getName());
+    }
+
     public void setCommand(World world, String command) {
         String path = "limity.worlds." + world.getName();
         this.plugin.configs().mechanics().set(path + ".commands", List.of(command));
@@ -125,7 +131,7 @@ public final class LimitYService {
                 this.lastRelocate.put(player.getUniqueId(), now);
                 relocate(player, world, rule, location);
             }
-            if (ready(player.getUniqueId(), this.lastNotify, now, notifyCooldown)) {
+            if (rule.alerts && ready(player.getUniqueId(), this.lastNotify, now, notifyCooldown)) {
                 this.lastNotify.put(player.getUniqueId(), now);
                 this.plugin.messages().send(player, "limity.blocked", Map.of(
                         "min", String.valueOf(rule.min),
@@ -161,7 +167,7 @@ public final class LimitYService {
         player.teleport(clamped);
     }
 
-    private static final Rule NONE = new Rule(0, 0, List.of(), false);
+    private static final Rule NONE = new Rule(0, 0, List.of(), false, false);
 
     private Rule ruleOf(World world) {
         Rule cached = this.rules.get(world.getName());
@@ -178,7 +184,8 @@ public final class LimitYService {
                 section.getDouble("min"),
                 section.getDouble("max"),
                 List.copyOf(commands),
-                section.getBoolean("teleport-spawn", commands.isEmpty())
+                section.getBoolean("teleport-spawn", commands.isEmpty()),
+                section.getBoolean("notify", this.plugin.configs().mechanics().getBoolean("limity.notify", true))
         );
         this.rules.put(world.getName(), rule);
         return rule;
@@ -189,6 +196,6 @@ public final class LimitYService {
         return previous == null || now - previous >= cooldown;
     }
 
-    private record Rule(double min, double max, List<String> commands, boolean teleport) {
+    private record Rule(double min, double max, List<String> commands, boolean teleport, boolean alerts) {
     }
 }

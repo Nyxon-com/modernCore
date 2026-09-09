@@ -24,28 +24,28 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 
 ## 3. Player
 - [x] Join/quit MiniMessage; primo join usa `first-join`
-- [ ] `/nick <gradient:#ff0:#f0f>Test` senza `valary.nick.color` → niente colori; con permesso → ok
+- [x] `/nick <gradient:#ff0:#f0f>Test` senza `valary.nick.color` → niente colori; con permesso → ok
 - [x] `/nick off` reset
 - [x] Nick in **chat**
-- [ ] Nick in **tab** (TAB plugin: deve comparire il nick, non lo username)
+- [x] Nick in **tab** (TAB plugin: deve comparire il nick, non lo username)
 - [ ] `/msg`, `/r`, `/socialspy` (due account): `[SS]` anche sui tuoi msg se `spy-self: true`
 - [x] Vanilla `/tell` è quello Valary
 - [x] `/fly` persiste al relog se `players.yml` `fly.persist: true`
-- [ ] `/gamemode creative` nello spawn, `/mvtp` (o warp) in un altro mondo → resti creative
+- [x] `/gamemode creative` nello spawn, `/mvtp` (o warp) in un altro mondo → resti creative
 - [x] `/god` ignora danno e fame; `/heal` `/feed` `/back`
 
 ## 4. Moderazione
-- [ ] `/kick <player> test` schermata custom
-- [ ] `/ban <player> 10s motivo` → dialog countdown; dopo 10s entra
+- [x] `/kick <player> test` schermata custom
+- [ ] `/ban <player> 10s motivo` → kick istantaneo (niente freeze in-game); schermata + ticket Discord
 - [ ] `/banlist`, `/pardon <player>`
-- [ ] `/ipban <player>` → altri account stesso IP kickati
-- [ ] `/unbanip <player>` o `/unban <player>` toglie anche l'IP ban
-- [ ] `/history <player>` mostra kick/ban/mute/warn
-- [ ] `/mute 5m` blocca chat e `/msg`; `/unmute`
-- [ ] `/warn` + `/warnings` (i warn NON scadono subito)
+- [x] `/ipban <player>` → altri account stesso IP kickati
+- [x] `/unbanip <player>` o `/unban <player>` toglie anche l'IP ban
+- [x] `/history <player>` mostra kick/ban/mute/warn
+- [x] `/mute 5m` blocca chat e `/msg`; `/unmute`
+- [ ] `/warn` + `/warnings` (i warn NON scadono subito); `/warn remove <player> [id|all]`
 - [x] `/dupeip <player>`: online/offline, BAN, MUTE, warn (layout HISTORY/DUPEIP)
-- [ ] `/vanish` invisibile, tab, no pickup se flag; `/vanishedit pickup`
-- [ ] `/invsee <player>` modifica zaino/armaturastop
+- [x] `/vanish` invisibile, tab, no pickup se flag; `/vanishedit pickup`
+- [x] `/invsee <player>` modifica zaino/armatura
 
 ## 5. Kit
 - [ ] Account nuovo: kit `starter` in mano entro ~1s
@@ -63,7 +63,11 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 
 ## 7. LimitY / drop / morti / coords
 - [ ] `/limity -5 20` nel mondo test
-- [ ] `/limity command [player] spawn` → vola fuori range esegue spawn (mondo corrente)
+- [ ] `/limity remove` (mondo in cui sei) o `/limity remove <mondo>` → niente più limite (anche se il mondo non è caricato)
+- [ ] `/limity command spawn {player}` → console fa `/spawn <nick>` (mondo corrente; `spawn` non è il nome mondo)
+- [ ] `/limity command in spawn spawn {player}` se il comando è per il mondo chiamato spawn
+- [ ] `/limity notify off` silenzia il messaggio "sei fuori dal limite"
+- [ ] `/limity command [player] spawn` → vola fuori range esegue spawn (come il player)
 - [ ] `/limity command world_nether [message] <red>nether` → solo in nether
 - [ ] Bypass `valary.limity.bypass` ignora
 - [ ] Droppa un diamond: hologram piccolo con nome e countdown ~300s; `show-lore: true` mostra lore

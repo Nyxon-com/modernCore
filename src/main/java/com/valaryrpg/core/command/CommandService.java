@@ -6,12 +6,11 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.worlds.WeatherService;
 import com.valaryrpg.core.module.worlds.WorldsModule;
+import com.valaryrpg.core.util.OnlinePlayers;
 import com.valaryrpg.core.util.Perms;
 import com.valaryrpg.core.util.Sounds;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -109,16 +108,19 @@ public final class CommandService {
                     worlds().spawns().teleport(player, player);
                     return Command.SINGLE_SUCCESS;
                 })
-                .then(Commands.argument("target", ArgumentTypes.player())
+                .then(Commands.argument("target", StringArgumentType.word())
                         .requires(stack -> Perms.has(this.plugin, stack.getSender(), "spawn-others"))
+                        .suggests((ctx, builder) -> {
+                            OnlinePlayers.suggest(builder);
+                            return builder.buildFuture();
+                        })
                         .executes(ctx -> {
-                            PlayerSelectorArgumentResolver resolver = ctx.getArgument("target", PlayerSelectorArgumentResolver.class);
-                            List<Player> players = resolver.resolve(ctx.getSource());
-                            if (players.isEmpty()) {
-                                this.plugin.messages().send(ctx.getSource().getSender(), "general.player-not-found", Map.of("target", "?"));
+                            String targetName = StringArgumentType.getString(ctx, "target");
+                            Player target = OnlinePlayers.exact(targetName);
+                            if (target == null) {
+                                this.plugin.messages().send(ctx.getSource().getSender(), "general.player-not-found", Map.of("target", targetName));
                                 return 0;
                             }
-                            Player target = players.getFirst();
                             worlds().spawns().teleport(ctx.getSource().getSender(), target);
                             return Command.SINGLE_SUCCESS;
                         }))

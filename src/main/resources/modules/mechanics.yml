@@ -5,6 +5,7 @@
 # LimitY: mondi senza sezione = nessun limite. Bypass: valary.limity.bypass
 # /limity <min> <max> [mondo] scrive qui. /limity remove [mondo] cancella la sezione.
 #   commands            lista ActionCommands al superamento Y
+#   notify              false = niente messaggio "sei fuori dal limite"
 #   teleport-spawn      true = tp spawn mondo (default true se commands è vuoto)
 #                       se lo spawn è fuori range, clamp Y su min/max (niente loop tp)
 #
@@ -27,6 +28,7 @@
 
 limity:
   enabled: true
+  notify: true
   check-interval-ticks: 10
   notify-cooldown-millis: 3000
   command-cooldown-millis: 3000

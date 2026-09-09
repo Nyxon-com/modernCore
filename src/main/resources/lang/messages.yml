@@ -296,17 +296,20 @@ invsee:
   title: "<dark_gray>Invsee <white>{player}"
 
 limity:
-  usage: "{prefix} <gray>Uso: <white>/limity</white> | <white>/limity <min> <max> [mondo]</white> | <white>/limity remove [mondo]</white> | <white>/limity command [mondo] <comando></white>"
+  usage: "{prefix} <gray>Uso: <white>/limity</white> | <white>/limity <min> <max> [mondo]</white> | <white>/limity remove [mondo]</white> | <white>/limity command <comando></white> | <white>/limity notify <on|off></white>"
   current: "{prefix} <gray>LimitY di <white>{world}</white>: <white>{range}</white>"
   none: "{prefix} <gray>Nessun range Y per <white>{world}</white>."
   set: "{prefix} <green>LimitY di <white>{world}</white> impostato a <white>{min}</white> → <white>{max}</white>."
   removed: "{prefix} <yellow>LimitY di <white>{world}</white> rimosso."
   blocked: "{prefix} <red>Sei fuori dal limite Y di <white>{world}</white> <gray>({min} → {max})."
-  command-usage: "{prefix} <gray>Uso: <white>/limity command [mondo] <comando></white>  es. <white>/limity command [player] spawn</white>"
+  command-usage: "{prefix} <gray>Uso: <white>/limity command <comando></white>  es. <white>/limity command spawn {player}</white>  oppure  <white>/limity command [player] spawn</white>  mondo: <white>/limity command in spawn spawn {player}</white>"
   command-set: "{prefix} <green>Comando LimitY di <white>{world}</white>: <gray>{command}"
   command-cleared: "{prefix} <yellow>Comandi LimitY di <white>{world}</white> azzerati."
   commands: "{prefix} <gray>Comando: <white>{commands}"
   commands-none: "{prefix} <gray>Nessun comando LimitY per <white>{world}</white>. Usa <white>/limity command ...</white>"
+  notify-usage: "{prefix} <gray>Uso: <white>/limity notify <on|off> [mondo]</white>"
+  notify-on: "{prefix} <green>Messaggi LimitY attivi in <white>{world}</white>."
+  notify-off: "{prefix} <yellow>Messaggi LimitY disattivati in <white>{world}</white>."
 
 checkdeath:
   usage: "{prefix} <gray>Uso: <white>/checkdeath [player]</white> oppure <white>/checkdeath restore [player]</white>"

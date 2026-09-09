@@ -52,6 +52,29 @@ final class MechanicsCommands {
                                         ctx.getSource().getSender(),
                                         StringArgumentType.getString(ctx, "line")
                                 ))))
+                .then(Commands.literal("notify")
+                        .executes(ctx -> {
+                            this.plugin.messages().send(ctx.getSource().getSender(), "limity.notify-usage");
+                            return Command.SINGLE_SUCCESS;
+                        })
+                        .then(Commands.literal("on")
+                                .executes(ctx -> setNotify(ctx.getSource().getSender(), true, null))
+                                .then(Commands.argument("world", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> suggestWorlds(builder))
+                                        .executes(ctx -> setNotify(
+                                                ctx.getSource().getSender(),
+                                                true,
+                                                StringArgumentType.getString(ctx, "world")
+                                        ))))
+                        .then(Commands.literal("off")
+                                .executes(ctx -> setNotify(ctx.getSource().getSender(), false, null))
+                                .then(Commands.argument("world", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> suggestWorlds(builder))
+                                        .executes(ctx -> setNotify(
+                                                ctx.getSource().getSender(),
+                                                false,
+                                                StringArgumentType.getString(ctx, "world")
+                                        )))))
                 .then(Commands.literal("clearcommand")
                         .executes(ctx -> clearLimitCommand(ctx.getSource().getSender(), null))
                         .then(Commands.argument("world", StringArgumentType.word())
@@ -331,21 +354,30 @@ final class MechanicsCommands {
             this.plugin.messages().send(sender, "limity.command-usage");
             return 0;
         }
-        String[] parts = trimmed.split("\\s+", 2);
-        World named = Bukkit.getWorld(parts[0]);
         World world;
         String command;
-        if (named != null && parts.length >= 2) {
-            world = named;
-            command = parts[1];
-        } else if (named != null) {
-            this.plugin.messages().send(sender, "limity.command-usage");
-            return 0;
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("in ")) {
+            String after = trimmed.substring(3).trim();
+            int space = after.indexOf(' ');
+            if (space <= 0) {
+                this.plugin.messages().send(sender, "limity.command-usage");
+                return 0;
+            }
+            world = worldOf(sender, after.substring(0, space));
+            command = after.substring(space + 1).trim();
         } else {
-            world = worldOf(sender, null);
-            command = trimmed;
+            String[] parts = trimmed.split("\\s+", 2);
+            World named = Bukkit.getWorld(parts[0]);
+            if (named != null && parts.length >= 2 && parts[1].startsWith("[")) {
+                world = named;
+                command = parts[1];
+            } else {
+                world = worldOf(sender, null);
+                command = trimmed;
+            }
         }
-        if (world == null) {
+        if (world == null || command.isBlank()) {
             return 0;
         }
         module().limitY().setCommand(world, command);
@@ -377,6 +409,16 @@ final class MechanicsCommands {
         }
         module().limitY().remove(name);
         this.plugin.messages().send(sender, "limity.removed", Map.of("world", name));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int setNotify(CommandSender sender, boolean enabled, String worldName) {
+        World world = worldOf(sender, worldName);
+        if (world == null) {
+            return 0;
+        }
+        module().limitY().setNotify(world, enabled);
+        this.plugin.messages().send(sender, enabled ? "limity.notify-on" : "limity.notify-off", Map.of("world", world.getName()));
         return Command.SINGLE_SUCCESS;
     }
 
