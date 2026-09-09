@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -89,6 +90,17 @@ public final class WorldsListener implements Listener {
         }
         if (player.getWorld() != null && !this.catalog.hunger(player.getWorld())) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onFall(EntityDamageEvent event) {
+        if (event.getCause() != EntityDamageEvent.DamageCause.FALL) {
+            return;
+        }
+        if (event.getEntity().getWorld() != null && !this.catalog.fallDamage(event.getEntity().getWorld())) {
+            event.setCancelled(true);
+            event.getEntity().setFallDistance(0.0F);
         }
     }
 

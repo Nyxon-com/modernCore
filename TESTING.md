@@ -13,6 +13,7 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 - [x] `/spawn <altro>` con permesso
 - [x] `/weatherlock rain` → resta pioggia; `/weatherlock unlock`
 - [x] `/timelock noon` → ora ferma; `/time add 1000` non deve avanzare; `/timelock unlock`
+- [ ] `/falldamage false spawn` → in spawn niente danno da caduta; `/falldamage true spawn` lo riaccende
 - [x] Con Multiverse: un mondo extra compare in `worlds.yml` senza sovrascrivere alias già scritti
 
 ## 2. Home / warp

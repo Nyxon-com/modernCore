@@ -43,6 +43,7 @@ public final class CommandService {
                 registrar.register(setSpawnCommand(), "Imposta lo spawn globale", aliases("commands.setspawn-aliases"));
                 registrar.register(weatherLockCommand(), "Blocca o sblocca il meteo di un mondo", aliases("commands.weatherlock-aliases"));
                 registrar.register(timeLockCommand(), "Blocca o sblocca l'ora di un mondo", aliases("commands.timelock-aliases"));
+                registrar.register(fallDamageCommand(), "Attiva o disattiva il danno da caduta per mondo", aliases("commands.falldamage-aliases"));
             }
             if (enabled("homes")) {
                 new HomesCommands(this.plugin).register(registrar);
@@ -290,6 +291,91 @@ public final class CommandService {
                 "weather", lock.name().toLowerCase(Locale.ROOT)
         ));
         return Command.SINGLE_SUCCESS;
+    }
+
+    private LiteralCommandNode<CommandSourceStack> fallDamageCommand() {
+        String name = string("commands.falldamage", "falldamage");
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "falldamage"))
+                .executes(ctx -> showFallDamage(ctx.getSource().getSender(), null, name))
+                .then(Commands.argument("state", StringArgumentType.word())
+                        .suggests((ctx, builder) -> {
+                            for (String suggestion : List.of("true", "false", "on", "off")) {
+                                if (suggestion.startsWith(builder.getRemainingLowerCase())) {
+                                    builder.suggest(suggestion);
+                                }
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes(ctx -> applyFallDamage(
+                                ctx.getSource().getSender(),
+                                StringArgumentType.getString(ctx, "state"),
+                                null,
+                                name
+                        ))
+                        .then(Commands.argument("world", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    for (World world : Bukkit.getWorlds()) {
+                                        if (world.getName().toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(world.getName());
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> applyFallDamage(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "state"),
+                                        StringArgumentType.getString(ctx, "world"),
+                                        name
+                                ))))
+                .build();
+    }
+
+    private int showFallDamage(CommandSender sender, String worldName, String label) {
+        String name = worldOf(sender, worldName, label);
+        if (name == null) {
+            return 0;
+        }
+        boolean enabled = worlds().catalog().fallDamage(name);
+        this.plugin.messages().send(sender, enabled ? "falldamage.current-on" : "falldamage.current-off", Map.of("world", name));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int applyFallDamage(CommandSender sender, String stateRaw, String worldName, String label) {
+        Boolean enabled = parseToggle(stateRaw);
+        if (enabled == null) {
+            this.plugin.messages().send(sender, "falldamage.usage", Map.of("label", label));
+            return 0;
+        }
+        String name = worldOf(sender, worldName, label);
+        if (name == null) {
+            return 0;
+        }
+        worlds().catalog().setFallDamage(name, enabled);
+        this.plugin.messages().send(sender, enabled ? "falldamage.enabled" : "falldamage.disabled", Map.of("world", name));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private String worldOf(CommandSender sender, String worldName, String label) {
+        if (worldName == null || worldName.isBlank()) {
+            if (!(sender instanceof Player player) || player.getWorld() == null) {
+                this.plugin.messages().send(sender, "falldamage.usage", Map.of("label", label));
+                return null;
+            }
+            return player.getWorld().getName();
+        }
+        return worldName;
+    }
+
+    private static Boolean parseToggle(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return switch (raw.toLowerCase(Locale.ROOT)) {
+            case "true", "on", "enable", "enabled", "1", "si", "yes" -> true;
+            case "false", "off", "disable", "disabled", "0", "no" -> false;
+            default -> null;
+        };
     }
 
     private boolean enabled(String moduleId) {

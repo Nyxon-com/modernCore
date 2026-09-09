@@ -28,6 +28,7 @@ permissions:
       valary.setspawn: true
       valary.weather.lock: true
       valary.time.lock: true
+      valary.falldamage: true
       valary.home.unlimited: true
       valary.teleport.cooldown.bypass: true
       valary.warp.others: true
@@ -83,6 +84,9 @@ permissions:
     default: op
   valary.time.lock:
     description: Blocca o sblocca l'ora di un mondo
+    default: op
+  valary.falldamage:
+    description: Attiva o disattiva il danno da caduta per mondo
     default: op
   valary.home:
     description: Usa /home e /homes

@@ -52,8 +52,9 @@ MiniMessage: `<red>`, `<gradient:#8B5CF6:#EC4899>`, `&#FF00AA`, `<lang:item.mine
 - `/spawn` — ti porta lì da qualsiasi mondo. `/spawn <player>` con `valary.spawn.others`
 - `/weatherlock <clear|rain|thunder|unlock> [mondo]` — meteo mondo + client (serve anche negli spawn void)
 - `/timelock <day|noon|night|midnight|unlock> [mondo]` — ferma il ciclo; `/time add` viene riportato indietro
+- `/falldamage <true|false> [mondo]` — danno da caduta per mondo (`/falldamage false spawn`). Resta in `worlds.yml` (`fall-damage`)
 
-Se **Multiverse-Core** è presente, pvp, difficulty, gamemode, hunger e flight restano quelli di MV: non serve rifarli in `worlds.yml`. Valary usa `/setspawn`, weatherlock e timelock. Senza MV, il catalogo in `worlds.yml` viene applicato come prima.
+Se **Multiverse-Core** è presente, pvp, difficulty, gamemode, hunger e flight restano quelli di MV: non serve rifarli in `worlds.yml`. Valary usa `/setspawn`, weatherlock, timelock e `/falldamage`. Senza MV, il catalogo in `worlds.yml` viene applicato come prima.
 
 PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary_nick_mm%` `%valary_god%` `%valary_vanished%` `%valary_fly%`
 

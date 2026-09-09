@@ -36,6 +36,9 @@ commands:
   timelock: timelock
   timelock-aliases:
     - tlock
+  falldamage: falldamage
+  falldamage-aliases:
+    - fdmg
   home: home
   home-aliases: []
   sethome: sethome
@@ -145,6 +148,7 @@ permissions:
   setspawn: valary.setspawn
   weatherlock: valary.weather.lock
   timelock: valary.time.lock
+  falldamage: valary.falldamage
   home: valary.home
   sethome: valary.home.set
   delhome: valary.home.delete

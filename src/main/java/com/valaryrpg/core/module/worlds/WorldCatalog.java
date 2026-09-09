@@ -65,6 +65,7 @@ public final class WorldCatalog {
         changed |= write(yaml, base + ".spawn-animals", bool(mv, world.getAllowAnimals(), "canAnimalsSpawn", "getAnimalSpawn"), overwrite);
         changed |= write(yaml, base + ".hunger", bool(mv, true, "isHunger", "getHunger", "isHungerEnabled"), mvSync);
         changed |= write(yaml, base + ".allow-flight", bool(mv, false, "isAllowFlight", "getAllowFlight"), mvSync);
+        changed |= write(yaml, base + ".fall-damage", true, false);
         changed |= write(yaml, base + ".keep-spawn-in-memory", bool(mv, world.getKeepSpawnInMemory(), "isKeepSpawnInMemory", "getKeepSpawnInMemory"), overwrite);
         changed |= write(yaml, base + ".hidden", bool(mv, false, "isHidden"), mvSync);
         changed |= write(yaml, base + ".auto-heal", bool(mv, true, "getAutoHeal", "isAutoHeal"), mvSync);
@@ -125,6 +126,22 @@ public final class WorldCatalog {
             return bool(mv, false, "isAllowFlight", "getAllowFlight");
         }
         return this.plugin.configs().worlds().getBoolean("worlds." + world.getName() + ".allow-flight", false);
+    }
+
+    public boolean fallDamage(World world) {
+        if (world == null) {
+            return true;
+        }
+        return fallDamage(world.getName());
+    }
+
+    public boolean fallDamage(String worldName) {
+        return this.plugin.configs().worlds().getBoolean("worlds." + worldName + ".fall-damage", true);
+    }
+
+    public void setFallDamage(String worldName, boolean enabled) {
+        this.plugin.configs().worlds().set("worlds." + worldName + ".fall-damage", enabled);
+        this.plugin.configs().saveWorlds();
     }
 
     public boolean forceGamemode(World world) {

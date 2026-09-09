@@ -80,6 +80,13 @@ time:
   usage: "{prefix} <gray>Uso: <white>/{label} <day|noon|night|midnight|unlock> [mondo]</white>"
   invalid-type: "{prefix} <red>Tipo ora non valido. Usa: day, noon, night, midnight, unlock oppure un numero di tick."
 
+falldamage:
+  usage: "{prefix} <gray>Uso: <white>/{label} <true|false> [mondo]</white>  es. <white>/{label} false spawn</white>"
+  enabled: "{prefix} <green>Danno da caduta attivo in <white>{world}</white>."
+  disabled: "{prefix} <yellow>Danno da caduta disattivato in <white>{world}</white>."
+  current-on: "{prefix} <gray>Danno da caduta in <white>{world}</white>: <green>attivo</green>."
+  current-off: "{prefix} <gray>Danno da caduta in <white>{world}</white>: <yellow>disattivo</yellow>."
+
 join-quit:
   join: "<dark_gray>[<green>+<dark_gray>] <gray>{displayname}"
   first-join: "<dark_gray>[<gold>+<dark_gray>] <yellow>{displayname} <gray>è entrato per la prima volta."
