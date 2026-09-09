@@ -92,7 +92,8 @@ public final class SellService {
             }
             Reward reward = rewardOf(item);
             if (reward == null) {
-                player.getInventory().addItem(item.clone());
+                player.getInventory().addItem(item.clone()).values()
+                        .forEach(left -> player.getWorld().dropItemNaturally(player.getLocation(), left));
                 inventory.setItem(slot, null);
                 continue;
             }
@@ -196,19 +197,9 @@ public final class SellService {
     }
 
     private Double priceOf(ItemStack item) {
-        ConfigurationSection mmo = this.plugin.configs().prices().getConfigurationSection("mmoitems");
-        if (mmo != null) {
-            for (String key : mmo.getKeys(false)) {
-                int split = key.indexOf('.');
-                if (split <= 0) {
-                    continue;
-                }
-                String type = key.substring(0, split);
-                String id = key.substring(split + 1);
-                if (MmoItems.matches(item, type, id)) {
-                    return mmo.getDouble(key);
-                }
-            }
+        Double mmoPrice = mmoPrice(item);
+        if (mmoPrice != null) {
+            return mmoPrice;
         }
         String material = item.getType().name();
         ConfigurationSection worth = this.plugin.configs().prices().getConfigurationSection("worth");
@@ -216,6 +207,47 @@ public final class SellService {
             return null;
         }
         return worth.getDouble(material);
+    }
+
+    private Double mmoPrice(ItemStack item) {
+        ConfigurationSection mmo = this.plugin.configs().prices().getConfigurationSection("mmoitems");
+        if (mmo == null) {
+            return null;
+        }
+        String[] nbt = MmoItems.typeAndId(item);
+        if (nbt != null && isMmoId(nbt[0]) && isMmoId(nbt[1])) {
+            ConfigurationSection type = mmo.getConfigurationSection(nbt[0]);
+            if (type != null && type.contains(nbt[1])) {
+                return type.getDouble(nbt[1]);
+            }
+            String flat = nbt[0] + "." + nbt[1];
+            if (mmo.contains(flat)) {
+                return mmo.getDouble(flat);
+            }
+        }
+        for (String key : mmo.getKeys(false)) {
+            ConfigurationSection nested = mmo.getConfigurationSection(key);
+            if (nested != null) {
+                for (String id : nested.getKeys(false)) {
+                    if (MmoItems.matches(item, key, id)) {
+                        return nested.getDouble(id);
+                    }
+                }
+                continue;
+            }
+            int split = key.indexOf('.');
+            if (split <= 0) {
+                continue;
+            }
+            if (MmoItems.matches(item, key.substring(0, split), key.substring(split + 1))) {
+                return mmo.getDouble(key);
+            }
+        }
+        return null;
+    }
+
+    private static boolean isMmoId(String value) {
+        return value != null && !value.isBlank() && !"null".equalsIgnoreCase(value);
     }
 
     public void sellAll(Player player) {
