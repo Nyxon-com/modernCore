@@ -6,10 +6,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 /**
- * GUI kit, anteprima e kit di benvenuto al primo join.
+ * GUI kit: sinistro ritira, destro anteprima; kit welcome al primo join.
  */
 public final class KitsListener implements Listener {
 
@@ -40,7 +41,15 @@ public final class KitsListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player) || event.getClickedInventory() != event.getView().getTopInventory()) {
             return;
         }
-        this.kits.click(player, event.getSlot(), holder.page());
+        this.kits.click(player, event.getSlot(), holder.page(), event.getClick());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onDrag(InventoryDragEvent event) {
+        if (event.getInventory().getHolder() instanceof MenuHolder holder
+                && (KitService.MENU.equals(holder.menu()) || KitService.PREVIEW.equals(holder.menu()))) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

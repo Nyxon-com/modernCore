@@ -100,15 +100,30 @@ public final class ModerationCommands {
         return Commands.literal(literal)
                 .requires(stack -> has("unban", stack.getSender()))
                 .executes(ctx -> usage(ctx.getSource().getSender(), "moderation.unban-usage", literal))
-                .then(Commands.argument("player", StringArgumentType.word())
+                .then(Commands.literal("list")
                         .executes(ctx -> {
                             ModerationService service = moderation();
                             if (service == null) {
                                 return 0;
                             }
-                            service.unban(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "player"));
+                            service.pardonList(ctx.getSource().getSender());
                             return Command.SINGLE_SUCCESS;
                         }))
+                .then(Commands.argument("player", StringArgumentType.word())
+                        .executes(ctx -> usage(ctx.getSource().getSender(), "moderation.unban-usage", literal))
+                        .then(Commands.argument("reason", StringArgumentType.greedyString())
+                                .executes(ctx -> {
+                                    ModerationService service = moderation();
+                                    if (service == null) {
+                                        return 0;
+                                    }
+                                    service.unban(
+                                            ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "player"),
+                                            StringArgumentType.getString(ctx, "reason")
+                                    );
+                                    return Command.SINGLE_SUCCESS;
+                                })))
                 .build();
     }
 

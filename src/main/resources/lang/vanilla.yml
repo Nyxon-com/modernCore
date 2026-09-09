@@ -70,6 +70,17 @@ commands:
   help:
     failed: "{prefix} <red>Comando sconosciuto."
 
+command:
+  unknown:
+    command: "{prefix} <red>Comando incompleto. Controlla gli argomenti."
+    argument: "{prefix} <red>Argomento non valido."
+  context:
+    parse_error: ""
+    here: ""
+  failed: "{prefix} <red>Comando non valido. Controlla gli argomenti."
+  exception:
+    parse: "{prefix} <red>Comando non valido: {0}"
+
 sleep:
   players_sleeping: "<gray>Stanno dormendo <white>{0}</white>/<white>{1}</white>."
   skipping_night: "<gray>La notte viene saltata."

@@ -12,12 +12,13 @@
 #
 # Campi di uno slot:
 #   action              kit | preview | page | close | command | none
-#   kit                 id del kit (action: kit o preview)
+#   kit                 id del kit. action: kit → sinistro ritira, destro anteprima
+#                       action: preview → anteprima su qualsiasi click (opzionale)
 #   page                numero pagina (solo action: page)
 #   one-time            sul kit: true = ritirabile una sola volta (SQL kit_claims)
 #
 # Pagine extra sotto gui.pages.<n> (stessi campi di gui: title, rows, slots).
-# Il fill della pagina 1 viene riusato. preview: GUI anteprima contenuto kit.
+# Il fill della pagina 1 viene riusato. preview: GUI contenuto (si apre col destro sul kit).
 #   material            materiale vanilla (IRON_SWORD). Fallback se MMOItems assente
 #   mmoitem-type        tipo MMOItems (SWORD, CONSUMABLE, ARMOR, ...)
 #   mmoitem-id          id interno MMOItems (es. STEEL_SWORD)
@@ -49,12 +50,18 @@
 #   commands            eseguiti da console al claim. {player} = nick
 #
 # settings.mmoitems-give  comando se getItem() reflection fallisce
+# settings.right-click-preview  true = destro apre l'anteprima (niente bottone a parte)
+# settings.close-on-claim       chiude la GUI dopo il ritiro
+# settings.drop-overflow        zaino pieno → droppa a terra
 # =============================================================================
 
 settings:
   first-join-kit: starter
-  first-join-delay-ticks: 5
+  first-join-delay-ticks: 20
   mmoitems-give: "mi give {player} {type} {id} {amount}"
+  right-click-preview: true
+  close-on-claim: true
+  drop-overflow: true
 
 gui:
   title: "<dark_gray>Kit <white>{player}"
@@ -89,7 +96,6 @@ gui:
       name: "<green>Starter"
       lore:
         - "<gray>Kit di benvenuto"
-        - "<dark_gray>Click per ritirare"
       glow: false
       click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
       commands: []
@@ -100,14 +106,6 @@ gui:
       name: "<gold>Daily"
       lore:
         - "<gray>Ricompensa giornaliera"
-      commands: []
-    15:
-      action: preview
-      kit: starter
-      material: BOOK
-      name: "<aqua>Anteprima Starter"
-      lore:
-        - "<gray>Guarda il contenuto"
       commands: []
     16:
       action: page
@@ -181,8 +179,10 @@ kits:
     items:
       - material: BREAD
         amount: 16
+        name: "<gold>Pane starter"
       - material: WOODEN_SWORD
         amount: 1
+        name: "<white>Spada starter"
       # - mmoitem-type: SWORD
       #   mmoitem-id: STARTER_BLADE
       #   amount: 1
@@ -196,4 +196,5 @@ kits:
     items:
       - material: COOKED_BEEF
         amount: 8
+        name: "<gold>Razione daily"
     commands: []

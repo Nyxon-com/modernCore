@@ -29,30 +29,31 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 - [x] `/nick off` reset
 - [x] Nick in **chat**
 - [x] Nick in **tab** (TAB plugin: deve comparire il nick, non lo username)
-- [ ] `/msg`, `/r`, `/socialspy` (due account): `[SS]` anche sui tuoi msg se `spy-self: true`
+- [x] `/msg`, `/r`, `/socialspy` (due account): `[SS]` anche sui tuoi msg se `spy-self: true`
 - [x] Vanilla `/tell` è quello Valary
 - [x] `/fly` persiste al relog se `players.yml` `fly.persist: true`
-- [ ] `/fly` + `/kill` (o morte) → dopo respawn voli ancora
+- [x] `/fly` + `/kill` (o morte) → dopo respawn voli ancora
 - [x] `/gamemode creative` nello spawn, `/mvtp` (o warp) in un altro mondo → resti creative
-- [ ] `/gamemode creative` + `/kill` → dopo respawn resti creative
+- [x] `/gamemode creative` + `/kill` → dopo respawn resti creative
 - [x] `/god` ignora danno e fame; `/heal` `/feed` `/back`
 
 ## 4. Moderazione
 - [x] `/kick <player> test` schermata custom
 - [ ] `/ban <player> 10s motivo` → kick istantaneo (niente freeze in-game); schermata + ticket Discord
-- [ ] `/banlist`, `/pardon <player>`
+- [x] `/banlist`, `/pardon <player> <motivo>` (motivo obbligatorio); `/pardon list`
 - [x] `/ipban <player>` → altri account stesso IP kickati
 - [x] `/unbanip <player>` o `/unban <player>` toglie anche l'IP ban
-- [x] `/history <player>` mostra kick/ban/mute/warn
+- [x] `/history <player>` mostra kick/ban/mute/warn; REVOCATO ≠ SCADUTO; count = record veri
 - [x] `/mute 5m` blocca chat e `/msg`; `/unmute`
-- [ ] `/warn` + `/warnings` (i warn NON scadono subito); `/warn remove <player> [id|all]`
+- [x] `/warn` + `/warnings` (i warn NON scadono subito); `/warn remove <player> [id|all]`
 - [x] `/dupeip <player>`: online/offline, BAN, MUTE, warn (layout HISTORY/DUPEIP)
 - [x] `/vanish` invisibile, tab, no pickup se flag; `/vanishedit pickup`
 - [x] `/invsee <player>` modifica zaino/armatura
 
 ## 5. Kit
 - [ ] Account nuovo: kit `starter` in mano entro ~1s
-- [ ] `/kit` GUI, suoni, pagine, anteprima, chiudi
+- [ ] `/kit` GUI: **sinistro** ritira, **destro** anteprima (niente bottone libro), chiudi, pagine
+- [ ] In GUI: stato disponibile / cooldown / no permesso
 - [ ] `/kit daily` senza permesso → no; con `valary.kit.daily` → sì, cooldown
 - [ ] `/kit starter <player>` da console
 - [ ] Se MMOItems è presente, decommenta un item in `kits.yml` e ritira
@@ -80,11 +81,11 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 - [ ] `/copycoord` click = clipboard `world x y z`
 
 ## 8. Long jump
-- [ ] Calpesta gold plate → salto in direzione sguardo
-- [ ] Mira una gold plate **senza** calpestarla → **nessun** salto
-- [ ] `/pressureplayerjump` mentre miri → info blocco
-- [ ] `/pressureplayerjump set iron` su una stone plate? solo se miri una plate; su gold plate associa quel blocco
-- [ ] `/pressureplayerjump remove`
+- [x] Calpesta gold plate → salto in direzione sguardo
+- [x] Mira una gold plate **senza** calpestarla → **nessun** salto
+- [x] `/pressureplayerjump` mentre miri → info blocco
+- [x] `/pressureplayerjump set iron` su una stone plate? solo se miri una plate; su gold plate associa quel blocco
+- [x] `/pressureplayerjump remove`
 
 ## 9. Portali
 - [ ] `/portal wand` → item in mano

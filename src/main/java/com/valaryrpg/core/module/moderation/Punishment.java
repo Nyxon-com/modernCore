@@ -12,9 +12,16 @@ public record Punishment(
         String reason,
         long createdAt,
         Long expiresAt,
-        boolean active
+        boolean active,
+        Long revokedAt,
+        String revokedBy,
+        String revokeReason
 ) {
     public boolean expired() {
         return this.expiresAt != null && this.expiresAt <= System.currentTimeMillis();
+    }
+
+    public boolean revoked() {
+        return this.revokedAt != null && this.revokedAt > 0L;
     }
 }

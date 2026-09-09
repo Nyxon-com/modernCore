@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,7 +66,10 @@ public final class ModerationService {
                     finalReason,
                     System.currentTimeMillis(),
                     expiry,
-                    true
+                    true,
+                    null,
+                    null,
+                    null
             ));
         }
         this.plugin.messages().send(staff, "moderation.ban-staff", Map.of(
@@ -106,7 +110,10 @@ public final class ModerationService {
                         finalReason,
                         System.currentTimeMillis(),
                         expiry,
-                        true
+                        true,
+                        null,
+                        null,
+                        null
                 ));
             }
         }
@@ -118,14 +125,19 @@ public final class ModerationService {
         ));
     }
 
-    public void unban(CommandSender staff, String target) {
+    public void unban(CommandSender staff, String target, String reason) {
+        if (reason == null || reason.isBlank()) {
+            this.plugin.messages().send(staff, "moderation.unban-usage", Map.of("label", "pardon"));
+            return;
+        }
+        String finalReason = reason.trim();
         Target resolved = looksLikeIp(target) ? new Target(null, target, target, null) : resolve(target);
         String ip = resolved.ip;
         if (ip.isBlank() && resolved.uuid != null) {
             ip = this.players.lastIp(resolved.uuid);
         }
-        int bans = this.repository.deactivate(PunishmentType.BAN, resolved.uuid, resolved.name, ip);
-        int ips = this.repository.deactivate(PunishmentType.IPBAN, resolved.uuid, resolved.name, ip);
+        int bans = this.repository.pardon(PunishmentType.BAN, resolved.uuid, resolved.name, ip, staff.getName(), finalReason);
+        int ips = this.repository.pardon(PunishmentType.IPBAN, resolved.uuid, resolved.name, ip, staff.getName(), finalReason);
         if (bans + ips <= 0) {
             this.plugin.messages().send(staff, "moderation.unban-missing", Map.of("player", target));
             return;
@@ -137,11 +149,33 @@ public final class ModerationService {
         if (ips > 0) {
             this.plugin.messages().send(staff, "moderation.unban-ip-staff", Map.of(
                     "player", resolved.name,
-                    "ip", ip.isBlank() ? target : ip
+                    "ip", ip.isBlank() ? target : ip,
+                    "reason", this.plugin.messages().escape(finalReason)
             ));
             return;
         }
-        this.plugin.messages().send(staff, "moderation.unban-staff", Map.of("player", resolved.name));
+        this.plugin.messages().send(staff, "moderation.unban-staff", Map.of(
+                "player", resolved.name,
+                "reason", this.plugin.messages().escape(finalReason)
+        ));
+    }
+
+    public void pardonList(CommandSender staff) {
+        Tasks.async(this.plugin, () -> {
+            List<Punishment> rows = this.repository.listPardons();
+            int max = Math.max(1, this.plugin.configs().moderation().getInt("history.max-listed", 25));
+            List<Punishment> shown = rows.size() > max ? rows.subList(0, max) : rows;
+            Tasks.sync(this.plugin, () -> {
+                if (rows.isEmpty()) {
+                    this.plugin.messages().send(staff, "moderation.pardon-list-empty");
+                    return;
+                }
+                this.plugin.messages().send(staff, "moderation.pardon-list-header", Map.of("count", String.valueOf(rows.size())));
+                for (Punishment row : shown) {
+                    this.plugin.messages().send(staff, "moderation.pardon-list-line", linePlaceholders(row));
+                }
+            });
+        });
     }
 
     public void history(CommandSender staff, String targetName) {
@@ -151,7 +185,9 @@ public final class ModerationService {
             if (ip.isBlank() && target.uuid != null) {
                 ip = this.players.lastIp(target.uuid);
             }
-            List<Punishment> rows = this.repository.history(target.uuid, target.name, ip);
+            List<Punishment> rows = looksLikeIp(targetName)
+                    ? this.repository.historyByIp(ip)
+                    : this.repository.history(target.uuid, target.name, ip);
             int max = Math.max(1, this.plugin.configs().moderation().getInt("history.max-listed", 25));
             List<Punishment> shown = rows.size() > max ? rows.subList(0, max) : rows;
             String shownIp = ip == null || ip.isBlank() ? "-" : ip;
@@ -165,8 +201,8 @@ public final class ModerationService {
                         "count", String.valueOf(rows.size()),
                         "ip", shownIp
                 ));
-                for (int i = 0; i < shown.size(); i++) {
-                    this.plugin.messages().send(staff, "moderation.history-line", linePlaceholders(shown.get(i)));
+                for (Punishment row : shown) {
+                    this.plugin.messages().send(staff, historyLineKey(row), linePlaceholders(row));
                 }
             });
         });
@@ -176,7 +212,7 @@ public final class ModerationService {
         Target target = resolve(targetName);
         String finalReason = reasonOrDefault(reason, "mute.default-reason");
         Long expiry = parseExpiry(durationRaw);
-        Punishment mute = new Punishment(-1L, PunishmentType.MUTE, target.uuid, target.name, target.ip, staff.getName(), finalReason, System.currentTimeMillis(), expiry, true);
+        Punishment mute = new Punishment(-1L, PunishmentType.MUTE, target.uuid, target.name, target.ip, staff.getName(), finalReason, System.currentTimeMillis(), expiry, true, null, null, null);
         if (target.uuid != null) {
             this.mutes.put(target.uuid, mute);
         }
@@ -427,16 +463,21 @@ public final class ModerationService {
     }
 
     private Map<String, String> linePlaceholders(Punishment row) {
-        return Map.of(
-                "type", this.plugin.messages().text("moderation.history-type-" + row.type().name()),
-                "state", historyState(row),
-                "reason", this.plugin.messages().escape(row.reason()),
-                "staff", this.plugin.messages().escape(row.staff()),
-                "duration", historyDuration(row),
-                "when", Durations.formatWhen(this.plugin, row.createdAt()),
-                "ip", row.targetIp() == null || row.targetIp().isBlank() ? "-" : row.targetIp(),
-                "player", row.targetName() == null ? "-" : row.targetName()
-        );
+        Map<String, String> values = new HashMap<>();
+        values.put("type", this.plugin.messages().text("moderation.history-type-" + row.type().name()));
+        values.put("state", historyState(row));
+        values.put("reason", this.plugin.messages().escape(row.reason()));
+        values.put("staff", this.plugin.messages().escape(row.staff()));
+        values.put("duration", historyDuration(row));
+        values.put("when", Durations.formatWhen(this.plugin, row.createdAt()));
+        values.put("ip", row.targetIp() == null || row.targetIp().isBlank() ? "-" : row.targetIp());
+        values.put("player", row.targetName() == null ? "-" : row.targetName());
+        values.put("revoke-reason", row.revokeReason() == null || row.revokeReason().isBlank()
+                ? this.plugin.messages().text("moderation.default-reason")
+                : this.plugin.messages().escape(row.revokeReason()));
+        values.put("revoked-by", row.revokedBy() == null || row.revokedBy().isBlank() ? "-" : this.plugin.messages().escape(row.revokedBy()));
+        values.put("revoked-when", row.revokedAt() == null ? "-" : Durations.formatWhen(this.plugin, row.revokedAt()));
+        return values;
     }
 
     private Map<String, String> banLine(Punishment row) {
@@ -450,14 +491,27 @@ public final class ModerationService {
         );
     }
 
+    private String historyLineKey(Punishment row) {
+        if (row.type() == PunishmentType.KICK || row.type() == PunishmentType.WARN) {
+            return "moderation.history-line";
+        }
+        if (row.revoked() || (!row.active() && !row.expired())) {
+            return "moderation.history-line-revoked";
+        }
+        if (row.expired() || !row.active()) {
+            return "moderation.history-line-expired";
+        }
+        return "moderation.history-line";
+    }
+
     private String historyState(Punishment row) {
         if (row.type() == PunishmentType.KICK || row.type() == PunishmentType.WARN) {
             return this.plugin.messages().text("moderation.history-event");
         }
-        if (!row.active()) {
+        if (row.revoked() || (!row.active() && !row.expired())) {
             return this.plugin.messages().text("moderation.history-inactive");
         }
-        if (row.expired()) {
+        if (row.expired() || !row.active()) {
             return this.plugin.messages().text("moderation.history-expired");
         }
         if (row.expiresAt() == null) {
@@ -467,8 +521,11 @@ public final class ModerationService {
     }
 
     private String historyDuration(Punishment row) {
-        if (row.type() == PunishmentType.KICK || row.type() == PunishmentType.WARN || !row.active()) {
+        if (row.type() == PunishmentType.KICK || row.type() == PunishmentType.WARN) {
             return this.plugin.messages().text("duration.none");
+        }
+        if (row.expiresAt() == null) {
+            return this.plugin.messages().text("duration.permanent");
         }
         return Durations.formatRemaining(this.plugin, row.expiresAt());
     }

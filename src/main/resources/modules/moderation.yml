@@ -1,5 +1,6 @@
 # =============================================================================
 # Moderazione nativa. kick/ban/ban-ip/banlist/pardon sostituiscono i vanilla.
+# /pardon <player|ip> <motivo>  — motivo obbligatorio. /pardon list — elenco pardon.
 # Durate ban/mute: 10s 5m 2h 7d 2w 1mo 1y  perm  permanent  -1
 # =============================================================================
 

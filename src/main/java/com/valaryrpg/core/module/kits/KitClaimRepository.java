@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,6 +38,23 @@ final class KitClaimRepository {
         } catch (SQLException exception) {
             throw new StorageException("Lettura kit claim fallita.", exception);
         }
+    }
+
+    Map<String, Long> lastClaims(UUID uuid) {
+        String sql = "SELECT kit, claimed_at FROM " + table() + " WHERE uuid = ?";
+        Map<String, Long> last = new HashMap<>();
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    last.put(result.getString("kit"), result.getLong("claimed_at"));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Lettura kit claim fallita.", exception);
+        }
+        return last;
     }
 
     void mark(UUID uuid, String kit, long at) {

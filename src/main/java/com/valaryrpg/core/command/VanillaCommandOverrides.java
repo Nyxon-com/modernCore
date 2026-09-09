@@ -58,6 +58,14 @@ public final class VanillaCommandOverrides {
                             OnlinePlayers.suggest(builder);
                             return builder.buildFuture();
                         })
+                        .executes(ctx -> {
+                            ValaryCorePlugin plugin = Plugins.core();
+                            if (plugin == null) {
+                                return 0;
+                            }
+                            plugin.messages().send(ctx.getSource().getSender(), "msg.usage", Map.of("label", literal));
+                            return Command.SINGLE_SUCCESS;
+                        })
                         .then(Commands.argument("message", StringArgumentType.greedyString())
                                 .executes(ctx -> sendPrivate(
                                         ctx.getSource().getSender(),

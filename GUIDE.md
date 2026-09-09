@@ -91,9 +91,9 @@ PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary
 
 Durate: `10s` `5m` `2h` `7d` `2w` `1mo` `1y` `perm`. Vuoto = permanente.
 
-**Togliere un IP ban:** `/unbanip <player|ip>` oppure `/unban <player>` (toglie anche l’IP ban di quell’account) o `/pardon-ip <ip>`.
+**Togliere un IP ban:** `/unbanip <player|ip>` oppure `/unban <player> <motivo>` (toglie anche l’IP ban) o `/pardon-ip <ip> <motivo>`.
 
-`/history <player>` — kick, ban, ipban, mute, warn (attivi e chiusi). Limite: `modules/moderation.yml` → `history.max-listed`.
+`/history <player>` — kick, ban, ipban, mute, warn. **REVOCATO** (pardon) ≠ **SCADUTO**. `/pardon <player> <motivo>` obbligatorio. `/pardon list` elenco pardon.
 
 `/dupeip <player|ip>` — account sullo stesso IP, online/ban/mute/warn. Testi in `moderation.dupeip*`.
 
@@ -105,12 +105,14 @@ Schermata ban a tempo: dialog nativo col countdown (`screen.live-countdown`). La
 
 ## Kit
 
-`/kit` `/kits` apre la GUI. `/kit <id> [player]` da comando/console.
+`/kit` `/kits` apre la GUI. **Sinistro** ritira, **destro** anteprima (niente bottone a parte). `/kit <id> [player]` da comando/console.
 
-- Cooldown e one-time su SQL (`kit_claims`)
+- Cooldown e one-time su SQL (`kit_claims`); in GUI vedi se è disponibile / in cooldown / bloccato
 - `settings.first-join-kit: starter` — dato al **primo join** (`hasPlayedBefore() == false`)
+- `settings.right-click-preview: true` — destro = anteprima. `close-on-claim` / `drop-overflow` in `kits.yml`
 - Item MMOItems: `mmoitem-type` + `mmoitem-id`
 - GUI: ogni slot ha `action`, `click-sound`, `commands` (`[close]` `[console]` `[player]` `[sound]` `[message]`)
+- Comandi del kit al claim: stessa sintassi ActionCommands
 
 ---
 
