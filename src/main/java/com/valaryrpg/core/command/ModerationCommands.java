@@ -137,6 +137,17 @@ public final class ModerationCommands {
         return Commands.literal(literal)
                 .requires(stack -> has("warn", stack.getSender()))
                 .executes(ctx -> usage(ctx.getSource().getSender(), "moderation.warn-usage", literal))
+                .then(Commands.literal("remove")
+                        .executes(ctx -> usage(ctx.getSource().getSender(), "moderation.warn-usage", literal))
+                        .then(Commands.argument("player", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestOnline(builder))
+                                .executes(ctx -> removeWarn(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "player"), null))
+                                .then(Commands.argument("which", StringArgumentType.greedyString())
+                                        .executes(ctx -> removeWarn(
+                                                ctx.getSource().getSender(),
+                                                StringArgumentType.getString(ctx, "player"),
+                                                StringArgumentType.getString(ctx, "which")
+                                        )))))
                 .then(Commands.argument("player", StringArgumentType.word())
                         .suggests((ctx, builder) -> suggestOnline(builder))
                         .executes(ctx -> warn(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "player"), null))
@@ -204,6 +215,12 @@ public final class ModerationCommands {
         return Commands.literal(literal)
                 .requires(stack -> has("vanish", stack.getSender()))
                 .executes(ctx -> vanishSelf(ctx.getSource().getSender(), null))
+                .then(Commands.literal("edit")
+                        .requires(stack -> has("vanishedit", stack.getSender()))
+                        .executes(ctx -> vanishEditMenu(ctx.getSource().getSender()))
+                        .then(Commands.argument("flag", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestVanishFlags(builder))
+                                .executes(ctx -> vanishEdit(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "flag")))))
                 .then(Commands.argument("player", StringArgumentType.word())
                         .requires(stack -> has("vanish-others", stack.getSender()))
                         .suggests((ctx, builder) -> suggestOnline(builder))
@@ -214,22 +231,9 @@ public final class ModerationCommands {
     private LiteralCommandNode<CommandSourceStack> vanishEditNode(String literal) {
         return Commands.literal(literal)
                 .requires(stack -> has("vanishedit", stack.getSender()))
-                .executes(ctx -> {
-                    ValaryCorePlugin plugin = Plugins.core();
-                    if (plugin != null) {
-                        plugin.messages().send(ctx.getSource().getSender(), "vanish.edit-usage", Map.of("label", literal));
-                    }
-                    return Command.SINGLE_SUCCESS;
-                })
+                .executes(ctx -> vanishEditMenu(ctx.getSource().getSender()))
                 .then(Commands.argument("flag", StringArgumentType.word())
-                        .suggests((ctx, builder) -> {
-                            for (String flag : List.of("nightvision", "pickup")) {
-                                if (flag.startsWith(builder.getRemainingLowerCase())) {
-                                    builder.suggest(flag);
-                                }
-                            }
-                            return builder.buildFuture();
-                        })
+                        .suggests((ctx, builder) -> suggestVanishFlags(builder))
                         .executes(ctx -> vanishEdit(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "flag"))))
                 .build();
     }
@@ -324,6 +328,15 @@ public final class ModerationCommands {
         return Command.SINGLE_SUCCESS;
     }
 
+    private static int removeWarn(CommandSender sender, String player, String which) {
+        ModerationService service = moderation();
+        if (service == null) {
+            return 0;
+        }
+        service.removeWarn(sender, player, which);
+        return Command.SINGLE_SUCCESS;
+    }
+
     private static int vanishSelf(CommandSender sender, Boolean ignored) {
         if (!(sender instanceof Player player)) {
             usage(sender, "vanish.usage", "vanish");
@@ -348,6 +361,22 @@ public final class ModerationCommands {
             return 0;
         }
         vanish.toggle(target, sender);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int vanishEditMenu(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            ValaryCorePlugin plugin = Plugins.core();
+            if (plugin != null) {
+                plugin.messages().send(sender, "general.player-only");
+            }
+            return 0;
+        }
+        VanishService vanish = vanish();
+        if (vanish == null) {
+            return 0;
+        }
+        vanish.openEdit(player);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -405,6 +434,17 @@ public final class ModerationCommands {
     private static boolean has(String permissionKey, CommandSender sender) {
         ValaryCorePlugin plugin = Plugins.core();
         return plugin != null && Perms.has(plugin, sender, permissionKey);
+    }
+
+    private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestVanishFlags(
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder
+    ) {
+        for (String flag : List.of("nightvision", "pickup")) {
+            if (flag.startsWith(builder.getRemainingLowerCase())) {
+                builder.suggest(flag);
+            }
+        }
+        return builder.buildFuture();
     }
 
     private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestOnline(

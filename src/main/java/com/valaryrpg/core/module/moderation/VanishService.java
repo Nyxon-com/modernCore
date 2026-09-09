@@ -1,10 +1,14 @@
 package com.valaryrpg.core.module.moderation;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import com.valaryrpg.core.gui.GuiLayouts;
+import com.valaryrpg.core.gui.Panels;
 import com.valaryrpg.core.module.players.PlayerDataRepository;
+import com.valaryrpg.core.module.players.PlayersModule;
 import com.valaryrpg.core.util.Tasks;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -15,6 +19,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class VanishService {
+
+    public static final String MENU = "vanishedit";
 
     private final ValaryCorePlugin plugin;
     private final PlayerDataRepository players;
@@ -116,6 +122,24 @@ public final class VanishService {
         this.plugin.messages().send(player, "vanish.edit-on", Map.of("flag", "nightvision"));
     }
 
+    public void openEdit(Player player) {
+        Panels.open(this.plugin, player, MENU, this.plugin.configs().moderation().getConfigurationSection("vanishedit.gui"), Map.of());
+    }
+
+    public void clickEdit(Player player, int slot) {
+        ConfigurationSection button = GuiLayouts.button(this.plugin.configs().moderation().getConfigurationSection("vanishedit.gui"), slot);
+        String action = GuiLayouts.action(button);
+        if (action.equals("nightvision") || action.equals("nv")) {
+            toggleNightVision(player);
+            openEdit(player);
+            return;
+        }
+        if (action.equals("pickup") || action.equals("nopickup")) {
+            toggleNoPickup(player);
+            openEdit(player);
+        }
+    }
+
     public void toggleNoPickup(Player player) {
         if (!this.noPickup.add(player.getUniqueId())) {
             this.noPickup.remove(player.getUniqueId());
@@ -142,11 +166,8 @@ public final class VanishService {
             if (this.plugin.configs().moderation().getBoolean("vanish.no-pickup", true)) {
                 this.noPickup.add(target.getUniqueId());
             }
-            if (announce && this.plugin.configs().moderation().getBoolean("vanish.fake-join-quit", false)) {
-                Bukkit.broadcast(this.plugin.messages().component("join-quit.quit", Map.of(
-                        "player", this.plugin.messages().escape(target.getName()),
-                        "displayname", this.plugin.messages().escape(target.getName())
-                )));
+            if (announce) {
+                fakeBroadcast(target, true);
             }
         } else {
             this.vanished.remove(target.getUniqueId());
@@ -155,13 +176,42 @@ public final class VanishService {
             target.setInvisible(false);
             target.removePotionEffect(PotionEffectType.NIGHT_VISION);
             showToAll(target);
-            if (announce && this.plugin.configs().moderation().getBoolean("vanish.fake-join-quit", false)) {
-                Bukkit.broadcast(this.plugin.messages().component("join-quit.join", Map.of(
-                        "player", this.plugin.messages().escape(target.getName()),
-                        "displayname", this.plugin.messages().escape(target.getName())
-                )));
+            PlayersModule players = this.plugin.modules().get("players");
+            if (players != null && players.nicks() != null) {
+                players.nicks().reapply(target);
+            }
+            if (announce) {
+                fakeBroadcast(target, false);
             }
         }
+    }
+
+    private void fakeBroadcast(Player target, boolean leaving) {
+        if (!this.plugin.configs().moderation().getBoolean("vanish.fake-join-quit", true)) {
+            return;
+        }
+        String display = displayName(target);
+        net.kyori.adventure.text.Component message = this.plugin.messages().component(
+                leaving ? "join-quit.quit" : "join-quit.join",
+                Map.of(
+                        "player", this.plugin.messages().escape(target.getName()),
+                        "displayname", display
+                )
+        );
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            if (other.equals(target) || canSeeVanished(other)) {
+                continue;
+            }
+            other.sendMessage(message);
+        }
+    }
+
+    private String displayName(Player player) {
+        PlayersModule players = this.plugin.modules().get("players");
+        if (players != null && players.nicks() != null) {
+            return players.nicks().displayMini(player);
+        }
+        return this.plugin.messages().escape(player.getName());
     }
 
     private void hideFromAll(Player vanishedPlayer) {

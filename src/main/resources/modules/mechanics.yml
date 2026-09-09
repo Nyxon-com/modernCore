@@ -3,7 +3,7 @@
 # =============================================================================
 #
 # LimitY: mondi senza sezione = nessun limite. Bypass: valary.limity.bypass
-# /limity <min> <max> [mondo] scrive qui.
+# /limity <min> <max> [mondo] scrive qui. /limity remove [mondo] cancella la sezione.
 #   commands            lista ActionCommands al superamento Y
 #   teleport-spawn      true = tp spawn mondo (default true se commands è vuoto)
 #                       se lo spawn è fuori range, clamp Y su min/max (niente loop tp)

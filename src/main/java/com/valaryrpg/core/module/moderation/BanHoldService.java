@@ -56,6 +56,9 @@ public final class BanHoldService {
     }
 
     public boolean shouldHold(Punishment punishment) {
+        if (this.plugin.configs().moderation().getBoolean("screen.instant", true)) {
+            return false;
+        }
         return liveEnabled() && punishment != null && punishment.expiresAt() != null && !punishment.expired();
     }
 

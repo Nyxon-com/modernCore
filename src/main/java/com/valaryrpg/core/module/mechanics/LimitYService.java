@@ -73,6 +73,15 @@ public final class LimitYService {
         this.rules.remove(world.getName());
     }
 
+    public void remove(String worldName) {
+        this.plugin.configs().mechanics().set("limity.worlds." + worldName, null);
+        this.plugin.configs().saveMechanics();
+        this.rules.remove(worldName);
+        this.lastNotify.clear();
+        this.lastAction.clear();
+        this.lastRelocate.clear();
+    }
+
     public void setCommand(World world, String command) {
         String path = "limity.worlds." + world.getName();
         this.plugin.configs().mechanics().set(path + ".commands", List.of(command));

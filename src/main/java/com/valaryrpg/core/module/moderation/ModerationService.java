@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Kick/ban/mute/warn/ipban persistiti su SQL. I mute restano in cache per non interrogare il DB a ogni chat.
@@ -161,23 +160,13 @@ public final class ModerationService {
                     this.plugin.messages().send(staff, "moderation.history-empty", Map.of("player", target.name));
                     return;
                 }
-                this.plugin.messages().send(staff, "moderation.history-header", Map.of(
+                    this.plugin.messages().send(staff, "moderation.history-header", Map.of(
                         "player", target.name,
                         "count", String.valueOf(rows.size()),
                         "ip", shownIp
                 ));
                 for (int i = 0; i < shown.size(); i++) {
-                    Punishment row = shown.get(i);
-                    this.plugin.messages().send(staff, "moderation.history-line", Map.of(
-                            "type", this.plugin.messages().text("moderation.history-type-" + row.type().name()),
-                            "state", row.active() && !row.expired()
-                                    ? this.plugin.messages().text("moderation.history-active")
-                                    : this.plugin.messages().text("moderation.history-inactive"),
-                            "reason", this.plugin.messages().escape(row.reason()),
-                            "staff", this.plugin.messages().escape(row.staff()),
-                            "duration", Durations.formatRemaining(this.plugin, row.expiresAt()),
-                            "ip", row.targetIp() == null || row.targetIp().isBlank() ? "-" : row.targetIp()
-                    ));
+                    this.plugin.messages().send(staff, "moderation.history-line", linePlaceholders(shown.get(i)));
                 }
             });
         });
@@ -240,38 +229,85 @@ public final class ModerationService {
 
     public void warnings(CommandSender staff, String targetName) {
         Target target = resolve(targetName);
-        List<Punishment> history = this.repository.history(target.uuid, target.name, PunishmentType.WARN);
-        if (history.isEmpty()) {
-            this.plugin.messages().send(staff, "moderation.warnings-empty", Map.of("player", target.name));
-            return;
-        }
-        this.plugin.messages().send(staff, "moderation.warnings-header", Map.of(
-                "player", target.name,
-                "count", String.valueOf(history.size())
-        ));
-        int shown = Math.min(history.size(), this.plugin.configs().moderation().getInt("warn.max-listed", 10));
-        for (int i = 0; i < shown; i++) {
-            Punishment punishment = history.get(i);
-            this.plugin.messages().send(staff, "moderation.warnings-line", Map.of(
-                    "reason", this.plugin.messages().escape(punishment.reason()),
-                    "staff", this.plugin.messages().escape(punishment.staff())
-            ));
-        }
+        Tasks.async(this.plugin, () -> {
+            List<Punishment> history = this.repository.history(target.uuid, target.name, PunishmentType.WARN);
+            int shown = Math.min(history.size(), this.plugin.configs().moderation().getInt("warn.max-listed", 10));
+            Tasks.sync(this.plugin, () -> {
+                if (history.isEmpty()) {
+                    this.plugin.messages().send(staff, "moderation.warnings-empty", Map.of("player", target.name));
+                    return;
+                }
+                this.plugin.messages().send(staff, "moderation.warnings-header", Map.of(
+                        "player", target.name,
+                        "count", String.valueOf(history.size())
+                ));
+                for (int i = 0; i < shown; i++) {
+                    Punishment punishment = history.get(i);
+                    this.plugin.messages().send(staff, "moderation.warnings-line", Map.of(
+                            "id", String.valueOf(punishment.id()),
+                            "reason", this.plugin.messages().escape(punishment.reason()),
+                            "staff", this.plugin.messages().escape(punishment.staff()),
+                            "when", Durations.formatWhen(this.plugin, punishment.createdAt())
+                    ));
+                }
+            });
+        });
+    }
+
+    public void removeWarn(CommandSender staff, String targetName, String which) {
+        Target target = resolve(targetName);
+        Tasks.async(this.plugin, () -> {
+            List<Punishment> history = this.repository.history(target.uuid, target.name, PunishmentType.WARN);
+            if (history.isEmpty()) {
+                Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "moderation.warn-remove-missing", Map.of("player", target.name)));
+                return;
+            }
+            String token = which == null ? "" : which.trim();
+            if (token.equalsIgnoreCase("all") || token.equals("*")) {
+                int count = this.repository.deactivate(PunishmentType.WARN, target.uuid, target.name, target.ip);
+                Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "moderation.warn-removed-all", Map.of(
+                        "player", target.name,
+                        "count", String.valueOf(count)
+                )));
+                return;
+            }
+            Punishment picked = pickWarn(history, token);
+            if (picked == null) {
+                Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "moderation.warn-remove-unknown", Map.of(
+                        "player", target.name,
+                        "id", token.isBlank() ? "-" : token
+                )));
+                return;
+            }
+            this.repository.deactivate(picked.id());
+            Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "moderation.warn-removed", Map.of(
+                    "player", target.name,
+                    "id", String.valueOf(picked.id())
+            )));
+        });
     }
 
     public void banList(CommandSender staff) {
-        List<Punishment> bans = this.repository.listActive(PunishmentType.BAN);
-        List<Punishment> ips = this.repository.listActive(PunishmentType.IPBAN);
-        if (bans.isEmpty() && ips.isEmpty()) {
-            this.plugin.messages().send(staff, "moderation.banlist-empty");
-            return;
-        }
-        String names = bans.stream().map(Punishment::targetName).collect(Collectors.joining(", "));
-        String ipList = ips.stream().map(punishment -> punishment.targetIp() + "/" + punishment.targetName()).collect(Collectors.joining(", "));
-        this.plugin.messages().send(staff, "moderation.banlist", Map.of(
-                "bans", names.isBlank() ? "-" : names,
-                "ips", ipList.isBlank() ? "-" : ipList
-        ));
+        Tasks.async(this.plugin, () -> {
+            List<Punishment> bans = this.repository.listActive(PunishmentType.BAN);
+            List<Punishment> ips = this.repository.listActive(PunishmentType.IPBAN);
+            Tasks.sync(this.plugin, () -> {
+                if (bans.isEmpty() && ips.isEmpty()) {
+                    this.plugin.messages().send(staff, "moderation.banlist-empty");
+                    return;
+                }
+                this.plugin.messages().send(staff, "moderation.banlist-header", Map.of(
+                        "bans", String.valueOf(bans.size()),
+                        "ips", String.valueOf(ips.size())
+                ));
+                for (Punishment ban : bans) {
+                    this.plugin.messages().send(staff, "moderation.banlist-line", banLine(ban));
+                }
+                for (Punishment ban : ips) {
+                    this.plugin.messages().send(staff, "moderation.banlist-ip-line", banLine(ban));
+                }
+            });
+        });
     }
 
     public void dupeIp(CommandSender staff, String target) {
@@ -388,6 +424,70 @@ public final class ModerationService {
             return;
         }
         player.kick(DisconnectScreens.of(this.plugin, punishment));
+    }
+
+    private Map<String, String> linePlaceholders(Punishment row) {
+        return Map.of(
+                "type", this.plugin.messages().text("moderation.history-type-" + row.type().name()),
+                "state", historyState(row),
+                "reason", this.plugin.messages().escape(row.reason()),
+                "staff", this.plugin.messages().escape(row.staff()),
+                "duration", historyDuration(row),
+                "when", Durations.formatWhen(this.plugin, row.createdAt()),
+                "ip", row.targetIp() == null || row.targetIp().isBlank() ? "-" : row.targetIp(),
+                "player", row.targetName() == null ? "-" : row.targetName()
+        );
+    }
+
+    private Map<String, String> banLine(Punishment row) {
+        return Map.of(
+                "player", row.targetName() == null || row.targetName().isBlank() ? "-" : row.targetName(),
+                "ip", row.targetIp() == null || row.targetIp().isBlank() ? "-" : row.targetIp(),
+                "reason", this.plugin.messages().escape(row.reason()),
+                "staff", this.plugin.messages().escape(row.staff()),
+                "when", Durations.formatWhen(this.plugin, row.createdAt()),
+                "duration", Durations.formatRemaining(this.plugin, row.expiresAt())
+        );
+    }
+
+    private String historyState(Punishment row) {
+        if (row.type() == PunishmentType.KICK || row.type() == PunishmentType.WARN) {
+            return this.plugin.messages().text("moderation.history-event");
+        }
+        if (!row.active()) {
+            return this.plugin.messages().text("moderation.history-inactive");
+        }
+        if (row.expired()) {
+            return this.plugin.messages().text("moderation.history-expired");
+        }
+        if (row.expiresAt() == null) {
+            return this.plugin.messages().text("moderation.history-permanent");
+        }
+        return this.plugin.messages().text("moderation.history-active");
+    }
+
+    private String historyDuration(Punishment row) {
+        if (row.type() == PunishmentType.KICK || row.type() == PunishmentType.WARN || !row.active()) {
+            return this.plugin.messages().text("duration.none");
+        }
+        return Durations.formatRemaining(this.plugin, row.expiresAt());
+    }
+
+    private static Punishment pickWarn(List<Punishment> history, String token) {
+        if (token == null || token.isBlank()) {
+            return history.get(0);
+        }
+        try {
+            long id = Long.parseLong(token);
+            for (Punishment punishment : history) {
+                if (punishment.id() == id) {
+                    return punishment;
+                }
+            }
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+        return null;
     }
 
     private String reasonOrDefault(String reason, String configKey) {

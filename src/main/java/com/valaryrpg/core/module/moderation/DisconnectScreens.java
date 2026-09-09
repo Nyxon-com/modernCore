@@ -91,6 +91,7 @@ public final class DisconnectScreens {
         values.put("duration", Durations.formatRemaining(plugin, expiry));
         values.put("ip", plugin.messages().escape(safe(ip)));
         values.put("line", plugin.messages().text("moderation.screen-rule"));
+        values.put("appeal", plugin.messages().text("moderation.appeal"));
         values.put("ip-line", ip == null || ip.isBlank()
                 ? ""
                 : plugin.messages().text("moderation.ban-dialog-ip", Map.of("ip", plugin.messages().escape(ip))));

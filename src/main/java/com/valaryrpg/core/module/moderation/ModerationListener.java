@@ -1,6 +1,7 @@
 package com.valaryrpg.core.module.moderation;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import com.valaryrpg.core.gui.MenuHolder;
 import com.valaryrpg.core.util.Durations;
 import io.papermc.paper.connection.PlayerGameConnection;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -209,6 +210,17 @@ public final class ModerationListener implements Listener {
         }
         if (event.getEntity() instanceof Player player && this.holds.holding(player.getUniqueId())) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onVanishEditClick(InventoryClickEvent event) {
+        if (!(event.getInventory().getHolder() instanceof MenuHolder holder) || !VanishService.MENU.equals(holder.menu())) {
+            return;
+        }
+        event.setCancelled(true);
+        if (event.getWhoClicked() instanceof Player player && event.getClickedInventory() == event.getView().getTopInventory()) {
+            this.vanish.clickEdit(player, event.getSlot());
         }
     }
 

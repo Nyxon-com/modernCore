@@ -6,7 +6,8 @@
 #   title          MiniMessage. Placeholder: {player}
 #   rows           1-6
 #   open-sound     suono Bukkit (es. UI_BUTTON_CLICK) o vuoto
-#   fill           item che riempie gli slot vuoti (stessi campi di uno slot)
+#   fill           item che riempie gli slot VUOTI interni (stessi campi di uno slot)
+#   frame          cornice: corners / accents (accanto agli angoli) / edges
 #   slots          mappa slot -> bottone. Chiavi: "11" oppure "18-26" oppure "0,8,17"
 #
 # Campi di uno slot:
@@ -60,10 +61,24 @@ gui:
   rows: 3
   open-sound: UI_BUTTON_CLICK
   fill:
-    enabled: true
+    enabled: false
     material: GRAY_STAINED_GLASS_PANE
     name: "<black>"
     lore: []
+  frame:
+    enabled: true
+    corners:
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
+    accents:
+      material: BLUE_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
+    edges:
+      material: GRAY_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
   slots:
     11:
       action: kit
@@ -86,7 +101,7 @@ gui:
       lore:
         - "<gray>Ricompensa giornaliera"
       commands: []
-    20:
+    15:
       action: preview
       kit: starter
       material: BOOK
@@ -94,16 +109,18 @@ gui:
       lore:
         - "<gray>Guarda il contenuto"
       commands: []
-    18:
+    16:
       action: page
       page: 2
       material: ARROW
       name: "<gray>Avanti"
+      hide-flags: true
       commands: []
-    26:
+    22:
       action: close
       material: BARRIER
       name: "<red>Chiudi"
+      hide-flags: true
       commands:
         - "[close]"
   pages:
@@ -111,26 +128,48 @@ gui:
       title: "<dark_gray>Kit <white>{player} <gray>p.2"
       rows: 3
       slots:
-        18:
+        11:
           action: page
           page: 1
           material: ARROW
           name: "<gray>Indietro"
+          hide-flags: true
           commands: []
-        26:
+        22:
           action: close
           material: BARRIER
           name: "<red>Chiudi"
+          hide-flags: true
           commands:
             - "[close]"
 
 preview:
   title: "<dark_gray>Anteprima <white>{kit}"
   rows: 6
-  close-slot: 53
+  content-slots: "10-16,19-25,28-34,37-43"
+  close-slot: 49
+  fill:
+    enabled: false
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<black>"
+  frame:
+    enabled: true
+    corners:
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
+    accents:
+      material: BLUE_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
+    edges:
+      material: GRAY_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
   close:
-    material: BARRIER
-    name: "<red>Chiudi"
+    material: ARROW
+    name: "<gray>Indietro"
+    hide-flags: true
     commands: []
 
 kits:

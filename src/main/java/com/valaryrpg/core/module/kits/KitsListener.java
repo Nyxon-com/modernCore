@@ -29,7 +29,7 @@ public final class KitsListener implements Listener {
             if (event.getWhoClicked() instanceof Player player
                     && event.getClickedInventory() == event.getView().getTopInventory()
                     && this.kits.closePreviewSlot(event.getSlot())) {
-                player.closeInventory();
+                this.kits.open(player);
             }
             return;
         }

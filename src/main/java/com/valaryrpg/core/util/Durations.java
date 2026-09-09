@@ -2,6 +2,9 @@ package com.valaryrpg.core.util;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -85,6 +88,19 @@ public final class Durations {
         return plugin.messages().text("duration.seconds", Map.of(
                 "seconds", String.valueOf(Math.max(1, TimeUnit.MILLISECONDS.toSeconds(remaining)))
         ));
+    }
+
+    public static String formatWhen(ValaryCorePlugin plugin, long epochMs) {
+        String pattern = plugin.configs().messages().getString("duration.when", "dd/MM/yyyy HH:mm");
+        try {
+            return DateTimeFormatter.ofPattern(pattern == null || pattern.isBlank() ? "dd/MM/yyyy HH:mm" : pattern)
+                    .withZone(ZoneId.systemDefault())
+                    .format(Instant.ofEpochMilli(epochMs));
+        } catch (RuntimeException exception) {
+            return DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                    .withZone(ZoneId.systemDefault())
+                    .format(Instant.ofEpochMilli(epochMs));
+        }
     }
 
     private static long toMillis(long amount, String unit) {

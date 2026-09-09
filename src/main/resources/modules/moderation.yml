@@ -28,16 +28,15 @@ history:
   max-listed: 25
 vanish:
   hide-from-tab: true
-  fake-join-quit: false
+  fake-join-quit: true
   night-vision: true
   no-pickup: true
   silent-join: true
 
-# Schermata ban. Connection Lost vanilla NON può aggiornare il tempo: è un frame fisso.
-# live-countdown true = dialog nativo Minecraft (1.21.6+) col countdown che scende ogni secondo.
-# Testi/colori/spazi: lang/messages.yml → moderation.ban-dialog-* e moderation.*-screen
+# Schermata ban. instant true = kick subito (Connection Lost). live-countdown è solo se instant è false.
 screen:
-  live-countdown: true
+  instant: true
+  live-countdown: false
   tick-ticks: 20
   dialog-width: 320
   hide-from-tab: true
@@ -63,3 +62,43 @@ invsee:
       name: "<black>"
       lore: []
       glow: false
+
+# /vanishedit — menu flag, NON toglie il vanish.
+vanishedit:
+  gui:
+    title: "<dark_gray>Vanish <white>edit"
+    rows: 3
+    open-sound: UI_BUTTON_CLICK
+    fill:
+      enabled: false
+      material: GRAY_STAINED_GLASS_PANE
+      name: "<black>"
+    frame:
+      enabled: true
+      corners:
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<black>"
+        hide-flags: true
+      accents:
+        material: BLUE_STAINED_GLASS_PANE
+        name: "<black>"
+        hide-flags: true
+      edges:
+        material: GRAY_STAINED_GLASS_PANE
+        name: "<black>"
+        hide-flags: true
+    slots:
+      11:
+        action: nightvision
+        material: ENDER_EYE
+        name: "<aqua>Night vision"
+        lore:
+          - "<gray>Click per accendere/spegnere"
+        hide-flags: true
+      15:
+        action: pickup
+        material: HOPPER
+        name: "<gold>No pickup"
+        lore:
+          - "<gray>Click per accendere/spegnere"
+        hide-flags: true

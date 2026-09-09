@@ -60,6 +60,22 @@ final class MechanicsCommands {
                                         ctx.getSource().getSender(),
                                         StringArgumentType.getString(ctx, "world")
                                 ))))
+                .then(Commands.literal("remove")
+                        .executes(ctx -> removeLimit(ctx.getSource().getSender(), null))
+                        .then(Commands.argument("world", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestWorlds(builder))
+                                .executes(ctx -> removeLimit(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "world")
+                                ))))
+                .then(Commands.literal("clear")
+                        .executes(ctx -> removeLimit(ctx.getSource().getSender(), null))
+                        .then(Commands.argument("world", StringArgumentType.word())
+                                .suggests((ctx, builder) -> suggestWorlds(builder))
+                                .executes(ctx -> removeLimit(
+                                        ctx.getSource().getSender(),
+                                        StringArgumentType.getString(ctx, "world")
+                                ))))
                 .then(Commands.argument("min", DoubleArgumentType.doubleArg())
                         .then(Commands.argument("max", DoubleArgumentType.doubleArg())
                                 .executes(ctx -> setLimit(
@@ -350,11 +366,34 @@ final class MechanicsCommands {
         return Command.SINGLE_SUCCESS;
     }
 
+    private int removeLimit(CommandSender sender, String worldName) {
+        String name = worldName;
+        if (name == null || name.isBlank()) {
+            if (!(sender instanceof Player player) || player.getWorld() == null) {
+                this.plugin.messages().send(sender, "limity.usage");
+                return 0;
+            }
+            name = player.getWorld().getName();
+        }
+        module().limitY().remove(name);
+        this.plugin.messages().send(sender, "limity.removed", Map.of("world", name));
+        return Command.SINGLE_SUCCESS;
+    }
+
     private java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestWorlds(
             com.mojang.brigadier.suggestion.SuggestionsBuilder builder
     ) {
+        String remaining = builder.getRemainingLowerCase();
+        org.bukkit.configuration.ConfigurationSection worlds = this.plugin.configs().mechanics().getConfigurationSection("limity.worlds");
+        if (worlds != null) {
+            for (String name : worlds.getKeys(false)) {
+                if (name.toLowerCase(Locale.ROOT).startsWith(remaining)) {
+                    builder.suggest(name);
+                }
+            }
+        }
         for (World world : Bukkit.getWorlds()) {
-            if (world.getName().toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase())) {
+            if (world.getName().toLowerCase(Locale.ROOT).startsWith(remaining)) {
                 builder.suggest(world.getName());
             }
         }

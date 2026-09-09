@@ -54,6 +54,10 @@ public final class Panels {
                 inventory.setItem(slot, fill.clone());
             }
         }
+        PanelFrames.apply(plugin, inventory, fillSection);
+        if (layout != fillSection) {
+            PanelFrames.apply(plugin, inventory, layout);
+        }
         ConfigurationSection slots = layout == null ? null : layout.getConfigurationSection("slots");
         if (slots != null) {
             for (String key : slots.getKeys(false)) {

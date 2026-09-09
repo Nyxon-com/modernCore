@@ -4,8 +4,10 @@ import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.gui.GuiLayouts;
 import com.valaryrpg.core.gui.MenuHolder;
 import com.valaryrpg.core.gui.PanelClicks;
+import com.valaryrpg.core.gui.PanelFrames;
 import com.valaryrpg.core.gui.PanelItems;
 import com.valaryrpg.core.gui.Panels;
+import com.valaryrpg.core.gui.SlotSpec;
 import com.valaryrpg.core.module.moderation.ModerationModule;
 import com.valaryrpg.core.util.MmoItems;
 import com.valaryrpg.core.util.Perms;
@@ -113,23 +115,35 @@ public final class KitService {
         MenuHolder holder = new MenuHolder(PREVIEW, 1, kitId);
         Inventory inventory = Bukkit.createInventory(holder, rows * 9, title);
         holder.inventory(inventory);
-        int slot = 0;
+        PanelFrames.apply(this.plugin, inventory, preview);
+        int closeSlot = preview == null ? inventory.getSize() - 1 : preview.getInt("close-slot", inventory.getSize() - 1);
+        List<Integer> content = SlotSpec.expand(preview == null ? "" : preview.getString("content-slots", ""));
+        int cursor = 0;
         for (Map<?, ?> raw : kit.getMapList("items")) {
             ItemStack stack = previewItem(raw);
             if (stack == null || stack.getType().isAir()) {
                 continue;
             }
-            if (slot >= inventory.getSize()) {
-                break;
+            int targetSlot;
+            if (content.isEmpty()) {
+                targetSlot = cursor;
+                cursor++;
+            } else {
+                if (cursor >= content.size()) {
+                    break;
+                }
+                targetSlot = content.get(cursor);
+                cursor++;
             }
-            inventory.setItem(slot, stack);
-            slot++;
+            if (targetSlot < 0 || targetSlot >= inventory.getSize() || targetSlot == closeSlot) {
+                continue;
+            }
+            inventory.setItem(targetSlot, stack);
         }
-        int closeSlot = preview == null ? inventory.getSize() - 1 : preview.getInt("close-slot", inventory.getSize() - 1);
         if (closeSlot >= 0 && closeSlot < inventory.getSize()) {
             ConfigurationSection close = preview == null ? null : preview.getConfigurationSection("close");
             inventory.setItem(closeSlot, close == null
-                    ? named(Material.BARRIER, this.plugin.messages().text("kits.preview-close-name"))
+                    ? named(Material.ARROW, this.plugin.messages().text("kits.preview-close-name"))
                     : PanelItems.from(this.plugin, close, player));
         }
         player.openInventory(inventory);
