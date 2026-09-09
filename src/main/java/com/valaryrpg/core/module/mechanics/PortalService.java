@@ -169,7 +169,7 @@ public final class PortalService {
             return;
         }
         yaml.set(base + ".material", hand.getType().name());
-        yaml.set(base + ".amount", Math.max(1, hand.getAmount()));
+        yaml.set(base + ".amount", 1);
         yaml.set(base + ".consume", true);
         String[] nbt = MmoItems.typeAndId(hand);
         if (nbt != null && isMmoId(nbt[0]) && isMmoId(nbt[1])) {

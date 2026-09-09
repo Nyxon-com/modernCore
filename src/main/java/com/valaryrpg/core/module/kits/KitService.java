@@ -163,38 +163,35 @@ public final class KitService {
         boolean oneTime = kit.getBoolean("one-time", false);
         boolean bypass = ignoreCooldown || Perms.has(this.plugin, target, "kit-bypass") || Perms.has(this.plugin, staff, "kit-bypass");
         Tasks.async(this.plugin, () -> {
-            Optional<Long> last = bypass ? Optional.empty() : this.claims.lastClaim(uuid, id);
-            if (!bypass && oneTime && last.isPresent()) {
-                Tasks.sync(this.plugin, () -> {
-                    this.claiming.remove(uuid);
-                    this.plugin.messages().send(staff, "kits.one-time", Map.of("kit", id));
-                });
-                return;
-            }
-            long now = System.currentTimeMillis();
-            if (last.isPresent() && cooldownMs > 0 && now - last.get() < cooldownMs) {
-                long left = (cooldownMs - (now - last.get()) + 999) / 1000;
-                Tasks.sync(this.plugin, () -> {
-                    this.claiming.remove(uuid);
-                    this.plugin.messages().send(staff, "kits.cooldown", Map.of(
-                            "kit", id,
-                            "seconds", String.valueOf(left)
-                    ));
-                });
-                return;
-            }
-            this.claims.mark(uuid, id, now);
-            Tasks.sync(this.plugin, () -> {
-                this.claiming.remove(uuid);
-                if (!target.isOnline()) {
+            try {
+                Optional<Long> last = bypass ? Optional.empty() : this.claims.lastClaim(uuid, id);
+                if (!bypass && oneTime && last.isPresent()) {
+                    Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "kits.one-time", Map.of("kit", id)));
                     return;
                 }
-                give(target, kit);
-                this.plugin.messages().send(target, "kits.received", Map.of("kit", id));
-                if (staff != target) {
-                    this.plugin.messages().send(staff, "kits.given", Map.of("kit", id, "player", target.getName()));
+                long now = System.currentTimeMillis();
+                if (last.isPresent() && cooldownMs > 0 && now - last.get() < cooldownMs) {
+                    long left = (cooldownMs - (now - last.get()) + 999) / 1000;
+                    Tasks.sync(this.plugin, () -> this.plugin.messages().send(staff, "kits.cooldown", Map.of(
+                            "kit", id,
+                            "seconds", String.valueOf(left)
+                    )));
+                    return;
                 }
-            });
+                this.claims.mark(uuid, id, now);
+                Tasks.sync(this.plugin, () -> {
+                    if (!target.isOnline()) {
+                        return;
+                    }
+                    give(target, kit);
+                    this.plugin.messages().send(target, "kits.received", Map.of("kit", id));
+                    if (staff != target) {
+                        this.plugin.messages().send(staff, "kits.given", Map.of("kit", id, "player", target.getName()));
+                    }
+                });
+            } finally {
+                Tasks.sync(this.plugin, () -> this.claiming.remove(uuid));
+            }
         });
     }
 

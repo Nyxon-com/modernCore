@@ -54,7 +54,8 @@ public final class ModerationListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
         try {
-            this.moderation.loginBlock(event.getUniqueId(), event.getName(), event.getAddress().getHostAddress())
+            String ip = event.getAddress().getHostAddress();
+            this.moderation.loginBlock(event.getUniqueId(), event.getName(), ip)
                     .ifPresent(punishment -> {
                         if (this.holds.shouldHold(punishment)) {
                             this.holds.rememberIncoming(event.getUniqueId(), punishment);
@@ -65,6 +66,9 @@ public final class ModerationListener implements Listener {
                                 DisconnectScreens.of(this.plugin, punishment)
                         );
                     });
+            if (event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+                this.moderation.prefetchMute(event.getUniqueId(), event.getName(), ip);
+            }
         } catch (Exception exception) {
             this.plugin.getLogger().severe("Controllo ban fallito per " + event.getName() + ": " + exception.getMessage());
         }
@@ -196,7 +200,6 @@ public final class ModerationListener implements Listener {
             event.quitMessage(null);
         }
         this.vanish.unload(event.getPlayer().getUniqueId());
-        this.moderation.forgetMute(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(ignoreCancelled = true)

@@ -9,18 +9,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class VanishService {
 
     private final ValaryCorePlugin plugin;
     private final PlayerDataRepository players;
-    private final Set<UUID> vanished = new HashSet<>();
-    private final Set<UUID> nightVision = new HashSet<>();
-    private final Set<UUID> noPickup = new HashSet<>();
+    private final Set<UUID> vanished = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> nightVision = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> noPickup = ConcurrentHashMap.newKeySet();
 
     public VanishService(ValaryCorePlugin plugin, PlayerDataRepository players) {
         this.plugin = plugin;
@@ -28,13 +28,43 @@ public final class VanishService {
     }
 
     public void restore(Player player) {
-        if (this.players.vanished(player.getUniqueId())) {
+        UUID uuid = player.getUniqueId();
+        if (this.vanished.contains(uuid)) {
             apply(player, true, false);
+            Tasks.later(this.plugin, 2L, () -> {
+                if (player.isOnline() && this.vanished.contains(uuid)) {
+                    apply(player, true, false);
+                }
+            });
+            return;
         }
+        Tasks.async(this.plugin, () -> {
+            boolean stored = this.players.vanished(uuid);
+            if (!stored) {
+                return;
+            }
+            Tasks.sync(this.plugin, () -> {
+                if (!player.isOnline()) {
+                    return;
+                }
+                apply(player, true, false);
+            });
+            Tasks.later(this.plugin, 2L, () -> {
+                if (player.isOnline() && this.vanished.contains(uuid)) {
+                    apply(player, true, false);
+                }
+            });
+        });
     }
 
     public boolean isVanished(Player player) {
         return this.vanished.contains(player.getUniqueId());
+    }
+
+    public void reapply(Player player) {
+        if (player.isOnline() && this.vanished.contains(player.getUniqueId())) {
+            apply(player, true, false);
+        }
     }
 
     public boolean noPickup(Player player) {
@@ -96,7 +126,6 @@ public final class VanishService {
     }
 
     public void unload(UUID uuid) {
-        this.vanished.remove(uuid);
         this.nightVision.remove(uuid);
         this.noPickup.remove(uuid);
     }

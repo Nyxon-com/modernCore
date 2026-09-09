@@ -354,9 +354,20 @@ public final class ModerationService {
             }
             return Optional.of(cached);
         }
+        if (Bukkit.isPrimaryThread()) {
+            return Optional.empty();
+        }
         Optional<Punishment> found = this.repository.active(PunishmentType.MUTE, player.getUniqueId(), player.getName(), ip(player));
         found.ifPresent(mute -> this.mutes.put(player.getUniqueId(), mute));
         return found;
+    }
+
+    public void prefetchMute(UUID uuid, String name, String ip) {
+        if (uuid != null && this.mutes.containsKey(uuid)) {
+            return;
+        }
+        this.repository.active(PunishmentType.MUTE, uuid, name, ip)
+                .ifPresent(mute -> this.mutes.put(uuid, mute));
     }
 
     public void forgetMute(UUID uuid) {

@@ -6,6 +6,7 @@
 # /limity <min> <max> [mondo] scrive qui.
 #   commands            lista ActionCommands al superamento Y
 #   teleport-spawn      true = tp spawn mondo (default true se commands è vuoto)
+#                       se lo spawn è fuori range, clamp Y su min/max (niente loop tp)
 #
 # Portali: cubo pos1-pos2 nel world. Si attiva ENTRANDO (non ogni tick).
 # /portal wand dà l'item. Destro = pos1, Shift+destro = pos2, Shift+sinistro = dest.

@@ -248,7 +248,7 @@ permissions:
     default: op
   valary.kit.daily:
     description: Kit daily
-    default: true
+    default: false
   valary.sell:
     description: Usa /sell
     default: true

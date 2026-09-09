@@ -62,11 +62,11 @@ public final class GroundItemService {
             return;
         }
         int despawnSeconds = Math.max(0, this.plugin.configs().mechanics().getInt("ground-items.despawn-seconds", 300));
-        if (despawnSeconds > 0) {
-            item.setUnlimitedLifetime(true);
-        }
         if (this.tracked.size() >= this.plugin.configs().mechanics().getInt("ground-items.max-holograms", 80)) {
             return;
+        }
+        if (despawnSeconds > 0) {
+            item.setUnlimitedLifetime(true);
         }
         remove(item.getUniqueId());
         Component text = label(item.getItemStack(), despawnSeconds);
@@ -96,13 +96,16 @@ public final class GroundItemService {
 
     public void clear() {
         stop();
-        for (Tracked found : List.copyOf(this.tracked.values())) {
-            if (found.displayId == null) {
-                continue;
+        for (Map.Entry<UUID, Tracked> entry : List.copyOf(this.tracked.entrySet())) {
+            var entity = this.plugin.getServer().getEntity(entry.getKey());
+            if (entity instanceof Item item) {
+                item.setUnlimitedLifetime(false);
             }
-            var entity = this.plugin.getServer().getEntity(found.displayId);
-            if (entity != null) {
-                entity.remove();
+            if (entry.getValue().displayId != null) {
+                var display = this.plugin.getServer().getEntity(entry.getValue().displayId);
+                if (display != null) {
+                    display.remove();
+                }
             }
         }
         this.tracked.clear();

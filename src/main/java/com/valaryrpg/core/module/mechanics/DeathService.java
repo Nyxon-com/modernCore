@@ -22,6 +22,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public final class DeathService {
 
@@ -29,6 +31,7 @@ public final class DeathService {
 
     private final ValaryCorePlugin plugin;
     private final PlayerDataRepository players;
+    private final Map<UUID, DeathSnapshot> latest = new ConcurrentHashMap<>();
 
     public DeathService(ValaryCorePlugin plugin, PlayerDataRepository players) {
         this.plugin = plugin;
@@ -56,6 +59,8 @@ public final class DeathService {
                 ? ""
                 : event.getEntity().getKiller().getName();
         String inventory = ItemStacks.encodePlayer(player.getInventory());
+        DeathSnapshot snapshot = new DeathSnapshot(uuid, world, x, y, z, yaw, pitch, at, cause, killer, inventory);
+        this.latest.put(uuid, snapshot);
         if (this.plugin.configs().players().getBoolean("back.include-death", true)) {
             this.plugin.lastLocations().remember(player);
         }
@@ -68,39 +73,33 @@ public final class DeathService {
         if (resolved == null) {
             return;
         }
-        Optional<DeathSnapshot> death = this.players.lastDeath(resolved.uuid);
-        if (death.isEmpty()) {
-            this.plugin.messages().send(sender, "checkdeath.missing", Map.of("player", resolved.name));
-            return;
-        }
-        DeathSnapshot stored = death.get();
-        Location location = stored.toLocation();
-        String coords = format(stored);
-        sender.sendMessage(this.plugin.messages().component("checkdeath.found", Map.of(
-                "player", resolved.name,
-                "world", stored.world(),
-                "coords", coords
-        )).clickEvent(ClickEvent.copyToClipboard(coords)).hoverEvent(HoverEvent.showText(
-                this.plugin.messages().component("copycoord.hover", Map.of())
-        )));
-        this.plugin.messages().send(sender, "checkdeath.cause", Map.of(
-                "cause", stored.cause().isBlank() ? "-" : stored.cause(),
-                "killer", stored.killer().isBlank() ? "-" : stored.killer()
-        ));
-        ItemStack[] items = ItemStacks.decode(stored.inventory());
-        int count = 0;
-        for (ItemStack item : items) {
-            if (item != null && !item.getType().isAir()) {
-                count++;
+        load(resolved, snapshot -> {
+            if (snapshot == null) {
+                this.plugin.messages().send(sender, "checkdeath.missing", Map.of("player", resolved.name));
+                return;
             }
-        }
-        this.plugin.messages().send(sender, "checkdeath.items", Map.of("count", String.valueOf(count)));
-        if (sender instanceof Player viewer) {
-            openSnapshot(viewer, resolved.name, items);
-            if (location != null && this.plugin.configs().mechanics().getBoolean("checkdeath.teleport", false)) {
-                viewer.teleport(location);
+            Location location = snapshot.toLocation();
+            String coords = format(snapshot);
+            sender.sendMessage(this.plugin.messages().component("checkdeath.found", Map.of(
+                    "player", resolved.name,
+                    "world", snapshot.world(),
+                    "coords", coords
+            )).clickEvent(ClickEvent.copyToClipboard(coords)).hoverEvent(HoverEvent.showText(
+                    this.plugin.messages().component("copycoord.hover", Map.of())
+            )));
+            this.plugin.messages().send(sender, "checkdeath.cause", Map.of(
+                    "cause", snapshot.cause().isBlank() ? "-" : snapshot.cause(),
+                    "killer", snapshot.killer().isBlank() ? "-" : snapshot.killer()
+            ));
+            ItemStack[] items = ItemStacks.decode(snapshot.inventory());
+            this.plugin.messages().send(sender, "checkdeath.items", Map.of("count", String.valueOf(counted(items))));
+            if (sender instanceof Player viewer) {
+                openSnapshot(viewer, resolved.name, items);
+                if (location != null && this.plugin.configs().mechanics().getBoolean("checkdeath.teleport", false)) {
+                    viewer.teleport(location);
+                }
             }
-        }
+        });
     }
 
     public void restore(CommandSender sender, String targetName) {
@@ -113,37 +112,38 @@ public final class DeathService {
             this.plugin.messages().send(sender, "checkdeath.restore-offline", Map.of("player", resolved.name));
             return;
         }
-        Optional<DeathSnapshot> death = this.players.lastDeath(resolved.uuid);
-        if (death.isEmpty()) {
-            this.plugin.messages().send(sender, "checkdeath.missing", Map.of("player", resolved.name));
-            return;
-        }
-        ItemStack[] items = ItemStacks.decode(death.get().inventory());
-        int count = 0;
-        for (ItemStack item : items) {
-            if (item != null && !item.getType().isAir()) {
-                count++;
+        load(resolved, snapshot -> {
+            Player target = Bukkit.getPlayer(resolved.uuid);
+            if (target == null || !target.isOnline()) {
+                this.plugin.messages().send(sender, "checkdeath.restore-offline", Map.of("player", resolved.name));
+                return;
             }
-        }
-        if (count == 0) {
-            this.plugin.messages().send(sender, "checkdeath.restore-empty", Map.of("player", resolved.name));
-            return;
-        }
-        if (this.plugin.configs().mechanics().getBoolean("checkdeath.restore-clear", true)) {
-            ItemStacks.restorePlayer(online.getInventory(), items);
-        } else {
-            for (ItemStack item : items) {
-                if (item == null || item.getType().isAir()) {
-                    continue;
+            if (snapshot == null) {
+                this.plugin.messages().send(sender, "checkdeath.missing", Map.of("player", resolved.name));
+                return;
+            }
+            ItemStack[] items = ItemStacks.decode(snapshot.inventory());
+            int count = counted(items);
+            if (count == 0) {
+                this.plugin.messages().send(sender, "checkdeath.restore-empty", Map.of("player", resolved.name));
+                return;
+            }
+            if (this.plugin.configs().mechanics().getBoolean("checkdeath.restore-clear", true)) {
+                ItemStacks.restorePlayer(target.getInventory(), items);
+            } else {
+                for (ItemStack item : items) {
+                    if (item == null || item.getType().isAir()) {
+                        continue;
+                    }
+                    target.getInventory().addItem(item.clone()).values()
+                            .forEach(left -> target.getWorld().dropItemNaturally(target.getLocation(), left));
                 }
-                online.getInventory().addItem(item.clone()).values()
-                        .forEach(left -> online.getWorld().dropItemNaturally(online.getLocation(), left));
             }
-        }
-        this.plugin.messages().send(sender, "checkdeath.restored", Map.of("player", resolved.name));
-        if (sender != online) {
-            this.plugin.messages().send(online, "checkdeath.restored-target", Map.of("player", sender.getName()));
-        }
+            this.plugin.messages().send(sender, "checkdeath.restored", Map.of("player", resolved.name));
+            if (sender != target) {
+                this.plugin.messages().send(target, "checkdeath.restored-target", Map.of("player", sender.getName()));
+            }
+        });
     }
 
     public boolean isSnapshot(Inventory inventory) {
@@ -221,6 +221,32 @@ public final class DeathService {
             }
         }
         viewer.openInventory(inventory);
+    }
+
+    private void load(Resolved resolved, Consumer<DeathSnapshot> then) {
+        DeathSnapshot ram = this.latest.get(resolved.uuid);
+        if (ram != null) {
+            then.accept(ram);
+            return;
+        }
+        UUID uuid = resolved.uuid;
+        Tasks.async(this.plugin, () -> {
+            Optional<DeathSnapshot> found = this.players.lastDeath(uuid);
+            Tasks.sync(this.plugin, () -> {
+                found.ifPresent(snapshot -> this.latest.put(uuid, snapshot));
+                then.accept(found.orElse(null));
+            });
+        });
+    }
+
+    private static int counted(ItemStack[] items) {
+        int count = 0;
+        for (ItemStack item : items) {
+            if (item != null && !item.getType().isAir()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private Resolved resolve(CommandSender sender, String targetName) {

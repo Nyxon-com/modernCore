@@ -152,6 +152,10 @@ public final class PlayersListener implements Listener {
             this.fly.reapply(player);
             this.nicks.reapply(player);
             this.gamemodes.reapply(player);
+            ModerationModule moderation = this.plugin.modules().get("moderation");
+            if (moderation != null && moderation.vanish() != null) {
+                moderation.vanish().reapply(player);
+            }
         });
     }
 

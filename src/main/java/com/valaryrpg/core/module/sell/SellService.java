@@ -80,6 +80,7 @@ public final class SellService {
         }
         double total = 0;
         int sold = 0;
+        java.util.List<ItemStack> taken = new java.util.ArrayList<>();
         java.util.List<Runnable> rewards = new java.util.ArrayList<>();
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             if (locked(slot)) {
@@ -98,6 +99,7 @@ public final class SellService {
             int amount = item.getAmount();
             total += reward.money * amount * this.plugin.configs().prices().getDouble("settings.multiplier", 1.0D);
             sold += amount;
+            taken.add(item.clone());
             rewards.add(() -> applyReward(player, reward, amount));
             inventory.setItem(slot, null);
         }
@@ -108,6 +110,7 @@ public final class SellService {
             return;
         }
         if (total > 0 && !this.plugin.economy().deposit(player, total)) {
+            giveBack(player, taken);
             this.plugin.messages().send(player, "sell.failed");
             return;
         }
@@ -222,6 +225,8 @@ public final class SellService {
         }
         double total = 0;
         int sold = 0;
+        java.util.List<int[]> slots = new java.util.ArrayList<>();
+        java.util.List<ItemStack> taken = new java.util.ArrayList<>();
         java.util.List<Runnable> rewards = new java.util.ArrayList<>();
         for (int slot = 0; slot < 36; slot++) {
             ItemStack item = player.getInventory().getItem(slot);
@@ -235,6 +240,8 @@ public final class SellService {
             int amount = item.getAmount();
             total += reward.money * amount * this.plugin.configs().prices().getDouble("settings.multiplier", 1.0D);
             sold += amount;
+            slots.add(new int[]{slot});
+            taken.add(item.clone());
             rewards.add(() -> applyReward(player, reward, amount));
             player.getInventory().setItem(slot, null);
         }
@@ -243,6 +250,9 @@ public final class SellService {
             return;
         }
         if (total > 0 && !this.plugin.economy().deposit(player, total)) {
+            for (int i = 0; i < slots.size(); i++) {
+                player.getInventory().setItem(slots.get(i)[0], taken.get(i));
+            }
             this.plugin.messages().send(player, "sell.failed");
             return;
         }
@@ -253,6 +263,13 @@ public final class SellService {
                 "amount", String.valueOf(sold),
                 "money", String.format(Locale.US, "%.2f", total)
         ));
+    }
+
+    private void giveBack(Player player, java.util.List<ItemStack> items) {
+        for (ItemStack item : items) {
+            player.getInventory().addItem(item).values()
+                    .forEach(left -> player.getWorld().dropItemNaturally(player.getLocation(), left));
+        }
     }
 
     private record Reward(double money, int xp, List<String> commands, List<Map<?, ?>> items) {
