@@ -171,6 +171,7 @@ public final class LimitYService {
             }
             if (!rule.commands.isEmpty() && ready(player.getUniqueId(), this.lastAction, now, actionCooldown)) {
                 this.lastAction.put(player.getUniqueId(), now);
+                this.plugin.teleports().safeLand(player);
                 ActionCommands.run(this.plugin, player, rule.commands, Map.of(
                         "min", String.valueOf(rule.min),
                         "max", String.valueOf(rule.max)
@@ -200,11 +201,13 @@ public final class LimitYService {
         if (destination == null) {
             destination = world.getSpawnLocation();
         }
+        this.plugin.teleports().safeLand(player);
         if (destination.getWorld() != null
                 && destination.getWorld().equals(world)
                 && destination.getY() >= rule.min
                 && destination.getY() <= rule.max) {
             player.teleport(destination);
+            this.plugin.teleports().safeLand(player);
             return;
         }
         Location clamped = from.clone();
@@ -214,6 +217,7 @@ public final class LimitYService {
             clamped.setY(rule.max);
         }
         player.teleport(clamped);
+        this.plugin.teleports().safeLand(player);
     }
 
     private static final Rule NONE = new Rule(0, 0, List.of(), false, false);

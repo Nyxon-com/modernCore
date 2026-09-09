@@ -6,7 +6,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 import java.time.Duration;
 import java.util.Map;
@@ -17,11 +24,12 @@ import java.util.function.Consumer;
 /**
  * Warmup/cooldown teletrasporto condiviso (home, warp, spawn) con countdown a schermo.
  */
-public final class Teleports {
+public final class Teleports implements Listener {
 
     private final ValaryCorePlugin plugin;
     private final Map<UUID, Pending> pending = new ConcurrentHashMap<>();
     private final Map<UUID, Long> cooldownUntil = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> fallUntil = new ConcurrentHashMap<>();
 
     public Teleports(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -66,6 +74,52 @@ public final class Teleports {
         }
     }
 
+    /** Azzera caduta dopo un tp (LimitY /spawn non deve uccidere). */
+    public void safeLand(Player player) {
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+        if (!this.plugin.configs().root().getBoolean("teleport.reset-fall", true)) {
+            return;
+        }
+        player.setFallDistance(0.0F);
+        player.setVelocity(new Vector(0, 0, 0));
+        long grace = Math.max(0L, this.plugin.configs().root().getLong("teleport.fall-grace-millis", 1000L));
+        this.fallUntil.put(player.getUniqueId(), System.currentTimeMillis() + grace);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTeleport(PlayerTeleportEvent event) {
+        PlayerTeleportEvent.TeleportCause cause = event.getCause();
+        if (cause != PlayerTeleportEvent.TeleportCause.PLUGIN && cause != PlayerTeleportEvent.TeleportCause.COMMAND) {
+            return;
+        }
+        Player player = event.getPlayer();
+        safeLand(player);
+        Tasks.nextTick(this.plugin, () -> safeLand(player));
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onFall(EntityDamageEvent event) {
+        if (event.getCause() != EntityDamageEvent.DamageCause.FALL) {
+            return;
+        }
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        Long until = this.fallUntil.get(player.getUniqueId());
+        if (until == null || until < System.currentTimeMillis()) {
+            return;
+        }
+        event.setCancelled(true);
+        player.setFallDistance(0.0F);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        this.fallUntil.remove(event.getPlayer().getUniqueId());
+    }
+
     private void tick(Player player) {
         Pending session = this.pending.get(player.getUniqueId());
         if (session == null || !player.isOnline()) {
@@ -90,17 +144,24 @@ public final class Teleports {
 
     private void complete(Player player, Location destination, int cooldownSeconds, Consumer<Player> after) {
         this.plugin.lastLocations().remember(player);
+        safeLand(player);
         player.teleportAsync(destination).thenAccept(success -> {
             if (!Boolean.TRUE.equals(success) || !player.isOnline()) {
                 return;
             }
-            if (cooldownSeconds > 0 && !Perms.has(this.plugin, player, "teleport-cooldown-bypass")) {
-                this.cooldownUntil.put(player.getUniqueId(), System.currentTimeMillis() + cooldownSeconds * 1000L);
-            }
-            Sounds.play(this.plugin, player, "teleport-success");
-            if (after != null) {
-                after.accept(player);
-            }
+            Tasks.sync(this.plugin, () -> {
+                if (!player.isOnline()) {
+                    return;
+                }
+                safeLand(player);
+                if (cooldownSeconds > 0 && !Perms.has(this.plugin, player, "teleport-cooldown-bypass")) {
+                    this.cooldownUntil.put(player.getUniqueId(), System.currentTimeMillis() + cooldownSeconds * 1000L);
+                }
+                Sounds.play(this.plugin, player, "teleport-success");
+                if (after != null) {
+                    after.accept(player);
+                }
+            });
         });
     }
 

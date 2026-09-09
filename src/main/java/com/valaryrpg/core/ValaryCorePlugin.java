@@ -59,6 +59,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
         this.economy.hook();
         this.lastLocations = new LastLocations();
         this.teleports = new Teleports(this);
+        getServer().getPluginManager().registerEvents(this.teleports, this);
 
         this.modules = new ModuleManager(this);
         this.modules.register(new WorldsModule(this));
@@ -146,6 +147,9 @@ public final class ValaryCorePlugin extends JavaPlugin {
     public Teleports teleports() {
         if (this.teleports == null) {
             this.teleports = new Teleports(this);
+            if (isEnabled()) {
+                getServer().getPluginManager().registerEvents(this.teleports, this);
+            }
         }
         return this.teleports;
     }

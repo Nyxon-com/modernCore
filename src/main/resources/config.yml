@@ -202,6 +202,9 @@ permissions:
 
 # Countdown a schermo per warmup/cooldown di /home /warp /spawn
 teleport:
+  # true = dopo /spawn /home /warp / LimitY niente danno da caduta
+  reset-fall: true
+  fall-grace-millis: 1000
   hud:
     enabled: true
     # ACTION_BAR oppure TITLE

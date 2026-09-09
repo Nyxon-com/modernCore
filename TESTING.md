@@ -70,6 +70,7 @@ Esegui in ordine su un Paper 1.21.11 di prova (OP). Segna ogni riga. Nessun coma
 - [ ] `/limity command spawn {player}` → comando sul mondo corrente (`spawn` non è il nome mondo)
 - [ ] `/limity notify off` silenzia il messaggio "sei fuori dal limite"
 - [ ] `/limity command [player] spawn` → vola fuori range esegue spawn (come il player)
+- [ ] Caduta + LimitY `/spawn` → tp allo spawn **senza** danno/morte da fall
 - [ ] Bypass `valary.limity.bypass` ignora
 - [ ] Droppa un diamond: hologram piccolo con nome e countdown ~300s; `show-lore: true` mostra lore
 - [ ] Dopo il tempo l'item sparisce
