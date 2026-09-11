@@ -569,9 +569,14 @@ public final class HoloBlockService {
     }
 
     private void spawn(String id, ConfigurationSection holo) {
-        if (!enabled() || this.spawned.containsKey(id)) {
+        if (!enabled()) {
             return;
         }
+        Spawned existing = this.spawned.get(id);
+        if (existing != null && lookup(existing.textId) != null) {
+            return;
+        }
+        despawn(id);
         World world = Bukkit.getWorld(holo.getString("world", ""));
         if (world == null) {
             return;
@@ -901,18 +906,29 @@ public final class HoloBlockService {
     }
 
     private <T> T entity(UUID id, Class<T> type) {
+        Entity found = lookup(id);
+        return type.isInstance(found) ? type.cast(found) : null;
+    }
+
+    private Entity lookup(UUID id) {
         if (id == null) {
             return null;
         }
-        var entity = this.plugin.getServer().getEntity(id);
-        return type.isInstance(entity) ? type.cast(entity) : null;
+        Entity entity = this.plugin.getServer().getEntity(id);
+        if (entity != null) {
+            return entity;
+        }
+        for (World world : Bukkit.getWorlds()) {
+            entity = world.getEntity(id);
+            if (entity != null) {
+                return entity;
+            }
+        }
+        return null;
     }
 
     private void removeEntity(UUID id) {
-        if (id == null) {
-            return;
-        }
-        var entity = this.plugin.getServer().getEntity(id);
+        Entity entity = lookup(id);
         if (entity != null) {
             entity.remove();
         }

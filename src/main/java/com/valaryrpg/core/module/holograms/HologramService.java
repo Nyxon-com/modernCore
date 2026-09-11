@@ -5,14 +5,17 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
@@ -20,6 +23,7 @@ import org.joml.Vector3f;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -63,7 +67,11 @@ public final class HologramService {
             this.task = null;
         }
         this.ticks = 0;
+        for (String id : List.copyOf(this.files.keySet())) {
+            despawn(id);
+        }
         despawnAll();
+        purgeTagged(null);
         this.files.clear();
     }
 
@@ -105,6 +113,7 @@ public final class HologramService {
             return;
         }
         despawn(id);
+        purgeTagged(id);
         this.files.remove(id);
         this.storage.delete(id);
         this.plugin.messages().send(sender, "holograms.deleted", Map.of("holo", id));
@@ -515,7 +524,9 @@ public final class HologramService {
                 if (used >= cap) {
                     continue;
                 }
-                display = spawnDisplay(at, yaml, player, lines);
+                copies.remove(player.getUniqueId());
+                purgeAt(id, at);
+                display = spawnDisplay(id, at, yaml, player, lines);
                 copies.put(player.getUniqueId(), display.getUniqueId());
                 player.showEntity(this.plugin, display);
                 used++;
@@ -536,21 +547,24 @@ public final class HologramService {
     }
 
     private void spawnShared(String id, FileConfiguration yaml) {
-        if (this.shared.containsKey(id)) {
+        if (entity(this.shared.get(id), TextDisplay.class) != null) {
             return;
         }
+        despawn(id);
         Location at = locationOf(yaml);
         if (at == null || at.getWorld() == null || !at.getWorld().isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) {
             return;
         }
-        TextDisplay display = spawnDisplay(at, yaml, null, yaml.getStringList("text"));
+        purgeAt(id, at);
+        TextDisplay display = spawnDisplay(id, at, yaml, null, yaml.getStringList("text"));
         this.shared.put(id, display.getUniqueId());
     }
 
-    private TextDisplay spawnDisplay(Location at, FileConfiguration yaml, Player viewer, List<String> lines) {
+    private TextDisplay spawnDisplay(String id, Location at, FileConfiguration yaml, Player viewer, List<String> lines) {
         return at.getWorld().spawn(at, TextDisplay.class, display -> {
             display.setPersistent(false);
             display.setInvulnerable(true);
+            display.getPersistentDataContainer().set(idKey(), PersistentDataType.STRING, id);
             display.setBillboard(billboard(yaml.getString("billboard", "center")));
             display.setSeeThrough(yaml.getBoolean("see_through", false));
             display.setShadowed(yaml.getBoolean("text_shadow", true));
@@ -605,11 +619,60 @@ public final class HologramService {
     private void despawn(String id) {
         removeEntity(this.shared.remove(id));
         Map<UUID, UUID> copies = this.personal.remove(id);
-        if (copies == null) {
+        if (copies != null) {
+            for (UUID entityId : copies.values()) {
+                removeEntity(entityId);
+            }
+        }
+        FileConfiguration yaml = yaml(id);
+        if (yaml != null) {
+            purgeAt(id, locationOf(yaml));
+        }
+        purgeTagged(id);
+    }
+
+    private void purgeAt(String id, Location at) {
+        if (id == null || at == null || at.getWorld() == null) {
             return;
         }
-        for (UUID entityId : copies.values()) {
-            removeEntity(entityId);
+        Set<UUID> keep = owned(id);
+        NamespacedKey key = idKey();
+        for (Entity entity : List.copyOf(at.getWorld().getNearbyEntities(at, 0.75D, 0.75D, 0.75D))) {
+            if (!(entity instanceof TextDisplay) || keep.contains(entity.getUniqueId())) {
+                continue;
+            }
+            String tagged = entity.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+            if (id.equalsIgnoreCase(tagged) || (tagged == null && !entity.isPersistent())) {
+                entity.remove();
+            }
+        }
+    }
+
+    private Set<UUID> owned(String id) {
+        Set<UUID> keep = new HashSet<>();
+        UUID sharedId = this.shared.get(id);
+        if (sharedId != null) {
+            keep.add(sharedId);
+        }
+        Map<UUID, UUID> copies = this.personal.get(id);
+        if (copies != null) {
+            keep.addAll(copies.values());
+        }
+        return keep;
+    }
+
+    private void purgeTagged(String id) {
+        NamespacedKey key = idKey();
+        for (World world : Bukkit.getWorlds()) {
+            for (TextDisplay display : List.copyOf(world.getEntitiesByClass(TextDisplay.class))) {
+                String tagged = display.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+                if (tagged == null) {
+                    continue;
+                }
+                if (id == null || tagged.equalsIgnoreCase(id)) {
+                    display.remove();
+                }
+            }
         }
     }
 
@@ -736,6 +799,10 @@ public final class HologramService {
         return this.plugin.configs().root().getString("commands.holo", "vholo");
     }
 
+    private NamespacedKey idKey() {
+        return new NamespacedKey(this.plugin, "holo_display");
+    }
+
     private int personalCount() {
         int total = 0;
         for (Map<UUID, UUID> copies : this.personal.values()) {
@@ -825,15 +892,29 @@ public final class HologramService {
         if (id == null) {
             return null;
         }
-        var entity = this.plugin.getServer().getEntity(id);
-        return type.isInstance(entity) ? type.cast(entity) : null;
+        Entity found = lookup(id);
+        return type.isInstance(found) ? type.cast(found) : null;
+    }
+
+    private Entity lookup(UUID id) {
+        if (id == null) {
+            return null;
+        }
+        Entity entity = this.plugin.getServer().getEntity(id);
+        if (entity != null) {
+            return entity;
+        }
+        for (World world : Bukkit.getWorlds()) {
+            entity = world.getEntity(id);
+            if (entity != null) {
+                return entity;
+            }
+        }
+        return null;
     }
 
     private void removeEntity(UUID id) {
-        if (id == null) {
-            return;
-        }
-        var entity = this.plugin.getServer().getEntity(id);
+        Entity entity = lookup(id);
         if (entity != null) {
             entity.remove();
         }
