@@ -8,6 +8,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Carica i YAML: config/storage in root, testi in lang/, suoni in sounds/, moduli in modules/.
@@ -50,6 +52,7 @@ public final class ConfigManager {
         migrateLegacySounds();
         migrateGroundItemHologram();
         migrateDisconnectScreens();
+        migrateHoloCommand();
         this.plugin.getLogger().info("Configurazioni caricate.");
     }
 
@@ -203,6 +206,104 @@ public final class ConfigManager {
             this.messages.save();
             this.plugin.getLogger().info("Schermate kick/ban migrate in lang/messages.yml");
         }
+    }
+
+    /**
+     * /holo collide con DecentHolograms e simili: passa a /vholo senza toccare i valori custom.
+     */
+    private void migrateHoloCommand() {
+        FileConfiguration root = this.root.config();
+        boolean rootChanged = false;
+        if ("holo".equalsIgnoreCase(root.getString("commands.holo", ""))) {
+            root.set("commands.holo", "vholo");
+            rootChanged = true;
+        }
+        List<String> aliases = new ArrayList<>(root.getStringList("commands.holo-aliases"));
+        List<String> cleaned = new ArrayList<>();
+        boolean aliasesChanged = false;
+        for (String alias : aliases) {
+            if (alias == null) {
+                continue;
+            }
+            String token = alias.toLowerCase(java.util.Locale.ROOT);
+            if (token.equals("holo") || token.equals("holos") || token.equals("hologram") || token.equals("holograms")) {
+                aliasesChanged = true;
+                continue;
+            }
+            cleaned.add(alias);
+        }
+        if (rootChanged && !containsIgnoreCase(cleaned, "vholos")) {
+            cleaned.add("vholos");
+            aliasesChanged = true;
+        }
+        if (aliasesChanged) {
+            root.set("commands.holo-aliases", cleaned);
+            rootChanged = true;
+        }
+        if (rootChanged) {
+            this.root.save();
+        }
+
+        boolean textsChanged = rewriteSlashHolo(this.messages.config());
+        if (textsChanged) {
+            this.messages.save();
+        }
+        boolean mechanicsChanged = rewriteSlashHolo(this.mechanics.config());
+        if (mechanicsChanged) {
+            this.mechanics.save();
+        }
+        if (rootChanged || textsChanged || mechanicsChanged) {
+            this.plugin.getLogger().info("Comando hologram migrato da /holo a /vholo.");
+        }
+    }
+
+    private static boolean rewriteSlashHolo(FileConfiguration yaml) {
+        boolean changed = false;
+        for (String key : yaml.getKeys(true)) {
+            if (yaml.isConfigurationSection(key)) {
+                continue;
+            }
+            if (yaml.isList(key)) {
+                List<String> lines = yaml.getStringList(key);
+                List<String> next = new ArrayList<>();
+                boolean listChanged = false;
+                for (String line : lines) {
+                    String updated = rewriteSlashHolo(line);
+                    next.add(updated);
+                    if (!updated.equals(line)) {
+                        listChanged = true;
+                    }
+                }
+                if (listChanged) {
+                    yaml.set(key, next);
+                    changed = true;
+                }
+                continue;
+            }
+            String value = yaml.getString(key);
+            String updated = rewriteSlashHolo(value);
+            if (value != null && !updated.equals(value)) {
+                yaml.set(key, updated);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    private static String rewriteSlashHolo(String value) {
+        if (value == null || !value.contains("/holo")) {
+            return value;
+        }
+        return value.replaceAll("/holo(?![A-Za-z])", "/vholo");
+    }
+
+    private static boolean containsIgnoreCase(List<String> values, String expected) {
+        for (String value : values) {
+            if (expected.equalsIgnoreCase(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private YamlConfiguration jarMessages() {

@@ -288,7 +288,7 @@ permissions:
     description: Usa /portal
     default: op
   valary.holo:
-    description: Usa /holo
+    description: Usa /vholo
     default: op
   valary.pressureplayerjump:
     description: Usa /pressureplayerjump

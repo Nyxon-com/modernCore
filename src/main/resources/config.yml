@@ -135,10 +135,9 @@ commands:
   portal: portal
   portal-aliases:
     - portals
-  holo: holo
+  holo: vholo
   holo-aliases:
-    - holos
-    - hologram
+    - vholos
   pressureplayerjump: pressureplayerjump
   pressureplayerjump-aliases:
     - ppjump

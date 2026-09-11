@@ -32,23 +32,23 @@
 #
 # Holo-block: hologram su UN blocco. Click destro (o click sull'hologram) esegue i comandi.
 # Shift+click = ignora (puoi piazzare / aprire chest). Wand: destro sul blocco da marcare.
-# /holo wand
-# /holo set                              marca il blocco mirato
-# /holo create <nome>
-# /holo command <nome> spawn             eseguito come il player (anche senza [player])
-# /holo command <nome> [player] warp pvp
-# /holo command <nome> [message] <green>ok
-# /holo command <nome> [console] say {player} ha cliccato {holo}
-# /holo line add <nome> <gradient:#A78BFA:#EC4899>Shop</gradient>
-# /holo animation <nome> bob|spin|pulse|wave|none
-# /holo particle <nome> enchant|flame|endrod|glow|cherry|heart|none
-# /holo clickparticle <nome> spark|burst|magic|crit|none
-# /holo icon <nome>                      item in mano (mano vuota = togli)
-# /holo glow <nome> on|off
-# /holo sound <nome> holo-click          chiave in sounds.yml
-# /holo permission <nome> [nodo]         vuoto = tutti
-# /holo scale <nome> 1.2
-# /holo offset <nome> 1.35
+# /vholo wand
+# /vholo set                              marca il blocco mirato
+# /vholo create <nome>
+# /vholo command <nome> spawn             eseguito come il player (anche senza [player])
+# /vholo command <nome> [player] warp pvp
+# /vholo command <nome> [message] <green>ok
+# /vholo command <nome> [console] say {player} ha cliccato {holo}
+# /vholo line add <nome> <gradient:#A78BFA:#EC4899>Shop</gradient>
+# /vholo animation <nome> bob|spin|pulse|wave|none
+# /vholo particle <nome> enchant|flame|endrod|glow|cherry|heart|none
+# /vholo clickparticle <nome> spark|burst|magic|crit|none
+# /vholo icon <nome>                      item in mano (mano vuota = togli)
+# /vholo glow <nome> on|off
+# /vholo sound <nome> holo-click          chiave in sounds.yml
+# /vholo permission <nome> [nodo]         vuoto = tutti
+# /vholo scale <nome> 1.2
+# /vholo offset <nome> 1.35
 # =============================================================================
 
 limity:
@@ -205,7 +205,7 @@ holo-blocks:
     name: "<light_purple>Wand hologram"
     lore:
       - "<gray>Destro: seleziona il blocco"
-      - "<gray>Poi /holo create <nome>"
+      - "<gray>Poi /vholo create <nome>"
     glow: true
   animations:
     bob:

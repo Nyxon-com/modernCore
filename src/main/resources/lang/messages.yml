@@ -372,19 +372,19 @@ portals:
 
 holos:
   usage: "{prefix} <gray>Uso: <white>/{label} <wand|set|create|command|clearcommands|line|animation|particle|clickparticle|icon|glow|sound|permission|scale|offset|info|enable|disable|delete|list></white>"
-  wand-given: "{prefix} <green>Wand hologram in inventario. Destro sul blocco, poi <white>/holo create <nome></white>."
+  wand-given: "{prefix} <green>Wand hologram in inventario. Destro sul blocco, poi <white>/vholo create <nome></white>."
   block-set: "{prefix} <green>Blocco hologram: <white>{world} {x} {y} {z}</white>."
   no-block: "{prefix} <red>Guarda un blocco entro il raggio di selezione."
-  incomplete: "{prefix} <red>Seleziona prima un blocco con <white>/holo wand</white> o <white>/holo set</white>."
+  incomplete: "{prefix} <red>Seleziona prima un blocco con <white>/vholo wand</white> o <white>/vholo set</white>."
   invalid-name: "{prefix} <red>Nome hologram non valido. Usa lettere, numeri, _ e -."
   max: "{prefix} <red>Limite hologram raggiunto."
-  created: "{prefix} <green>Hologram <white>{holo}</white> creato sul blocco. Aggiungi un comando con <white>/holo command {holo} ...</white>"
+  created: "{prefix} <green>Hologram <white>{holo}</white> creato sul blocco. Aggiungi un comando con <white>/vholo command {holo} ...</white>"
   enabled: "{prefix} <green>Hologram <white>{holo}</white> abilitato."
   disabled: "{prefix} <yellow>Hologram <white>{holo}</white> disabilitato."
   deleted: "{prefix} <green>Hologram <white>{holo}</white> eliminato."
   unknown: "{prefix} <red>Hologram <white>{holo}</white> inesistente."
   list: "{prefix} <gray>Hologram ({count}): <white>{holos}</white>"
-  list-empty: "{prefix} <gray>Nessun hologram. Usa <white>/holo set</white> poi create."
+  list-empty: "{prefix} <gray>Nessun hologram. Usa <white>/vholo set</white> poi create."
   command-usage: "{prefix} <gray>Uso: <white>/{label} command <nome> spawn</white>  oppure  <white>[message] <green>testo</green></white>  oppure  <white>[console] say ciao</white>"
   command-set: "{prefix} <green>Comando aggiunto all'hologram <white>{holo}</white>: <gray>{command}"
   commands-cleared: "{prefix} <yellow>Comandi dell'hologram <white>{holo}</white> azzerati."
@@ -406,7 +406,7 @@ holos:
   offset-set: "{prefix} <green>Offset Y di <white>{holo}</white>: <white>{value}</white>."
   invalid-number: "{prefix} <red>Valore <white>{value}</white> non numerico."
   no-permission: "{prefix} <red>Non puoi usare l'hologram <white>{holo}</white>."
-  no-command: "{prefix} <gray>Hologram <white>{holo}</white> senza comandi. Staff: <white>/holo command {holo} ...</white>"
+  no-command: "{prefix} <gray>Hologram <white>{holo}</white> senza comandi. Staff: <white>/vholo command {holo} ...</white>"
   info: "{prefix} <gray>Hologram <white>{holo}</white> @ <white>{world} {x} {y} {z}</white> · anim <white>{animation}</white> · particelle <white>{particle}</white> · glow <white>{glow}</white> · comandi <white>{commands}</white>"
 
 kits:

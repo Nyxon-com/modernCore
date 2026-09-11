@@ -204,7 +204,7 @@ public final class HoloBlockService {
         }
         String value = command == null ? "" : command.trim();
         if (value.isBlank()) {
-            this.plugin.messages().send(sender, "holos.command-usage", Map.of("label", "holo"));
+            this.plugin.messages().send(sender, "holos.command-usage", Map.of("label", commandLabel()));
             return;
         }
         List<String> commands = new ArrayList<>(yaml().getStringList("holo-blocks.holos." + id + ".commands"));
@@ -230,7 +230,7 @@ public final class HoloBlockService {
             return;
         }
         if (text == null || text.isBlank()) {
-            this.plugin.messages().send(sender, "holos.line-usage", Map.of("label", "holo"));
+            this.plugin.messages().send(sender, "holos.line-usage", Map.of("label", commandLabel()));
             return;
         }
         List<String> lines = new ArrayList<>(yaml().getStringList("holo-blocks.holos." + id + ".hologram.lines"));
@@ -808,6 +808,10 @@ public final class HoloBlockService {
 
     private FileConfiguration yaml() {
         return this.plugin.configs().mechanics();
+    }
+
+    private String commandLabel() {
+        return this.plugin.configs().root().getString("commands.holo", "vholo");
     }
 
     private boolean enabled() {
