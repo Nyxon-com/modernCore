@@ -49,6 +49,9 @@ public final class CommandService {
             if (enabled("mechanics")) {
                 new MechanicsCommands(this.plugin).register(registrar);
             }
+            if (enabled("holograms")) {
+                new HologramCommands(this.plugin).register(registrar);
+            }
             if (enabled("kits")) {
                 new KitsCommands(this.plugin).register(registrar);
             }

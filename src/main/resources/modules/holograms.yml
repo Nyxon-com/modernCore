@@ -1,0 +1,24 @@
+# =============================================================================
+# Hologram TextDisplay. Ogni hologram è un file in plugins/ValaryRPG-Core/holo/<nome>.yml
+# /valary reload e /vholo reload rileggono i file e respawnano le entity.
+#
+# /vholo create <nome>          crea qui, scrive holo/<nome>.yml
+# /vholo movehere <nome>        sposta l'hologram dove sei
+# /vholo line add <nome> testo  MiniMessage o &7 come FancyHolograms
+# /vholo scale <nome> 7
+# /vholo billboard <nome> fixed|center|horizontal|vertical
+# /vholo import                 spezza holo/holograms.yml (dump FancyHolograms) in file singoli
+#
+# visibilità: visibility_distance in blocchi (-1 = unlimited-view-blocks).
+# %player_name% / PlaceholderAPI: copia personale solo per i player vicini (cap sotto).
+# =============================================================================
+
+enabled: true
+folder: holo
+max: 200
+tick-ticks: 10
+near-range: 16
+default-visibility-distance: 64
+unlimited-view-blocks: 128
+max-personal-displays: 200
+line-width: 200

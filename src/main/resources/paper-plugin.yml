@@ -91,6 +91,7 @@ permissions:
       valary.give: true
       valary.portal: true
       valary.holo: true
+      valary.triggerblock: true
       valary.pressureplayerjump: true
   valary.reload:
     description: Ricarica i file di configurazione
@@ -288,7 +289,10 @@ permissions:
     description: Usa /portal
     default: op
   valary.holo:
-    description: Usa /vholo
+    description: Usa /vholo (hologram in holo/)
+    default: op
+  valary.triggerblock:
+    description: Usa /triggerblock
     default: op
   valary.pressureplayerjump:
     description: Usa /pressureplayerjump

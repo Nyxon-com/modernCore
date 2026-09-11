@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * /vholo: blocco con hologram, click-comando, particelle e animazioni.
+ * /triggerblock: blocco con hologram, click-comando, particelle e animazioni.
  */
 final class HoloBlockCommands {
 
@@ -34,13 +34,13 @@ final class HoloBlockCommands {
     }
 
     void register(Commands registrar) {
-        registrar.register(holoCommand(), "Hologram su blocco", aliases("commands.holo-aliases"));
+        registrar.register(holoCommand(), "Trigger su blocco", aliases("commands.triggerblock-aliases"));
     }
 
     private LiteralCommandNode<CommandSourceStack> holoCommand() {
-        String name = string("commands.holo", "vholo");
+        String name = string("commands.triggerblock", "triggerblock");
         return Commands.literal(name)
-                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "holo"))
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "triggerblock"))
                 .executes(ctx -> {
                     this.plugin.messages().send(ctx.getSource().getSender(), "holos.usage", Map.of("label", name));
                     return Command.SINGLE_SUCCESS;

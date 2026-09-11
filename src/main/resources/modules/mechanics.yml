@@ -32,25 +32,25 @@
 #
 # Holo-block: hologram su UN blocco. Click destro (o click sull'hologram) esegue i comandi.
 # Shift+click = ignora (puoi piazzare / aprire chest). Wand: destro sul blocco da marcare.
-# /vholo wand
-# /vholo set                              marca il blocco mirato
-# /vholo create <nome>
-# /vholo command <nome> spawn             eseguito come il player (anche senza [player])
-# /vholo command <nome> [player] warp pvp
-# /vholo command <nome> [message] <green>ok
-# /vholo command <nome> [console] say {player} ha cliccato {holo}
-# /vholo command <nome> [console] cp crates_boss {player} pk
+# /triggerblock wand
+# /triggerblock set                              marca il blocco mirato
+# /triggerblock create <nome>
+# /triggerblock command <nome> spawn             eseguito come il player (anche senza [player])
+# /triggerblock command <nome> [player] warp pvp
+# /triggerblock command <nome> [message] <green>ok
+# /triggerblock command <nome> [console] say {player} ha cliccato {holo}
+# /triggerblock command <nome> [console] cp crates_boss {player} pk
 #   {player} e %player_name% = nome di chi clicca. PlaceholderAPI se presente.
-# /vholo line add <nome> <gradient:#A78BFA:#EC4899>Shop</gradient>
-# /vholo animation <nome> bob|spin|pulse|wave|none
-# /vholo particle <nome> enchant|flame|endrod|glow|cherry|heart|none
-# /vholo clickparticle <nome> spark|burst|magic|crit|none
-# /vholo icon <nome>                      item in mano (mano vuota = togli)
-# /vholo glow <nome> on|off
-# /vholo sound <nome> holo-click          chiave in sounds.yml
-# /vholo permission <nome> [nodo]         vuoto = tutti
-# /vholo scale <nome> 1.2
-# /vholo offset <nome> 1.35
+# /triggerblock line add <nome> <gradient:#A78BFA:#EC4899>Shop</gradient>
+# /triggerblock animation <nome> bob|spin|pulse|wave|none
+# /triggerblock particle <nome> enchant|flame|endrod|glow|cherry|heart|none
+# /triggerblock clickparticle <nome> spark|burst|magic|crit|none
+# /triggerblock icon <nome>                      item in mano (mano vuota = togli)
+# /triggerblock glow <nome> on|off
+# /triggerblock sound <nome> holo-click          chiave in sounds.yml
+# /triggerblock permission <nome> [nodo]         vuoto = tutti
+# /triggerblock scale <nome> 1.2
+# /triggerblock offset <nome> 1.35
 # =============================================================================
 
 limity:
@@ -207,7 +207,7 @@ holo-blocks:
     name: "<light_purple>Wand hologram"
     lore:
       - "<gray>Destro: seleziona il blocco"
-      - "<gray>Poi /vholo create <nome>"
+      - "<gray>Poi /triggerblock create <nome>"
     glow: true
   animations:
     bob:

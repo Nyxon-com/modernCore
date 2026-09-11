@@ -28,6 +28,7 @@ public final class ConfigManager {
     private YamlFile players;
     private YamlFile moderation;
     private YamlFile mechanics;
+    private YamlFile holograms;
     private YamlFile kits;
     private YamlFile prices;
 
@@ -47,12 +48,14 @@ public final class ConfigManager {
         this.players = load("modules/players.yml");
         this.moderation = load("modules/moderation.yml");
         this.mechanics = load("modules/mechanics.yml");
+        this.holograms = load("modules/holograms.yml");
         this.kits = load("modules/kits.yml");
         this.prices = load("modules/prices.yml");
         migrateLegacySounds();
         migrateGroundItemHologram();
         migrateDisconnectScreens();
         migrateHoloCommand();
+        migrateTriggerblockCommand();
         this.plugin.getLogger().info("Configurazioni caricate.");
     }
 
@@ -98,6 +101,10 @@ public final class ConfigManager {
 
     public FileConfiguration mechanics() {
         return this.mechanics.config();
+    }
+
+    public FileConfiguration holograms() {
+        return this.holograms.config();
     }
 
     public FileConfiguration kits() {
@@ -255,6 +262,81 @@ public final class ConfigManager {
         if (rootChanged || textsChanged || mechanicsChanged) {
             this.plugin.getLogger().info("Comando hologram migrato da /holo a /vholo.");
         }
+    }
+
+    /**
+     * I trigger su blocco non usano più /vholo: quello resta per gli hologram in holo/.
+     */
+    private void migrateTriggerblockCommand() {
+        FileConfiguration root = this.root.config();
+        boolean changed = false;
+        if (!root.contains("commands.triggerblock")) {
+            root.set("commands.triggerblock", "triggerblock");
+            root.set("commands.triggerblock-aliases", List.of("tblock", "triggerblocks"));
+            changed = true;
+        }
+        if (!root.contains("permissions.triggerblock")) {
+            root.set("permissions.triggerblock", "valary.triggerblock");
+            changed = true;
+        }
+        if (!root.contains("modules.holograms")) {
+            root.set("modules.holograms", true);
+            changed = true;
+        }
+        if (changed) {
+            this.root.save();
+        }
+        boolean texts = rewriteTriggerLabel(this.messages.config(), "holos.");
+        if (texts) {
+            this.messages.save();
+        }
+        boolean mechanics = rewriteTriggerLabel(this.mechanics.config(), "holo-blocks.");
+        if (mechanics) {
+            this.mechanics.save();
+        }
+        if (changed || texts || mechanics) {
+            this.plugin.getLogger().info("Trigger su blocco migrati da /vholo a /triggerblock.");
+        }
+    }
+
+    private static boolean rewriteTriggerLabel(FileConfiguration yaml, String prefix) {
+        boolean changed = false;
+        for (String key : yaml.getKeys(true)) {
+            if (!key.startsWith(prefix) || yaml.isConfigurationSection(key)) {
+                continue;
+            }
+            if (yaml.isList(key)) {
+                List<String> lines = yaml.getStringList(key);
+                List<String> next = new ArrayList<>();
+                boolean listChanged = false;
+                for (String line : lines) {
+                    String updated = rewriteVholoToTrigger(line);
+                    next.add(updated);
+                    if (!updated.equals(line)) {
+                        listChanged = true;
+                    }
+                }
+                if (listChanged) {
+                    yaml.set(key, next);
+                    changed = true;
+                }
+                continue;
+            }
+            String value = yaml.getString(key);
+            String updated = rewriteVholoToTrigger(value);
+            if (value != null && !updated.equals(value)) {
+                yaml.set(key, updated);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    private static String rewriteVholoToTrigger(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replace("/vholos", "/triggerblocks").replace("/vholo", "/triggerblock");
     }
 
     private static boolean rewriteSlashHolo(FileConfiguration yaml) {

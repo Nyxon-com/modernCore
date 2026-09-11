@@ -1,0 +1,31 @@
+enabled: false
+type: TEXT
+location:
+  world: world
+  x: 0.5
+  y: 65.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+visibility_distance: 64
+visibility: ALL
+scale_x: 1.0
+scale_y: 1.0
+scale_z: 1.0
+translation_x: 0.0
+translation_y: 0.0
+translation_z: 0.0
+shadow_radius: 0.0
+shadow_strength: 1.0
+text:
+  - "<gray>Esempio hologram"
+  - "<white>/vholo create <nome>"
+text_shadow: true
+see_through: false
+text_alignment: center
+update_text_interval: -1
+background: transparent
+billboard: center
+block_brightness: -1
+sky_brightness: -1
+line_width: 200

@@ -811,7 +811,7 @@ public final class HoloBlockService {
     }
 
     private String commandLabel() {
-        return this.plugin.configs().root().getString("commands.holo", "vholo");
+        return this.plugin.configs().root().getString("commands.triggerblock", "triggerblock");
     }
 
     private boolean enabled() {
