@@ -14,6 +14,7 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -113,12 +114,22 @@ public final class MechanicsListener implements Listener {
         );
     }
 
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoin(PlayerJoinEvent event) {
+        this.portals.rememberInside(event.getPlayer());
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
-        if (event.getTo() == null || event.getFrom().getBlock().equals(event.getTo().getBlock())) {
+        if (event.getTo() == null) {
             return;
         }
-        this.portals.tryEnter(event.getPlayer(), event.getFrom(), event.getTo());
+        if (event.getFrom().getX() == event.getTo().getX()
+                && event.getFrom().getY() == event.getTo().getY()
+                && event.getFrom().getZ() == event.getTo().getZ()) {
+            return;
+        }
+        this.portals.tryEnter(event.getPlayer(), event.getTo());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -126,7 +137,7 @@ public final class MechanicsListener implements Listener {
         if (event.getTo() == null) {
             return;
         }
-        this.portals.tryEnter(event.getPlayer(), event.getFrom(), event.getTo());
+        this.portals.tryEnter(event.getPlayer(), event.getTo());
     }
 
     @EventHandler

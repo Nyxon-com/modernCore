@@ -2,6 +2,7 @@ package com.valaryrpg.core.module.mechanics;
 
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.gui.PanelItems;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -48,7 +49,7 @@ final class PortalSelection {
     }
 
     void markPos1(Player player) {
-        markPos1(player, player.getLocation());
+        markPos1(player, aimedBlock(player));
     }
 
     void markPos1(Player player, Location location) {
@@ -57,7 +58,7 @@ final class PortalSelection {
     }
 
     void markPos2(Player player) {
-        markPos2(player, player.getLocation());
+        markPos2(player, aimedBlock(player));
     }
 
     void markPos2(Player player, Location location) {
@@ -102,6 +103,11 @@ final class PortalSelection {
 
     private NamespacedKey wandKey() {
         return new NamespacedKey(this.plugin, "portal_wand");
+    }
+
+    private static Location aimedBlock(Player player) {
+        Block block = player.getTargetBlockExact(8, FluidCollisionMode.NEVER);
+        return block == null ? player.getLocation() : block.getLocation();
     }
 
     private static Location blockOf(Location location) {

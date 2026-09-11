@@ -33,6 +33,7 @@ public final class PortalService {
     private final ValaryCorePlugin plugin;
     private final PortalSelection selection;
     private final Map<UUID, Long> cooldownUntil = new ConcurrentHashMap<>();
+    private final Map<UUID, String> inside = new ConcurrentHashMap<>();
     private final Set<UUID> pending = ConcurrentHashMap.newKeySet();
     private final List<Region> regions = new CopyOnWriteArrayList<>();
 
@@ -58,21 +59,47 @@ public final class PortalService {
         this.regions.addAll(next);
     }
 
-    public void tryEnter(Player player, Location from, Location to) {
+    public void tryEnter(Player player, Location to) {
         if (player == null || to == null || to.getWorld() == null) {
             return;
         }
-        String entered = nameAt(to);
-        if (entered == null || entered.equals(nameAt(from))) {
+        UUID uuid = player.getUniqueId();
+        String now = nameAt(to);
+        if (now == null) {
+            this.inside.remove(uuid);
             return;
         }
-        activateLater(player, entered);
+        String was = this.inside.put(uuid, now);
+        if (now.equals(was)) {
+            return;
+        }
+        activateLater(player, now);
+    }
+
+    /**
+     * Al join: se sei già nel cubo non attivare finché non esci e rientri.
+     */
+    public void rememberInside(Player player) {
+        if (player == null || player.getLocation().getWorld() == null) {
+            return;
+        }
+        String now = nameAt(player.getLocation());
+        if (now == null) {
+            this.inside.remove(player.getUniqueId());
+            return;
+        }
+        this.inside.put(player.getUniqueId(), now);
     }
 
     public void unload(UUID uuid) {
         this.selection.forget(uuid);
         this.cooldownUntil.remove(uuid);
+        this.inside.remove(uuid);
         this.pending.remove(uuid);
+    }
+
+    private void forgetInside(String portalId) {
+        this.inside.values().removeIf(portalId::equals);
     }
 
     public void markPos1(Player player) {
@@ -127,6 +154,7 @@ public final class PortalService {
         yaml.set(base + ".warmup-seconds", 0);
         this.plugin.configs().saveMechanics();
         rebuild();
+        this.forgetInside(id);
         this.plugin.messages().send(player, "portals.created", Map.of("portal", id));
     }
 
@@ -167,6 +195,9 @@ public final class PortalService {
         this.plugin.configs().mechanics().set("portals." + id + ".enabled", enabled);
         this.plugin.configs().saveMechanics();
         rebuild();
+        if (enabled) {
+            this.forgetInside(id);
+        }
         this.plugin.messages().send(sender, enabled ? "portals.enabled" : "portals.disabled", Map.of("portal", id));
     }
 
@@ -355,13 +386,14 @@ public final class PortalService {
         if (location == null || location.getWorld() == null) {
             return null;
         }
-        int padding = Math.max(0, this.plugin.configs().mechanics().getInt("portal-settings.y-padding", 1));
+        int yPad = Math.max(0, this.plugin.configs().mechanics().getInt("portal-settings.y-padding", 1));
+        int xzPad = Math.max(0, this.plugin.configs().mechanics().getInt("portal-settings.xz-padding", 1));
         String world = location.getWorld().getName();
         int x = location.getBlockX();
         int y = location.getBlockY();
         int z = location.getBlockZ();
         for (Region region : this.regions) {
-            if (region.contains(world, x, y, z, padding)) {
+            if (region.contains(world, x, y, z, yPad, xzPad)) {
                 return region.id;
             }
         }
@@ -466,10 +498,10 @@ public final class PortalService {
     }
 
     private record Region(String id, String world, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-        private boolean contains(String worldName, int x, int y, int z, int yPadding) {
+        private boolean contains(String worldName, int x, int y, int z, int yPadding, int xzPadding) {
             return this.world.equalsIgnoreCase(worldName)
-                    && x >= this.minX && x <= this.maxX
-                    && z >= this.minZ && z <= this.maxZ
+                    && x >= this.minX - xzPadding && x <= this.maxX + xzPadding
+                    && z >= this.minZ - xzPadding && z <= this.maxZ + xzPadding
                     && y >= this.minY && y <= this.maxY + yPadding;
         }
     }
