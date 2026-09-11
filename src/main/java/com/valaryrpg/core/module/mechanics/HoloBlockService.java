@@ -31,6 +31,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -71,6 +72,7 @@ public final class HoloBlockService {
         }
         this.ticks = 0;
         despawnAll();
+        purgeTagged(null);
     }
 
     public void unload(UUID uuid) {
@@ -160,7 +162,8 @@ public final class HoloBlockService {
             return;
         }
         despawn(id);
-        yaml().set("holo-blocks.holos." + id, null);
+        purgeTagged(id);
+        removeHoloFromYaml(id);
         this.plugin.configs().saveMechanics();
         this.plugin.messages().send(sender, "holos.deleted", Map.of("holo", id));
     }
@@ -644,12 +647,50 @@ public final class HoloBlockService {
 
     private void despawn(String id) {
         Spawned spawned = this.spawned.remove(id);
-        if (spawned == null) {
+        if (spawned != null) {
+            removeEntity(spawned.textId);
+            removeEntity(spawned.iconId);
+            removeEntity(spawned.hitId);
+        }
+        purgeTagged(id);
+    }
+
+    private void removeHoloFromYaml(String id) {
+        FileConfiguration yaml = yaml();
+        ConfigurationSection holos = yaml.getConfigurationSection("holo-blocks.holos");
+        if (holos == null) {
+            yaml.set("holo-blocks.holos." + id, null);
             return;
         }
-        removeEntity(spawned.textId);
-        removeEntity(spawned.iconId);
-        removeEntity(spawned.hitId);
+        Map<String, Map<String, Object>> kept = new LinkedHashMap<>();
+        for (String key : holos.getKeys(false)) {
+            if (key.equalsIgnoreCase(id)) {
+                continue;
+            }
+            ConfigurationSection child = holos.getConfigurationSection(key);
+            if (child != null) {
+                kept.put(key, child.getValues(true));
+            }
+        }
+        yaml.set("holo-blocks.holos", null);
+        for (Map.Entry<String, Map<String, Object>> entry : kept.entrySet()) {
+            yaml.createSection("holo-blocks.holos." + entry.getKey(), entry.getValue());
+        }
+    }
+
+    private void purgeTagged(String id) {
+        NamespacedKey key = idKey();
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity entity : List.copyOf(world.getEntities())) {
+                String tagged = entity.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+                if (tagged == null) {
+                    continue;
+                }
+                if (id == null || tagged.equalsIgnoreCase(id)) {
+                    entity.remove();
+                }
+            }
+        }
     }
 
     private void despawnAll() {
@@ -793,12 +834,29 @@ public final class HoloBlockService {
     }
 
     private String require(CommandSender sender, String name) {
-        String id = normalize(name);
-        if (yaml().getConfigurationSection("holo-blocks.holos." + id) == null) {
-            this.plugin.messages().send(sender, "holos.unknown", Map.of("holo", name));
+        String id = yamlName(name);
+        if (id == null) {
+            this.plugin.messages().send(sender, "holos.unknown", Map.of("holo", name == null ? "" : name));
             return null;
         }
-        return id;
+        return normalize(id);
+    }
+
+    private String yamlName(String name) {
+        String id = normalize(name);
+        ConfigurationSection holos = yaml().getConfigurationSection("holo-blocks.holos");
+        if (holos == null) {
+            return null;
+        }
+        if (holos.getConfigurationSection(id) != null) {
+            return id;
+        }
+        for (String key : holos.getKeys(false)) {
+            if (key.equalsIgnoreCase(id) || normalize(key).equals(id)) {
+                return key;
+            }
+        }
+        return null;
     }
 
     private Set<String> keys(String path) {
