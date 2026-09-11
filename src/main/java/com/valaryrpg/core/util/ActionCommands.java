@@ -9,7 +9,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Esegue liste di comandi YAML: [close] [console] [player] [sound] [message] oppure console.
+ * Esegue liste di comandi YAML: [close] [console] [player] [sound] [message].
+ * Senza tag: console (kit/sell) oppure player se {@code playerDefault}.
  */
 public final class ActionCommands {
 
@@ -17,10 +18,20 @@ public final class ActionCommands {
     }
 
     public static boolean run(ValaryCorePlugin plugin, Player player, List<String> lines) {
-        return run(plugin, player, lines, Map.of());
+        return run(plugin, player, lines, Map.of(), false);
     }
 
     public static boolean run(ValaryCorePlugin plugin, Player player, List<String> lines, Map<String, String> extra) {
+        return run(plugin, player, lines, extra, false);
+    }
+
+    public static boolean run(
+            ValaryCorePlugin plugin,
+            Player player,
+            List<String> lines,
+            Map<String, String> extra,
+            boolean playerDefault
+    ) {
         if (lines == null || lines.isEmpty() || player == null) {
             return false;
         }
@@ -49,10 +60,7 @@ public final class ActionCommands {
                 continue;
             }
             if (lower.startsWith("[player]")) {
-                String asPlayer = command(line.substring("[player]".length()));
-                if (!asPlayer.isBlank() && !player.performCommand(asPlayer)) {
-                    Bukkit.dispatchCommand(player, asPlayer);
-                }
+                asPlayer(player, command(line.substring("[player]".length())));
                 continue;
             }
             if (lower.startsWith("[sound]")) {
@@ -64,12 +72,27 @@ public final class ActionCommands {
                 player.sendMessage(plugin.messages().deserialize(line.substring(cut).trim()));
                 continue;
             }
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command(line));
+            String cmd = command(line);
+            if (playerDefault) {
+                asPlayer(player, cmd);
+            } else {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+            }
         }
         if (close) {
             player.closeInventory();
         }
         return close;
+    }
+
+    private static void asPlayer(Player player, String command) {
+        if (command == null || command.isBlank()) {
+            return;
+        }
+        if (Bukkit.dispatchCommand(player, command)) {
+            return;
+        }
+        player.performCommand(command);
     }
 
     private static String command(String raw) {

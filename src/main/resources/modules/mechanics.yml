@@ -14,6 +14,7 @@
 # L'azione parte al tick successivo (i comandi in PlayerMoveEvent su Paper non partono).
 # /portal wand: Destro = pos1, Shift+destro = pos2, Shift+sinistro = dest (dove sei tu).
 # /portal pos1 e pos2 usano il blocco mirato, non i piedi.
+# /portal command <nome> spawn            eseguito come il player (anche senza [player])
 # /portal command <nome> [player] spawn
 # /portal command <nome> [message] <green>ok
 # /portal command <nome> [console] say {player} è entrato

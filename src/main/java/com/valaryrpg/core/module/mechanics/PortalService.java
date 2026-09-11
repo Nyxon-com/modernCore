@@ -287,12 +287,12 @@ public final class PortalService {
         if (!this.pending.add(uuid)) {
             return;
         }
-        Bukkit.getScheduler().runTask(this.plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
             this.pending.remove(uuid);
             if (player.isOnline()) {
                 activate(player, portalId);
             }
-        });
+        }, 1L);
     }
 
     private void activate(Player player, String entered) {
@@ -311,7 +311,7 @@ public final class PortalService {
             return;
         }
         this.plugin.lastLocations().remember(player);
-        List<String> commands = portal.getStringList("commands");
+        List<String> commands = commandsOf(portal);
         Location destination = destinationOf(portal);
         if (destination == null && commands.isEmpty()) {
             this.plugin.messages().send(player, "portals.invalid-destination", Map.of("portal", entered));
@@ -319,25 +319,42 @@ public final class PortalService {
         }
         long cooldown = Math.max(0L, this.plugin.configs().mechanics().getLong("portal-settings.enter-cooldown-millis", 1500L));
         this.cooldownUntil.put(player.getUniqueId(), System.currentTimeMillis() + cooldown);
-        if (!commands.isEmpty()) {
-            ActionCommands.run(this.plugin, player, commands, Map.of("portal", entered));
-        }
-        Sounds.play(this.plugin, player, "portals-enter");
-        if (destination == null) {
-            this.plugin.messages().send(player, "portals.used", Map.of("portal", entered));
-            return;
-        }
-        int warmup = Math.max(0, portal.getInt("warmup-seconds", 0));
-        if (warmup > 0) {
+        int warmup = destination == null ? 0 : Math.max(0, portal.getInt("warmup-seconds", 0));
+        if (destination != null && warmup > 0) {
             this.plugin.messages().send(player, "portals.warmup", Map.of(
                     "portal", entered,
                     "seconds", String.valueOf(warmup)
             ));
-            Bukkit.getScheduler().runTaskLater(this.plugin, () -> teleport(player, destination), warmup * 20L);
-        } else {
+            Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
+                teleport(player, destination);
+                Bukkit.getScheduler().runTaskLater(this.plugin, () -> finish(player, entered, commands), 1L);
+            }, warmup * 20L);
+            return;
+        }
+        if (destination != null) {
             teleport(player, destination);
         }
+        Bukkit.getScheduler().runTaskLater(this.plugin, () -> finish(player, entered, commands), 1L);
+    }
+
+    private void finish(Player player, String entered, List<String> commands) {
+        if (!player.isOnline()) {
+            return;
+        }
+        if (!commands.isEmpty()) {
+            ActionCommands.run(this.plugin, player, commands, Map.of("portal", entered), true);
+        }
+        Sounds.play(this.plugin, player, "portals-enter");
         this.plugin.messages().send(player, "portals.used", Map.of("portal", entered));
+    }
+
+    private List<String> commandsOf(ConfigurationSection portal) {
+        List<String> listed = portal.getStringList("commands");
+        if (!listed.isEmpty()) {
+            return listed;
+        }
+        String single = portal.getString("commands", "");
+        return single == null || single.isBlank() ? List.of() : List.of(single);
     }
 
     private void teleport(Player player, Location destination) {
