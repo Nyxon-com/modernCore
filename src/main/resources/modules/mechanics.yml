@@ -39,6 +39,8 @@
 # /vholo command <nome> [player] warp pvp
 # /vholo command <nome> [message] <green>ok
 # /vholo command <nome> [console] say {player} ha cliccato {holo}
+# /vholo command <nome> [console] cp crates_boss {player} pk
+#   {player} e %player_name% = nome di chi clicca. PlaceholderAPI se presente.
 # /vholo line add <nome> <gradient:#A78BFA:#EC4899>Shop</gradient>
 # /vholo animation <nome> bob|spin|pulse|wave|none
 # /vholo particle <nome> enchant|flame|endrod|glow|cherry|heart|none

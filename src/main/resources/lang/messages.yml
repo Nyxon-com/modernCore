@@ -385,7 +385,7 @@ holos:
   unknown: "{prefix} <red>Hologram <white>{holo}</white> inesistente."
   list: "{prefix} <gray>Hologram ({count}): <white>{holos}</white>"
   list-empty: "{prefix} <gray>Nessun hologram. Usa <white>/vholo set</white> poi create."
-  command-usage: "{prefix} <gray>Uso: <white>/{label} command <nome> spawn</white>  oppure  <white>[message] <green>testo</green></white>  oppure  <white>[console] say ciao</white>"
+  command-usage: "{prefix} <gray>Uso: <white>/{label} command <nome> spawn</white>  oppure  <white>[console] cp crates_boss {player} pk</white>  oppure  <white>[message] <green>testo</green></white>"
   command-set: "{prefix} <green>Comando aggiunto all'hologram <white>{holo}</white>: <gray>{command}"
   commands-cleared: "{prefix} <yellow>Comandi dell'hologram <white>{holo}</white> azzerati."
   line-usage: "{prefix} <gray>Uso: <white>/{label} line add <nome> <testo MiniMessage></white>"

@@ -40,16 +40,7 @@ public final class ActionCommands {
             if (raw == null || raw.isBlank()) {
                 continue;
             }
-            String line = raw.replace("{player}", player.getName());
-            if (player.getWorld() != null) {
-                line = line.replace("{world}", player.getWorld().getName());
-            }
-            line = line.replace("{x}", String.valueOf(player.getLocation().getBlockX()))
-                    .replace("{y}", String.valueOf(player.getLocation().getBlockY()))
-                    .replace("{z}", String.valueOf(player.getLocation().getBlockZ()));
-            for (Map.Entry<String, String> entry : extra.entrySet()) {
-                line = line.replace("{" + entry.getKey() + "}", entry.getValue());
-            }
+            String line = fill(player, raw, extra);
             String lower = line.toLowerCase(Locale.ROOT);
             if (lower.equals("[close]") || lower.equals("close")) {
                 close = true;
@@ -83,6 +74,24 @@ public final class ActionCommands {
             player.closeInventory();
         }
         return close;
+    }
+
+    private static String fill(Player player, String raw, Map<String, String> extra) {
+        String line = raw
+                .replace("{player}", player.getName())
+                .replace("{player_name}", player.getName())
+                .replace("%player_name%", player.getName())
+                .replace("%player%", player.getName());
+        if (player.getWorld() != null) {
+            line = line.replace("{world}", player.getWorld().getName());
+        }
+        line = line.replace("{x}", String.valueOf(player.getLocation().getBlockX()))
+                .replace("{y}", String.valueOf(player.getLocation().getBlockY()))
+                .replace("{z}", String.valueOf(player.getLocation().getBlockZ()));
+        for (Map.Entry<String, String> entry : extra.entrySet()) {
+            line = line.replace("{" + entry.getKey() + "}", entry.getValue());
+        }
+        return Placeholders.apply(player, line);
     }
 
     private static void asPlayer(Player player, String command) {
