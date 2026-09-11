@@ -13,13 +13,19 @@ import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
+/**
+ * Eventi mechanics: morti, item a terra, long-jump, portali, holo-block.
+ */
 public final class MechanicsListener implements Listener {
 
     private final ValaryCorePlugin plugin;
@@ -27,19 +33,22 @@ public final class MechanicsListener implements Listener {
     private final GroundItemService groundItems;
     private final LongJumpService longJumps;
     private final PortalService portals;
+    private final HoloBlockService holos;
 
     public MechanicsListener(
             ValaryCorePlugin plugin,
             DeathService deaths,
             GroundItemService groundItems,
             LongJumpService longJumps,
-            PortalService portals
+            PortalService portals,
+            HoloBlockService holos
     ) {
         this.plugin = plugin;
         this.deaths = deaths;
         this.groundItems = groundItems;
         this.longJumps = longJumps;
         this.portals = portals;
+        this.holos = holos;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -102,16 +111,48 @@ public final class MechanicsListener implements Listener {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK) {
             return;
         }
-        if (!this.portals.isWand(event.getPlayer().getInventory().getItemInMainHand())) {
+        var hand = event.getPlayer().getInventory().getItemInMainHand();
+        if (this.portals.isWand(hand)) {
+            event.setCancelled(true);
+            this.portals.handleWand(
+                    event.getPlayer(),
+                    event.getClickedBlock(),
+                    event.getPlayer().isSneaking(),
+                    event.getAction() == Action.LEFT_CLICK_BLOCK
+            );
             return;
         }
-        event.setCancelled(true);
-        this.portals.handleWand(
-                event.getPlayer(),
-                event.getClickedBlock(),
-                event.getPlayer().isSneaking(),
-                event.getAction() == Action.LEFT_CLICK_BLOCK
-        );
+        if (this.holos.isWand(hand)) {
+            event.setCancelled(true);
+            this.holos.handleWand(event.getPlayer(), event.getClickedBlock());
+            return;
+        }
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && this.holos.clickBlock(event.getPlayer(), event.getClickedBlock())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onHoloEntity(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
+        if (this.holos.isWand(event.getPlayer().getInventory().getItemInMainHand())) {
+            return;
+        }
+        if (this.holos.clickEntity(event.getPlayer(), event.getRightClicked().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onChunkLoad(ChunkLoadEvent event) {
+        this.holos.onChunkLoad(event.getWorld(), event.getChunk().getX(), event.getChunk().getZ());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onChunkUnload(ChunkUnloadEvent event) {
+        this.holos.onChunkUnload(event.getWorld(), event.getChunk().getX(), event.getChunk().getZ());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -144,5 +185,6 @@ public final class MechanicsListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         this.longJumps.unload(event.getPlayer().getUniqueId());
         this.portals.unload(event.getPlayer().getUniqueId());
+        this.holos.unload(event.getPlayer().getUniqueId());
     }
 }

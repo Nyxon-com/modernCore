@@ -90,6 +90,7 @@ permissions:
       valary.feed.others: true
       valary.give: true
       valary.portal: true
+      valary.holo: true
       valary.pressureplayerjump: true
   valary.reload:
     description: Ricarica i file di configurazione
@@ -285,6 +286,9 @@ permissions:
     default: op
   valary.portal:
     description: Usa /portal
+    default: op
+  valary.holo:
+    description: Usa /holo
     default: op
   valary.pressureplayerjump:
     description: Usa /pressureplayerjump

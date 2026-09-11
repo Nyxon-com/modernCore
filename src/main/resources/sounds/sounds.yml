@@ -63,3 +63,8 @@ portals-enter:
   sound: minecraft:entity.enderman.teleport
   volume: 0.7
   pitch: 1.2
+
+holo-click:
+  sound: minecraft:block.amethyst_block.chime
+  volume: 0.8
+  pitch: 1.35

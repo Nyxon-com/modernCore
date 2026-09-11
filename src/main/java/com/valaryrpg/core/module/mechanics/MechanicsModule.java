@@ -5,6 +5,9 @@ import com.valaryrpg.core.module.Module;
 import com.valaryrpg.core.module.players.PlayerDataRepository;
 import org.bukkit.event.HandlerList;
 
+/**
+ * LimitY, morti, hologram a terra, long-jump, portali e holo-block.
+ */
 public final class MechanicsModule implements Module {
 
     private final ValaryCorePlugin plugin;
@@ -13,6 +16,7 @@ public final class MechanicsModule implements Module {
     private GroundItemService groundItems;
     private LongJumpService longJumps;
     private PortalService portals;
+    private HoloBlockService holos;
     private MechanicsListener listener;
 
     public MechanicsModule(ValaryCorePlugin plugin) {
@@ -32,11 +36,13 @@ public final class MechanicsModule implements Module {
         this.groundItems = new GroundItemService(this.plugin);
         this.longJumps = new LongJumpService(this.plugin);
         this.portals = new PortalService(this.plugin);
-        this.listener = new MechanicsListener(this.plugin, this.deaths, this.groundItems, this.longJumps, this.portals);
+        this.holos = new HoloBlockService(this.plugin);
+        this.listener = new MechanicsListener(this.plugin, this.deaths, this.groundItems, this.longJumps, this.portals, this.holos);
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
         this.limitY.start();
         this.groundItems.start();
         this.longJumps.start();
+        this.holos.start();
     }
 
     @Override
@@ -49,6 +55,9 @@ public final class MechanicsModule implements Module {
         }
         if (this.groundItems != null) {
             this.groundItems.clear();
+        }
+        if (this.holos != null) {
+            this.holos.stop();
         }
         if (this.listener != null) {
             HandlerList.unregisterAll(this.listener);
@@ -75,5 +84,9 @@ public final class MechanicsModule implements Module {
 
     public LongJumpService longJumps() {
         return this.longJumps;
+    }
+
+    public HoloBlockService holos() {
+        return this.holos;
     }
 }

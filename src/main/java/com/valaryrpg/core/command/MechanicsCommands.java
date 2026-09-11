@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Checkdeath, copycoord e long-jump; LimitY e portali stanno in classi dedicate.
+ * Checkdeath, copycoord e long-jump; LimitY, portali e holo-block stanno in classi dedicate.
  */
 final class MechanicsCommands {
 
@@ -33,6 +33,7 @@ final class MechanicsCommands {
         registrar.register(checkDeathCommand(), "Ultima posizione di morte", aliases("commands.checkdeath-aliases"));
         registrar.register(copyCoordCommand(), "Copia le coordinate", aliases("commands.copycoord-aliases"));
         new PortalCommands(this.plugin).register(registrar);
+        new HoloBlockCommands(this.plugin).register(registrar);
         registrar.register(pressureJumpCommand(), "Long jump su pressure plate", aliases("commands.pressureplayerjump-aliases"));
     }
 

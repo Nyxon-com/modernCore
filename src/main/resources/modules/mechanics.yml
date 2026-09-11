@@ -1,5 +1,5 @@
 # =============================================================================
-# Utility: LimitY, hologram item a terra, morti, long-jump, portali item.
+# Utility: LimitY, hologram item a terra, morti, long-jump, portali, holo-block.
 # =============================================================================
 #
 # LimitY: SOLO i mondi elencati sotto hanno un limite. Mondo assente = nessun LimitY.
@@ -29,6 +29,26 @@
 #   font vuoto = font Minecraft normale. minecraft:uniform = testo minuscolo.
 #   background ARGB: 0 = trasparente. 1073741824 = riquadro nero vanilla.
 #   {name} = nome item (lang vanilla o MiniMessage custom). {amount} {seconds} {line}
+#
+# Holo-block: hologram su UN blocco. Click destro (o click sull'hologram) esegue i comandi.
+# Shift+click = ignora (puoi piazzare / aprire chest). Wand: destro sul blocco da marcare.
+# /holo wand
+# /holo set                              marca il blocco mirato
+# /holo create <nome>
+# /holo command <nome> spawn             eseguito come il player (anche senza [player])
+# /holo command <nome> [player] warp pvp
+# /holo command <nome> [message] <green>ok
+# /holo command <nome> [console] say {player} ha cliccato {holo}
+# /holo line add <nome> <gradient:#A78BFA:#EC4899>Shop</gradient>
+# /holo animation <nome> bob|spin|pulse|wave|none
+# /holo particle <nome> enchant|flame|endrod|glow|cherry|heart|none
+# /holo clickparticle <nome> spark|burst|magic|crit|none
+# /holo icon <nome>                      item in mano (mano vuota = togli)
+# /holo glow <nome> on|off
+# /holo sound <nome> holo-click          chiave in sounds.yml
+# /holo permission <nome> [nodo]         vuoto = tutti
+# /holo scale <nome> 1.2
+# /holo offset <nome> 1.35
 # =============================================================================
 
 limity:
@@ -157,3 +177,135 @@ portals:
       amount: 1
     permission: ""
     warmup-seconds: 0
+
+holo-blocks:
+  enabled: true
+  max: 80
+  tick-ticks: 2
+  particle-every-ticks: 8
+  click-cooldown-millis: 400
+  view-range: 24
+  select-range: 8
+  hitbox-width: 1.05
+  hitbox-height: 1.8
+  default-offset-y: 1.35
+  default-scale: 1.0
+  default-icon-scale: 0.55
+  default-icon-offset-y: -0.45
+  default-animation: bob
+  default-particle: enchant
+  default-click-particle: spark
+  default-glow: false
+  default-sound: holo-click
+  default-lines:
+    - "<gradient:#A78BFA:#EC4899><bold>{name}</bold></gradient>"
+    - "<gray>Click per usare"
+  wand:
+    material: AMETHYST_SHARD
+    name: "<light_purple>Wand hologram"
+    lore:
+      - "<gray>Destro: seleziona il blocco"
+      - "<gray>Poi /holo create <nome>"
+    glow: true
+  animations:
+    bob:
+      speed: 0.08
+      height: 0.12
+    spin:
+      speed: 6.0
+    pulse:
+      speed: 0.12
+      min-scale: 0.92
+      max-scale: 1.08
+    wave:
+      speed: 0.08
+      width: 0.18
+      height: 0.10
+  particles:
+    enchant:
+      type: ENCHANT
+      count: 6
+      offset: 0.35
+      extra: 0.4
+    flame:
+      type: FLAME
+      count: 3
+      offset: 0.22
+      extra: 0.01
+    endrod:
+      type: END_ROD
+      count: 2
+      offset: 0.18
+      extra: 0.0
+    glow:
+      type: GLOW
+      count: 4
+      offset: 0.28
+      extra: 0.0
+    cherry:
+      type: CHERRY_LEAVES
+      count: 3
+      offset: 0.30
+      extra: 0.0
+    heart:
+      type: HEART
+      count: 1
+      offset: 0.20
+      extra: 0.0
+    portal:
+      type: PORTAL
+      count: 8
+      offset: 0.25
+      extra: 0.4
+    soul:
+      type: SOUL_FIRE_FLAME
+      count: 3
+      offset: 0.22
+      extra: 0.01
+  click-particles:
+    spark:
+      type: ELECTRIC_SPARK
+      count: 12
+      offset: 0.35
+      extra: 0.15
+    burst:
+      type: FIREWORK
+      count: 16
+      offset: 0.40
+      extra: 0.08
+    magic:
+      type: WITCH
+      count: 14
+      offset: 0.35
+      extra: 0.2
+    crit:
+      type: CRIT
+      count: 10
+      offset: 0.30
+      extra: 0.15
+  holos:
+    example:
+      enabled: false
+      world: world
+      x: 0
+      y: 64
+      z: 0
+      hologram:
+        offset-y: 1.35
+        scale: 1.0
+        billboard: CENTER
+        see-through: false
+        line-width: 200
+        background: 0
+        shadowed: true
+        lines:
+          - "<gradient:#A78BFA:#EC4899><bold>example</bold></gradient>"
+          - "<gray>Click per usare"
+      animation: bob
+      particle: enchant
+      click-particle: spark
+      glow: false
+      permission: ""
+      sound: holo-click
+      commands:
+        - "[message] <gray>Hologram example"

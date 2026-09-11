@@ -135,6 +135,10 @@ commands:
   portal: portal
   portal-aliases:
     - portals
+  holo: holo
+  holo-aliases:
+    - holos
+    - hologram
   pressureplayerjump: pressureplayerjump
   pressureplayerjump-aliases:
     - ppjump
@@ -201,6 +205,7 @@ permissions:
   feed-others: valary.feed.others
   give: valary.give
   portal: valary.portal
+  holo: valary.holo
   pressureplayerjump: valary.pressureplayerjump
   teleport-cooldown-bypass: valary.teleport.cooldown.bypass
 
