@@ -48,19 +48,16 @@ public final class PunishmentRepository {
         }
     }
 
+    /**
+     * BAN/MUTE: solo uuid o nome. IPBAN: anche IP, così un /ban locale non chiude 127.0.0.1 a tutti.
+     */
     public Optional<Punishment> active(PunishmentType type, UUID uuid, String name, String ip) {
-        String sql = "SELECT id, type, target_uuid, target_name, target_ip, staff, reason, created_at, expires_at, active, revoked_at, revoked_by, revoke_reason FROM "
-                + table() + " WHERE active = 1 AND type = ? AND ("
-                + "(target_uuid IS NOT NULL AND target_uuid = ?) OR lower(target_name) = lower(?) OR (target_ip <> '' AND target_ip = ?)"
-                + ") ORDER BY id DESC";
+        String sql = select() + " WHERE active = 1 AND type = ? AND " + matchSql(type) + " ORDER BY id DESC";
         List<Long> expired = new ArrayList<>();
         Optional<Punishment> found = Optional.empty();
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, type.name());
-            statement.setString(2, uuid == null ? "" : uuid.toString());
-            statement.setString(3, name == null ? "" : name);
-            statement.setString(4, ip == null ? "" : ip);
+            bindMatch(statement, 1, type, uuid, name, ip);
             try (ResultSet result = statement.executeQuery()) {
                 while (result.next()) {
                     Punishment punishment = read(result);
@@ -159,14 +156,10 @@ public final class PunishmentRepository {
     }
 
     public int deactivate(PunishmentType type, UUID uuid, String name, String ip) {
-        String sql = "UPDATE " + table() + " SET active = 0 WHERE active = 1 AND type = ? AND ("
-                + "(target_uuid IS NOT NULL AND target_uuid = ?) OR lower(target_name) = lower(?) OR (target_ip <> '' AND target_ip = ?))";
+        String sql = "UPDATE " + table() + " SET active = 0 WHERE active = 1 AND type = ? AND " + matchSql(type);
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, type.name());
-            statement.setString(2, uuid == null ? "" : uuid.toString());
-            statement.setString(3, name == null ? "" : name);
-            statement.setString(4, ip == null ? "" : ip);
+            bindMatch(statement, 1, type, uuid, name, ip);
             return statement.executeUpdate();
         } catch (SQLException exception) {
             throw new StorageException("Revoca punizione fallita.", exception);
@@ -175,17 +168,13 @@ public final class PunishmentRepository {
 
     public int pardon(PunishmentType type, UUID uuid, String name, String ip, String staff, String reason) {
         String sql = "UPDATE " + table() + " SET active = 0, revoked_at = ?, revoked_by = ?, revoke_reason = ? "
-                + "WHERE active = 1 AND type = ? AND ("
-                + "(target_uuid IS NOT NULL AND target_uuid = ?) OR lower(target_name) = lower(?) OR (target_ip <> '' AND target_ip = ?))";
+                + "WHERE active = 1 AND type = ? AND " + matchSql(type);
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, System.currentTimeMillis());
             statement.setString(2, staff);
             statement.setString(3, reason);
-            statement.setString(4, type.name());
-            statement.setString(5, uuid == null ? "" : uuid.toString());
-            statement.setString(6, name == null ? "" : name);
-            statement.setString(7, ip == null ? "" : ip);
+            bindMatch(statement, 4, type, uuid, name, ip);
             return statement.executeUpdate();
         } catch (SQLException exception) {
             throw new StorageException("Pardon punizione fallito.", exception);
@@ -253,6 +242,33 @@ public final class PunishmentRepository {
 
     private static String empty(String value) {
         return value == null ? "" : value;
+    }
+
+    private static boolean matchIp(PunishmentType type) {
+        return type == PunishmentType.IPBAN;
+    }
+
+    private static String matchSql(PunishmentType type) {
+        if (matchIp(type)) {
+            return "((target_uuid IS NOT NULL AND target_uuid = ?) OR lower(target_name) = lower(?) OR (target_ip <> '' AND target_ip = ?))";
+        }
+        return "((target_uuid IS NOT NULL AND target_uuid = ?) OR lower(target_name) = lower(?))";
+    }
+
+    private static void bindMatch(
+            PreparedStatement statement,
+            int typeIndex,
+            PunishmentType type,
+            UUID uuid,
+            String name,
+            String ip
+    ) throws SQLException {
+        statement.setString(typeIndex, type.name());
+        statement.setString(typeIndex + 1, uuid == null ? "" : uuid.toString());
+        statement.setString(typeIndex + 2, name == null ? "" : name);
+        if (matchIp(type)) {
+            statement.setString(typeIndex + 3, ip == null ? "" : ip);
+        }
     }
 
     private String select() {
