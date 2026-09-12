@@ -542,21 +542,12 @@ public final class HoloBlockService {
     }
 
     private void spawnLoaded() {
-        for (World world : Bukkit.getWorlds()) {
-            for (String id : names()) {
-                ConfigurationSection holo = yaml().getConfigurationSection("holo-blocks.holos." + id);
-                if (holo == null || !holo.getBoolean("enabled", true)) {
-                    continue;
-                }
-                if (!world.getName().equalsIgnoreCase(holo.getString("world", ""))) {
-                    continue;
-                }
-                int x = holo.getInt("x");
-                int z = holo.getInt("z");
-                if (world.isChunkLoaded(x >> 4, z >> 4)) {
-                    spawn(id, holo);
-                }
+        for (String id : names()) {
+            ConfigurationSection holo = yaml().getConfigurationSection("holo-blocks.holos." + id);
+            if (holo == null || !holo.getBoolean("enabled", true)) {
+                continue;
             }
+            spawn(id, holo);
         }
     }
 
@@ -572,19 +563,18 @@ public final class HoloBlockService {
         if (!enabled()) {
             return;
         }
-        Spawned existing = this.spawned.get(id);
-        if (existing != null && lookup(existing.textId) != null) {
-            return;
-        }
-        despawn(id);
         World world = Bukkit.getWorld(holo.getString("world", ""));
         if (world == null) {
             return;
         }
-        Location block = new Location(world, holo.getInt("x"), holo.getInt("y"), holo.getInt("z"));
-        if (!world.isChunkLoaded(block.getBlockX() >> 4, block.getBlockZ() >> 4)) {
+        Location block = new Location(world, blockCoord(holo, "x"), blockCoord(holo, "y"), blockCoord(holo, "z"));
+        Spawned existing = this.spawned.get(id);
+        if (existing != null && lookup(existing.textId) != null && sameBlock(existing, block)) {
             return;
         }
+        despawn(id);
+        world.getChunkAt(block.getBlockX() >> 4, block.getBlockZ() >> 4);
+        purgeNearby(block, id);
         ConfigurationSection hologram = holo.getConfigurationSection("hologram");
         float offsetY = (float) (hologram == null ? 1.35D : hologram.getDouble("offset-y", 1.35D));
         float scale = (float) (hologram == null ? 1.0D : hologram.getDouble("scale", 1.0D));
@@ -656,8 +646,38 @@ public final class HoloBlockService {
             removeEntity(spawned.textId);
             removeEntity(spawned.iconId);
             removeEntity(spawned.hitId);
+            purgeNearby(spawned.block, id);
         }
         purgeTagged(id);
+    }
+
+    private void purgeNearby(Location block, String id) {
+        if (block == null || block.getWorld() == null) {
+            return;
+        }
+        World world = block.getWorld();
+        Location anchor = block.clone().add(0.5, 0, 0.5);
+        List<Entity> found = new ArrayList<>();
+        found.addAll(world.getNearbyEntities(anchor, 1.75D, 3.5D, 1.75D));
+        int chunkX = block.getBlockX() >> 4;
+        int chunkZ = block.getBlockZ() >> 4;
+        if (world.isChunkLoaded(chunkX, chunkZ)) {
+            found.addAll(List.of(world.getChunkAt(chunkX, chunkZ).getEntities()));
+        }
+        NamespacedKey key = idKey();
+        for (Entity entity : found) {
+            if (!(entity instanceof TextDisplay) && !(entity instanceof ItemDisplay) && !(entity instanceof Interaction)) {
+                continue;
+            }
+            String tagged = entity.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+            if (tagged == null) {
+                continue;
+            }
+            if (id == null || tagged.equalsIgnoreCase(id)) {
+                entity.setPersistent(false);
+                entity.remove();
+            }
+        }
     }
 
     private void removeHoloFromYaml(String id) {
@@ -686,12 +706,17 @@ public final class HoloBlockService {
     private void purgeTagged(String id) {
         NamespacedKey key = idKey();
         for (World world : Bukkit.getWorlds()) {
-            for (Entity entity : List.copyOf(world.getEntities())) {
+            List<Entity> entities = new ArrayList<>();
+            entities.addAll(world.getEntitiesByClass(TextDisplay.class));
+            entities.addAll(world.getEntitiesByClass(ItemDisplay.class));
+            entities.addAll(world.getEntitiesByClass(Interaction.class));
+            for (Entity entity : entities) {
                 String tagged = entity.getPersistentDataContainer().get(key, PersistentDataType.STRING);
                 if (tagged == null) {
                     continue;
                 }
                 if (id == null || tagged.equalsIgnoreCase(id)) {
+                    entity.setPersistent(false);
                     entity.remove();
                 }
             }
@@ -887,6 +912,25 @@ public final class HoloBlockService {
 
     private NamespacedKey idKey() {
         return new NamespacedKey(this.plugin, "holo_block");
+    }
+
+    private static boolean sameBlock(Spawned existing, Location block) {
+        return existing.block.getWorld() != null
+                && existing.block.getWorld().equals(block.getWorld())
+                && existing.block.getBlockX() == block.getBlockX()
+                && existing.block.getBlockY() == block.getBlockY()
+                && existing.block.getBlockZ() == block.getBlockZ();
+    }
+
+    private static int blockCoord(ConfigurationSection section, String key) {
+        if (section.contains(key)) {
+            return (int) Math.floor(section.getDouble(key));
+        }
+        ConfigurationSection location = section.getConfigurationSection("location");
+        if (location != null && location.contains(key)) {
+            return (int) Math.floor(location.getDouble(key));
+        }
+        return 0;
     }
 
     private static String key(String world, int x, int y, int z) {

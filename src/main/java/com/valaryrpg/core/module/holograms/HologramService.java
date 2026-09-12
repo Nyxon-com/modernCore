@@ -547,14 +547,18 @@ public final class HologramService {
     }
 
     private void spawnShared(String id, FileConfiguration yaml) {
-        if (entity(this.shared.get(id), TextDisplay.class) != null) {
+        Location at = locationOf(yaml);
+        TextDisplay current = entity(this.shared.get(id), TextDisplay.class);
+        if (current != null && at != null && current.getWorld() != null && at.getWorld() != null
+                && current.getWorld().equals(at.getWorld())
+                && current.getLocation().distanceSquared(at) < 0.01D) {
             return;
         }
         despawn(id);
-        Location at = locationOf(yaml);
-        if (at == null || at.getWorld() == null || !at.getWorld().isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) {
+        if (at == null || at.getWorld() == null) {
             return;
         }
+        at.getWorld().getChunkAt(at.getBlockX() >> 4, at.getBlockZ() >> 4);
         purgeAt(id, at);
         TextDisplay display = spawnDisplay(id, at, yaml, null, yaml.getStringList("text"));
         this.shared.put(id, display.getUniqueId());
@@ -637,12 +641,20 @@ public final class HologramService {
         }
         Set<UUID> keep = owned(id);
         NamespacedKey key = idKey();
-        for (Entity entity : List.copyOf(at.getWorld().getNearbyEntities(at, 0.75D, 0.75D, 0.75D))) {
+        List<Entity> found = new ArrayList<>();
+        found.addAll(at.getWorld().getNearbyEntities(at, 1.25D, 1.25D, 1.25D));
+        int chunkX = at.getBlockX() >> 4;
+        int chunkZ = at.getBlockZ() >> 4;
+        if (at.getWorld().isChunkLoaded(chunkX, chunkZ)) {
+            found.addAll(List.of(at.getWorld().getChunkAt(chunkX, chunkZ).getEntities()));
+        }
+        for (Entity entity : found) {
             if (!(entity instanceof TextDisplay) || keep.contains(entity.getUniqueId())) {
                 continue;
             }
             String tagged = entity.getPersistentDataContainer().get(key, PersistentDataType.STRING);
             if (id.equalsIgnoreCase(tagged) || (tagged == null && !entity.isPersistent())) {
+                entity.setPersistent(false);
                 entity.remove();
             }
         }
