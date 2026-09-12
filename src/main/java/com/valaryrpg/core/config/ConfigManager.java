@@ -5,17 +5,20 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Carica i YAML: config/storage in root, testi in lang/, suoni in sounds/, moduli in modules/.
  */
 public final class ConfigManager {
 
+    private static final int CONFIG_VERSION = 1;
     private final ValaryCorePlugin plugin;
     private YamlFile root;
     private YamlFile messages;
@@ -36,27 +39,71 @@ public final class ConfigManager {
         this.plugin = plugin;
     }
 
-    public void loadAll() {
-        this.root = load("config.yml");
-        this.storage = load("storage.yml");
-        this.messages = load("lang/messages.yml");
-        this.vanilla = load("lang/vanilla.yml");
-        this.sounds = load("sounds/sounds.yml");
-        this.worlds = load("modules/worlds.yml");
-        this.homes = load("modules/homes.yml");
-        this.warps = load("modules/warps.yml");
-        this.players = load("modules/players.yml");
-        this.moderation = load("modules/moderation.yml");
-        this.mechanics = load("modules/mechanics.yml");
-        this.holograms = load("modules/holograms.yml");
-        this.kits = load("modules/kits.yml");
-        this.prices = load("modules/prices.yml");
-        migrateLegacySounds();
-        migrateGroundItemHologram();
-        migrateDisconnectScreens();
-        migrateHoloCommand();
-        migrateTriggerblockCommand();
+    public void loadInitial() {
+        activate(loadSnapshot(false));
+        if (this.root.config().getInt("plugin.config-version", 0) < CONFIG_VERSION) {
+            migrateLegacySounds();
+            migrateGroundItemHologram();
+            migrateDisconnectScreens();
+            migrateHoloCommand();
+            migrateTriggerblockCommand();
+            this.root.config().set("plugin.config-version", CONFIG_VERSION);
+            this.root.save();
+        }
         this.plugin.getLogger().info("Configurazioni caricate.");
+    }
+
+    /**
+     * Prepara tutti i YAML in memoria senza modificare i file o la snapshot attiva.
+     */
+    public ReloadCandidate prepareReload() throws Exception {
+        Snapshot snapshot = loadSnapshot(true);
+        int hologramFiles = validateHologramFiles(snapshot.holograms().config());
+        return new ReloadCandidate(snapshot, 14, hologramFiles);
+    }
+
+    public Snapshot current() {
+        return new Snapshot(
+                this.root, this.storage, this.messages, this.vanilla, this.sounds,
+                this.worlds, this.homes, this.warps, this.players, this.moderation,
+                this.mechanics, this.holograms, this.kits, this.prices
+        );
+    }
+
+    public void activate(Snapshot snapshot) {
+        this.root = snapshot.root();
+        this.storage = snapshot.storage();
+        this.messages = snapshot.messages();
+        this.vanilla = snapshot.vanilla();
+        this.sounds = snapshot.sounds();
+        this.worlds = snapshot.worlds();
+        this.homes = snapshot.homes();
+        this.warps = snapshot.warps();
+        this.players = snapshot.players();
+        this.moderation = snapshot.moderation();
+        this.mechanics = snapshot.mechanics();
+        this.holograms = snapshot.holograms();
+        this.kits = snapshot.kits();
+        this.prices = snapshot.prices();
+    }
+
+    public List<String> loadedPaths(Snapshot snapshot) {
+        return List.of(
+                snapshot.root().file().getAbsolutePath(),
+                snapshot.storage().file().getAbsolutePath(),
+                snapshot.messages().file().getAbsolutePath(),
+                snapshot.vanilla().file().getAbsolutePath(),
+                snapshot.sounds().file().getAbsolutePath(),
+                snapshot.worlds().file().getAbsolutePath(),
+                snapshot.homes().file().getAbsolutePath(),
+                snapshot.warps().file().getAbsolutePath(),
+                snapshot.players().file().getAbsolutePath(),
+                snapshot.moderation().file().getAbsolutePath(),
+                snapshot.mechanics().file().getAbsolutePath(),
+                snapshot.holograms().file().getAbsolutePath(),
+                snapshot.kits().file().getAbsolutePath(),
+                snapshot.prices().file().getAbsolutePath()
+        );
     }
 
     public FileConfiguration root() {
@@ -401,9 +448,82 @@ public final class ConfigManager {
         }
     }
 
-    private YamlFile load(String fileName) {
+    private Snapshot loadSnapshot(boolean strict) throws RuntimeException {
+        try {
+            return new Snapshot(
+                    load("config.yml", strict),
+                    load("storage.yml", strict),
+                    load("lang/messages.yml", strict),
+                    load("lang/vanilla.yml", strict),
+                    load("sounds/sounds.yml", strict),
+                    load("modules/worlds.yml", strict),
+                    load("modules/homes.yml", strict),
+                    load("modules/warps.yml", strict),
+                    load("modules/players.yml", strict),
+                    load("modules/moderation.yml", strict),
+                    load("modules/mechanics.yml", strict),
+                    load("modules/holograms.yml", strict),
+                    load("modules/kits.yml", strict),
+                    load("modules/prices.yml", strict)
+            );
+        } catch (Exception exception) {
+            throw new IllegalStateException("YAML non valido: " + exception.getMessage(), exception);
+        }
+    }
+
+    private YamlFile load(String fileName, boolean strict) throws Exception {
         YamlFile yaml = new YamlFile(this.plugin, fileName);
-        yaml.load();
+        if (strict) {
+            yaml.loadStrict();
+        } else {
+            yaml.load();
+        }
         return yaml;
+    }
+
+    private int validateHologramFiles(FileConfiguration settings) throws Exception {
+        File folder = new File(this.plugin.getDataFolder(), settings.getString("folder", "holo"));
+        if (!folder.exists()) {
+            return 0;
+        }
+        if (!folder.isDirectory()) {
+            throw new IllegalStateException("La cartella hologram non è una directory: " + folder.getAbsolutePath());
+        }
+        File[] files = folder.listFiles((dir, name) ->
+                name.toLowerCase(Locale.ROOT).endsWith(".yml")
+                        && !name.equalsIgnoreCase("holograms.yml"));
+        if (files == null) {
+            throw new IllegalStateException("Impossibile leggere la cartella hologram: " + folder.getAbsolutePath());
+        }
+        for (File file : files) {
+            YamlConfiguration yaml = new YamlConfiguration();
+            try {
+                yaml.load(file);
+            } catch (Exception exception) {
+                throw new IllegalStateException("Hologram YAML non valido: " + file.getAbsolutePath(), exception);
+            }
+        }
+        return files.length;
+    }
+
+    public record ReloadCandidate(Snapshot snapshot, int managedFiles, int hologramFiles) {
+    }
+
+    public record Snapshot(
+            YamlFile root,
+            YamlFile storage,
+            YamlFile messages,
+            YamlFile vanilla,
+            YamlFile sounds,
+            YamlFile worlds,
+            YamlFile homes,
+            YamlFile warps,
+            YamlFile players,
+            YamlFile moderation,
+            YamlFile mechanics,
+            YamlFile holograms,
+            YamlFile kits,
+            YamlFile prices
+    ) {
     }
 }

@@ -48,6 +48,7 @@ public final class HoloBlockService {
     private final Map<UUID, Location> selected = new ConcurrentHashMap<>();
     private final Map<UUID, Long> clickUntil = new ConcurrentHashMap<>();
     private final Map<String, Spawned> spawned = new ConcurrentHashMap<>();
+    private final Set<String> spawning = ConcurrentHashMap.newKeySet();
     private BukkitTask task;
     private int ticks;
 
@@ -560,18 +561,22 @@ public final class HoloBlockService {
     }
 
     private void spawn(String id, ConfigurationSection holo) {
-        if (!enabled()) {
+        if (!enabled() || !this.spawning.add(id)) {
             return;
         }
+        try {
+            spawnNow(id, holo);
+        } finally {
+            this.spawning.remove(id);
+        }
+    }
+
+    private void spawnNow(String id, ConfigurationSection holo) {
         World world = Bukkit.getWorld(holo.getString("world", ""));
         if (world == null) {
             return;
         }
         Location block = new Location(world, blockCoord(holo, "x"), blockCoord(holo, "y"), blockCoord(holo, "z"));
-        Spawned existing = this.spawned.get(id);
-        if (existing != null && lookup(existing.textId) != null && sameBlock(existing, block)) {
-            return;
-        }
         despawn(id);
         world.getChunkAt(block.getBlockX() >> 4, block.getBlockZ() >> 4);
         purgeNearby(block, id);
@@ -912,14 +917,6 @@ public final class HoloBlockService {
 
     private NamespacedKey idKey() {
         return new NamespacedKey(this.plugin, "holo_block");
-    }
-
-    private static boolean sameBlock(Spawned existing, Location block) {
-        return existing.block.getWorld() != null
-                && existing.block.getWorld().equals(block.getWorld())
-                && existing.block.getBlockX() == block.getBlockX()
-                && existing.block.getBlockY() == block.getBlockY()
-                && existing.block.getBlockZ() == block.getBlockZ();
     }
 
     private static int blockCoord(ConfigurationSection section, String key) {

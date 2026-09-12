@@ -17,6 +17,8 @@ Repository: https://github.com/Nyxon-com/ValaryRPGcore
 
 Al primo avvio i file vengono creati. Se un YAML è corrotto viene rinominato `*.broken.<timestamp>.yml` e rigenerato. Chiavi nuove si aggiungono da sole senza toccare i tuoi valori.
 
+Il reload legge e valida prima tutti i YAML: non esegue migrazioni né riscrive i file. Se anche un solo YAML è invalido, mantiene la configurazione precedente e mostra il path errato in console. Coordinate, testo e stile di hologram/triggerblock vengono respawnati dai nuovi valori. Nomi/alias dei comandi e connessione `storage.yml` richiedono ancora il riavvio.
+
 Disattiva un modulo in `config.yml` → `modules.<id>: false`.
 
 ---

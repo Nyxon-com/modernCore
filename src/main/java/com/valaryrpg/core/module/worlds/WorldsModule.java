@@ -61,8 +61,15 @@ public final class WorldsModule implements Module {
 
     @Override
     public void reload() {
-        disable();
-        enable();
+        this.weather.stop();
+        this.time.stop();
+        for (org.bukkit.World world : Bukkit.getWorlds()) {
+            this.catalog.apply(world);
+        }
+        this.weather.applyCatalogAll();
+        this.weather.applyAll();
+        this.weather.start();
+        this.time.start();
     }
 
     public SpawnService spawns() {

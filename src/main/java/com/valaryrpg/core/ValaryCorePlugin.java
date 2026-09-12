@@ -39,7 +39,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
     @Override
     public void onLoad() {
         this.configs = new ConfigManager(this);
-        this.configs.loadAll();
+        this.configs.loadInitial();
         this.messages = new MessageService(this);
         this.vanillaTranslator = new VanillaTranslator(this);
     }
@@ -101,21 +101,129 @@ public final class ValaryCorePlugin extends JavaPlugin {
     /**
      * Ricarica YAML e moduli. Lo storage non viene riconnesso (richiede restart).
      */
-    public boolean reloadAll() {
+    public ReloadResult reloadAll() {
+        ConfigManager.Snapshot previous = this.configs.current();
+        java.util.Set<String> previousModules = this.modules == null
+                ? java.util.Set.of()
+                : this.modules.activeIds();
+        ConfigManager.ReloadCandidate candidate;
         try {
-            this.configs.loadAll();
-            this.messages.reload();
+            candidate = this.configs.prepareReload();
+        } catch (Exception exception) {
+            getLogger().severe("Reload rifiutato, configurazione attiva invariata: " + exception.getMessage());
+            return ReloadResult.failed(exception.getMessage());
+        }
+
+        boolean storageRestart = changed(previous.storage().config(), candidate.snapshot().storage().config());
+        boolean commandsRestart = changedSection(
+                previous.root().config(),
+                candidate.snapshot().root().config(),
+                "commands"
+        );
+        try {
+            this.configs.activate(candidate.snapshot());
             if (this.vanillaTranslator != null) {
                 this.vanillaTranslator.sync();
             }
+            int moduleCount = 0;
             if (this.modules != null) {
-                this.modules.reloadAll();
+                moduleCount = this.modules.reloadAll();
             }
-            return true;
+            int triggerCount = activeCount("mechanics")
+                    ? ((MechanicsModule) this.modules.get("mechanics")).holos().names().size()
+                    : 0;
+            int hologramCount = activeCount("holograms")
+                    ? ((HologramsModule) this.modules.get("holograms")).holograms().names().size()
+                    : 0;
+            for (String path : this.configs.loadedPaths(candidate.snapshot())) {
+                getLogger().info("Reload YAML: " + path);
+            }
+            java.io.File holoFolder = new java.io.File(
+                    getDataFolder(),
+                    candidate.snapshot().holograms().config().getString("folder", "holo")
+            );
+            getLogger().info("Reload cartella hologram: " + holoFolder.getAbsolutePath());
+            getLogger().info("Reload completato: " + candidate.managedFiles() + " YAML, "
+                    + hologramCount + " hologram, " + triggerCount + " triggerblock, "
+                    + moduleCount + " moduli.");
+            if (storageRestart) {
+                getLogger().warning("storage.yml è cambiato: la connessione DB verrà aggiornata al riavvio.");
+            }
+            if (commandsRestart) {
+                getLogger().warning("Nomi/alias comandi cambiati: Paper li aggiornerà al riavvio.");
+            }
+            return ReloadResult.ok(
+                    candidate.managedFiles(),
+                    hologramCount,
+                    triggerCount,
+                    moduleCount,
+                    storageRestart,
+                    commandsRestart
+            );
         } catch (Exception exception) {
-            getLogger().severe("Reload fallito: " + exception.getMessage());
+            this.configs.activate(previous);
+            try {
+                if (this.modules != null) {
+                    this.modules.restore(previousModules);
+                }
+                if (this.vanillaTranslator != null) {
+                    this.vanillaTranslator.sync();
+                }
+            } catch (Exception rollback) {
+                exception.addSuppressed(rollback);
+            }
+            getLogger().severe("Reload fallito, ripristinata la configurazione precedente: " + exception.getMessage());
             exception.printStackTrace();
-            return false;
+            return ReloadResult.failed(exception.getMessage());
+        }
+    }
+
+    private static boolean changed(
+            org.bukkit.configuration.file.FileConfiguration before,
+            org.bukkit.configuration.file.FileConfiguration after
+    ) {
+        return !before.saveToString().equals(after.saveToString());
+    }
+
+    private boolean activeCount(String id) {
+        return this.modules != null && this.modules.activeIds().contains(id);
+    }
+
+    private static boolean changedSection(
+            org.bukkit.configuration.file.FileConfiguration before,
+            org.bukkit.configuration.file.FileConfiguration after,
+            String path
+    ) {
+        org.bukkit.configuration.ConfigurationSection oldSection = before.getConfigurationSection(path);
+        org.bukkit.configuration.ConfigurationSection newSection = after.getConfigurationSection(path);
+        java.util.Map<String, Object> oldValue = oldSection == null ? java.util.Map.of() : oldSection.getValues(true);
+        java.util.Map<String, Object> newValue = newSection == null ? java.util.Map.of() : newSection.getValues(true);
+        return !oldValue.equals(newValue);
+    }
+
+    public record ReloadResult(
+            boolean success,
+            int files,
+            int holograms,
+            int triggers,
+            int modules,
+            boolean storageRestart,
+            boolean commandsRestart,
+            String error
+    ) {
+        private static ReloadResult ok(
+                int files,
+                int holograms,
+                int triggers,
+                int modules,
+                boolean storageRestart,
+                boolean commandsRestart
+        ) {
+            return new ReloadResult(true, files, holograms, triggers, modules, storageRestart, commandsRestart, "");
+        }
+
+        private static ReloadResult failed(String error) {
+            return new ReloadResult(false, 0, 0, 0, 0, false, false, error == null ? "errore sconosciuto" : error);
         }
     }
 

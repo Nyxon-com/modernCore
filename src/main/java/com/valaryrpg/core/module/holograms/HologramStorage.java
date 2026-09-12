@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -27,18 +28,25 @@ final class HologramStorage {
         return new File(this.plugin.getDataFolder(), settings().getString("folder", "holo"));
     }
 
+    void initialize() {
+        File folder = folder();
+        if (!folder.exists() && !folder.mkdirs()) {
+            throw new IllegalStateException("Impossibile creare la cartella hologram: " + folder.getAbsolutePath());
+        }
+        copyExample(folder);
+    }
+
     Map<String, YamlConfiguration> loadAll() {
         File folder = folder();
         if (!folder.exists() && !folder.mkdirs()) {
-            this.plugin.getLogger().warning("Impossibile creare la cartella hologram: " + folder.getAbsolutePath());
+            throw new IllegalStateException("Impossibile creare la cartella hologram: " + folder.getAbsolutePath());
         }
-        importFancy(new File(folder, "holograms.yml"));
-        copyExample(folder);
         Map<String, YamlConfiguration> loaded = new LinkedHashMap<>();
         File[] files = folder.listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".yml"));
         if (files == null) {
-            return loaded;
+            throw new IllegalStateException("Impossibile leggere la cartella hologram: " + folder.getAbsolutePath());
         }
+        Arrays.sort(files, java.util.Comparator.comparing(File::getName));
         for (File file : files) {
             String id = idOf(file.getName());
             if (id.isBlank() || id.equals("holograms")) {
@@ -49,7 +57,7 @@ final class HologramStorage {
                 yaml.load(file);
                 loaded.put(id, yaml);
             } catch (Exception exception) {
-                this.plugin.getLogger().log(Level.WARNING, "Hologram illeggibile: " + file.getName(), exception);
+                throw new IllegalStateException("Hologram YAML non valido: " + file.getAbsolutePath(), exception);
             }
         }
         return loaded;

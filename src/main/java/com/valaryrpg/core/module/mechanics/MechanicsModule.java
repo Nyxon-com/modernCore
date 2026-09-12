@@ -18,6 +18,7 @@ public final class MechanicsModule implements Module {
     private PortalService portals;
     private HoloBlockService holos;
     private MechanicsListener listener;
+    private boolean initialized;
 
     public MechanicsModule(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -39,7 +40,12 @@ public final class MechanicsModule implements Module {
         this.holos = new HoloBlockService(this.plugin);
         this.listener = new MechanicsListener(this.plugin, this.deaths, this.groundItems, this.longJumps, this.portals, this.holos);
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
-        this.limitY.start();
+        if (this.initialized) {
+            this.limitY.start();
+        } else {
+            this.limitY.initialize();
+            this.initialized = true;
+        }
         this.groundItems.start();
         this.longJumps.start();
         this.holos.start();

@@ -28,6 +28,9 @@ dependencies {
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.xerial:sqlite-jdbc:3.47.2.0")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.3")
+
+    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }
 
 tasks {
@@ -65,5 +68,9 @@ tasks {
 
     assemble {
         dependsOn(shadowJar)
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }

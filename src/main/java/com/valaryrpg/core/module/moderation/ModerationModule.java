@@ -47,8 +47,14 @@ public final class ModerationModule implements Module {
 
     @Override
     public void reload() {
-        disable();
-        enable();
+        if (this.holds != null) {
+            this.holds.startTimer();
+        }
+        for (org.bukkit.entity.Player player : this.plugin.getServer().getOnlinePlayers()) {
+            if (this.vanish != null) {
+                this.vanish.restore(player);
+            }
+        }
     }
 
     public ModerationService moderation() {

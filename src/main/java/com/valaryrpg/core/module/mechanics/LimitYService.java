@@ -38,12 +38,16 @@ public final class LimitYService {
         this.lastNotify.clear();
         this.lastAction.clear();
         this.lastRelocate.clear();
-        clearShippedExampleWorlds();
         if (!this.plugin.configs().mechanics().getBoolean("limity.enabled", true)) {
             return;
         }
         int interval = Math.max(1, this.plugin.configs().mechanics().getInt("limity.check-interval-ticks", 10));
         this.task = Bukkit.getScheduler().runTaskTimer(this.plugin, this::tick, interval, interval);
+    }
+
+    public void initialize() {
+        clearShippedExampleWorlds();
+        start();
     }
 
     public void stop() {

@@ -31,16 +31,13 @@ public final class BanHoldService {
     }
 
     public void startTimer() {
-        stopTimer();
+        cancelTimer();
         int ticks = Math.max(20, this.plugin.configs().moderation().getInt("screen.tick-ticks", 20));
         this.task = Bukkit.getScheduler().runTaskTimer(this.plugin, this::tick, ticks, ticks);
     }
 
     public void stopTimer() {
-        if (this.task != null) {
-            this.task.cancel();
-            this.task = null;
-        }
+        cancelTimer();
         for (UUID uuid : java.util.List.copyOf(this.sessions.keySet())) {
             Session session = this.sessions.remove(uuid);
             Player player = Bukkit.getPlayer(uuid);
@@ -49,6 +46,13 @@ public final class BanHoldService {
             }
         }
         this.incoming.clear();
+    }
+
+    private void cancelTimer() {
+        if (this.task != null) {
+            this.task.cancel();
+            this.task = null;
+        }
     }
 
     public boolean liveEnabled() {

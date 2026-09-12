@@ -68,14 +68,22 @@ public final class CommandService {
                         .requires(stack -> Perms.has(this.plugin, stack.getSender(), "reload"))
                         .executes(ctx -> {
                             CommandSender sender = ctx.getSource().getSender();
-                            boolean ok = this.plugin.reloadAll();
-                            if (ok) {
-                                this.plugin.messages().send(sender, "reload.success");
+                            ValaryCorePlugin.ReloadResult result = this.plugin.reloadAll();
+                            if (result.success()) {
+                                this.plugin.messages().send(sender, "reload.success", Map.of(
+                                        "files", String.valueOf(result.files()),
+                                        "holograms", String.valueOf(result.holograms()),
+                                        "triggers", String.valueOf(result.triggers()),
+                                        "modules", String.valueOf(result.modules())
+                                ));
                                 if (sender instanceof Player player) {
                                     Sounds.play(this.plugin, player, "reload-success");
                                 }
+                                if (result.storageRestart() || result.commandsRestart()) {
+                                    this.plugin.messages().send(sender, "reload.restart-required");
+                                }
                             } else {
-                                this.plugin.messages().send(sender, "reload.failed", Map.of("error", "vedi console"));
+                                this.plugin.messages().send(sender, "reload.failed", Map.of("error", result.error()));
                             }
                             return Command.SINGLE_SUCCESS;
                         }))

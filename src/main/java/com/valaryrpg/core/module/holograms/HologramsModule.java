@@ -12,6 +12,7 @@ public final class HologramsModule implements Module {
     private final ValaryCorePlugin plugin;
     private HologramService holograms;
     private HologramListener listener;
+    private boolean initialized;
 
     public HologramsModule(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -27,7 +28,12 @@ public final class HologramsModule implements Module {
         this.holograms = new HologramService(this.plugin);
         this.listener = new HologramListener(this.holograms);
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
-        this.holograms.start();
+        if (this.initialized) {
+            this.holograms.start();
+        } else {
+            this.holograms.initialize();
+            this.initialized = true;
+        }
     }
 
     @Override

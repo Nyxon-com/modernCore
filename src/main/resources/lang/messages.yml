@@ -24,8 +24,9 @@ duration:
   days: "{days}d {hours}h {minutes}m {seconds}s"
 
 reload:
-  success: "{prefix} <green>Configurazione ricaricata correttamente."
+  success: "{prefix} <green>Reload completato: <white>{files}</white> YAML, <white>{holograms}</white> hologram, <white>{triggers}</white> trigger, <white>{modules}</white> moduli."
   failed: "{prefix} <red>Reload fallito. Controlla la console. <gray>({error})"
+  restart-required: "{prefix} <yellow>Alcune modifiche a storage o nomi comando richiedono il riavvio."
 
 spawn:
   teleported: "{prefix} <gray>Sei stato teletrasportato allo spawn <gray>(<white>{world}</white>)."

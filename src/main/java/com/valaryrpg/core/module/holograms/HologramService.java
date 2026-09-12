@@ -41,12 +41,18 @@ public final class HologramService {
     private final Map<String, YamlConfiguration> files = new ConcurrentHashMap<>();
     private final Map<String, UUID> shared = new ConcurrentHashMap<>();
     private final Map<String, Map<UUID, UUID>> personal = new ConcurrentHashMap<>();
+    private final Set<String> spawning = ConcurrentHashMap.newKeySet();
     private BukkitTask task;
     private int ticks;
 
     public HologramService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
         this.storage = new HologramStorage(plugin);
+    }
+
+    public void initialize() {
+        this.storage.initialize();
+        start();
     }
 
     public void start() {
@@ -547,13 +553,18 @@ public final class HologramService {
     }
 
     private void spawnShared(String id, FileConfiguration yaml) {
-        Location at = locationOf(yaml);
-        TextDisplay current = entity(this.shared.get(id), TextDisplay.class);
-        if (current != null && at != null && current.getWorld() != null && at.getWorld() != null
-                && current.getWorld().equals(at.getWorld())
-                && current.getLocation().distanceSquared(at) < 0.01D) {
+        if (!this.spawning.add(id)) {
             return;
         }
+        try {
+            spawnSharedNow(id, yaml);
+        } finally {
+            this.spawning.remove(id);
+        }
+    }
+
+    private void spawnSharedNow(String id, FileConfiguration yaml) {
+        Location at = locationOf(yaml);
         despawn(id);
         if (at == null || at.getWorld() == null) {
             return;
@@ -642,6 +653,7 @@ public final class HologramService {
         Set<UUID> keep = owned(id);
         NamespacedKey key = idKey();
         List<Entity> found = new ArrayList<>();
+        at.getWorld().getChunkAt(at.getBlockX() >> 4, at.getBlockZ() >> 4);
         found.addAll(at.getWorld().getNearbyEntities(at, 1.25D, 1.25D, 1.25D));
         int chunkX = at.getBlockX() >> 4;
         int chunkZ = at.getBlockZ() >> 4;

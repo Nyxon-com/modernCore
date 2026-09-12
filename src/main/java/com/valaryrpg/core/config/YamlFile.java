@@ -78,6 +78,17 @@ public final class YamlFile {
         mergeMissingKeys();
     }
 
+    /**
+     * Legge un file esistente per l'hot reload senza creare, migrare o salvarlo.
+     */
+    public void loadStrict() throws Exception {
+        this.file = new File(this.plugin.getDataFolder(), this.fileName);
+        if (!this.file.isFile()) {
+            throw new IllegalStateException("File configurazione mancante: " + this.file.getAbsolutePath());
+        }
+        this.config = readStrict(this.file);
+    }
+
     public void save() {
         try {
             this.config.save(this.file);
@@ -88,6 +99,16 @@ public final class YamlFile {
 
     public FileConfiguration config() {
         return this.config;
+    }
+
+    public File file() {
+        return this.file;
+    }
+
+    static YamlConfiguration readStrict(File file) throws Exception {
+        YamlConfiguration loaded = new YamlConfiguration();
+        loaded.load(file);
+        return loaded;
     }
 
     private void migrateLegacy() {
