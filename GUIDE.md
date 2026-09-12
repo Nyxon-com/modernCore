@@ -36,7 +36,9 @@ I YAML stanno in cartelle, non tutti in root. Al primo avvio (o al reload) i fil
 | `modules/warps.yml` | elenco warp, warmup/cooldown |
 | `modules/players.yml` | join/quit, nick, msg, fly, heal/feed |
 | `modules/moderation.yml` | motivi default, mute, vanish, layout invsee |
-| `modules/mechanics.yml` | LimitY, hologram drop, morti, long-jump, portali |
+| `modules/mechanics.yml` | LimitY, hologram drop, morti, long-jump, portali, triggerblock |
+| `modules/holograms.yml` | Impostazioni `/vholo` |
+| `holo/<nome>.yml` | Un hologram testo (Fancy-style) |
 | `modules/kits.yml` | GUI kit + contenuto kit |
 | `modules/prices.yml` | GUI sell, prezzi vanilla/MMOItems, reward custom |
 
@@ -172,9 +174,24 @@ Piastre per materiale in `long-jump.plates`.
 
 Senza dest il portale esegue solo i comandi. I comandi partono **dopo** il tick di movimento, altrimenti Paper li ignora. `portal-settings.y-padding` in `mechanics.yml` (default 1) fa sì che resti attivo anche in piedi sul pavimento selezionato.
 
+### Hologram (`/vholo`) e triggerblock
+
+Due sistemi diversi:
+
+| | Hologram | Triggerblock |
+|---|---|---|
+| Comando | `/vholo` | `/triggerblock` (`/tblock`) |
+| File | `holo/<nome>.yml` | `modules/mechanics.yml` → `holo-blocks.holos` |
+| Reload | `/vholo reload` o `/valary reload` | solo `/valary reload` |
+| Click | no, solo testo | sì, esegue ActionCommands |
+
+Wiki completa delle chiavi YAML: [wiki/Holograms.md](wiki/Holograms.md) e [wiki/Triggerblocks.md](wiki/Triggerblocks.md).
+
+Edita sempre `plugins/ValaryRPG-Core/`, non i YAML del repo. `/vholo delete` non cancella i triggerblock.
+
 ---
 
-## ActionCommands (GUI, kit, sell, LimitY, portali)
+## ActionCommands (GUI, kit, sell, LimitY, portali, triggerblock)
 
 ```
 - "[close]"
@@ -183,10 +200,10 @@ Senza dest il portale esegue solo i comandi. I comandi partono **dopo** il tick 
 - "[sound] UI_BUTTON_CLICK"
 - "[message] <green>Fatto"
 - "[msg] <gray>alias di message"
-- "eco give {player} 10"   # senza tag = console
+- "eco give {player} 10"   # senza tag = console (nei triggerblock / portali senza tag = player)
 ```
 
-Placeholder: `{player}` `{world}` `{x}` `{y}` `{z}` e quelli extra del contesto (`{portal}` `{amount}` `{min}` `{max}`).
+Placeholder: `{player}` `{world}` `{x}` `{y}` `{z}` e quelli extra del contesto (`{portal}` `{holo}` `{amount}` `{min}` `{max}`). `{player}` / `%player_name%` nei trigger.
 
 ---
 
@@ -194,7 +211,7 @@ Placeholder: `{player}` `{world}` `{x}` `{y}` `{z}` e quelli extra del contesto 
 
 Gruppo default: `valary.spawn`, `valary.home*`, `valary.warp`, `valary.msg`, `valary.nick`, `valary.kit`, `valary.sell`, `valary.checkdeath`, `valary.copycoord`, `valary.back`
 
-Staff: `valary.admin` (tutti i figli) oppure i singoli `valary.kick`, `valary.ban`, `valary.vanish`, `valary.invsee`, `valary.portal`, `valary.limity`, `valary.time.lock`, `valary.pressureplayerjump`, ...
+Staff: `valary.admin` (tutti i figli) oppure i singoli `valary.kick`, `valary.ban`, `valary.vanish`, `valary.invsee`, `valary.portal`, `valary.holo`, `valary.triggerblock`, `valary.limity`, `valary.time.lock`, `valary.pressureplayerjump`, ...
 
 ---
 

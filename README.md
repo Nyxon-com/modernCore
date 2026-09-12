@@ -5,7 +5,7 @@ Plugin Core modulare per **Paper 1.21.11**. Sostituisce CMI/Essentials con coman
 Build: **Gradle** (JDK 21). Repository: https://github.com/Nyxon-com/ValaryRPGcore
 
 **Guida completa:** [GUIDE.md](GUIDE.md)  
-**Cosa testare in game:** [TESTING.md](TESTING.md)
+**Wiki hologram:** [wiki/Holograms.md](wiki/Holograms.md) · [wiki/Triggerblocks.md](wiki/Triggerblocks.md)
 
 ---
 
