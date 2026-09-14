@@ -68,7 +68,7 @@ public final class WorldsListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         applyWorldFlags(event.getPlayer(), event.getPlayer().getWorld());
-        if (!this.plugin.configs().worlds().getBoolean("settings.spawn-on-join", false)) {
+        if (!this.plugin.configs().worlds().getBoolean("settings.spawn-on-join", true)) {
             return;
         }
         Player player = event.getPlayer();

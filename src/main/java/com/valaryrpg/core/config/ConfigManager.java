@@ -18,7 +18,7 @@ import java.util.Locale;
  */
 public final class ConfigManager {
 
-    private static final int CONFIG_VERSION = 1;
+    private static final int CONFIG_VERSION = 2;
     private final ValaryCorePlugin plugin;
     private YamlFile root;
     private YamlFile messages;
@@ -41,12 +41,18 @@ public final class ConfigManager {
 
     public void loadInitial() {
         activate(loadSnapshot(false));
-        if (this.root.config().getInt("plugin.config-version", 0) < CONFIG_VERSION) {
+        int version = this.root.config().getInt("plugin.config-version", 0);
+        if (version < 1) {
             migrateLegacySounds();
             migrateGroundItemHologram();
             migrateDisconnectScreens();
             migrateHoloCommand();
             migrateTriggerblockCommand();
+        }
+        if (version < 2) {
+            migrateSpawnOnJoin();
+        }
+        if (version < CONFIG_VERSION) {
             this.root.config().set("plugin.config-version", CONFIG_VERSION);
             this.root.save();
         }
@@ -172,6 +178,15 @@ public final class ConfigManager {
 
     public void saveMechanics() {
         this.mechanics.save();
+    }
+
+    private void migrateSpawnOnJoin() {
+        if (this.worlds.config().getBoolean("settings.spawn-on-join", false)) {
+            return;
+        }
+        this.worlds.config().set("settings.spawn-on-join", true);
+        this.worlds.save();
+        this.plugin.getLogger().info("Login impostato sempre allo spawn globale.");
     }
 
     private void migrateLegacySounds() {

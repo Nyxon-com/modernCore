@@ -54,6 +54,7 @@ MiniMessage: `<red>`, `<gradient:#8B5CF6:#EC4899>`, `&#FF00AA`, `<lang:item.mine
 
 - `/setspawn` — imposta **lo** spawn (un solo punto, nel mondo in cui sei)
 - `/spawn` — ti porta lì da qualsiasi mondo. `/spawn <player>` con `valary.spawn.others`
+- A ogni login il player viene portato allo spawn globale (`modules/worlds.yml` → `settings.spawn-on-join`).
 - `/weatherlock <clear|rain|thunder|unlock> [mondo]` — meteo mondo + client (serve anche negli spawn void)
 - `/timelock <day|noon|night|midnight|unlock> [mondo]` — ferma il ciclo; `/time add` viene riportato indietro
 - `/falldamage <true|false> [mondo]` — danno da caduta per mondo (`/falldamage false spawn`). Resta in `worlds.yml` (`fall-damage`)

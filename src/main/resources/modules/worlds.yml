@@ -9,7 +9,8 @@ settings:
   default-world: world
   # true = join/respawn usano lo spawn del mondo in cui sei. /spawn è SEMPRE globale.
   use-current-world-spawn: false
-  spawn-on-join: false
+  # true = ogni login parte dallo spawn globale (/setspawn), anche dopo un quit altrove.
+  spawn-on-join: true
   spawn-on-respawn: true
   warmup-seconds: 0
   cooldown-seconds: 0
