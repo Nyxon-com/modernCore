@@ -341,7 +341,8 @@ checkdeath:
 
 copycoord:
   usage: "{prefix} <gray>Uso da console: <white>/copycoord <player></white>"
-  copied: "{prefix} <gray>Coordinate di <white>{player}</white>: <aqua>{coords}</aqua> <dark_gray>(click per copiare)"
+  copied: "{prefix} <gray>Blocco mirato da <white>{player}</white>: <aqua>{coords}</aqua> <dark_gray>(click per copiare)"
+  no-block: "{prefix} <red>Nessun blocco nel raggio di mira."
   hover: "<gray>Click per copiare"
 
 portals:

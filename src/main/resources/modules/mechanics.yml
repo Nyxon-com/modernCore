@@ -90,6 +90,7 @@ ground-items:
 
 copycoord:
   decimals: 1
+  range: 16
 
 checkdeath:
   teleport: false

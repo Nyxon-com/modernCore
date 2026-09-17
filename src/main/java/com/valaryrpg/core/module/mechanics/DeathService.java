@@ -12,6 +12,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -165,15 +166,16 @@ public final class DeathService {
                 return;
             }
         }
-        Location location = target.getLocation();
-        if (location.getWorld() == null) {
+        int range = Math.max(1, this.plugin.configs().mechanics().getInt("copycoord.range", 16));
+        Block block = target.getTargetBlockExact(range);
+        if (block == null || block.getWorld() == null) {
+            this.plugin.messages().send(sender, "copycoord.no-block");
             return;
         }
-        int decimals = this.plugin.configs().mechanics().getInt("copycoord.decimals", 1);
-        String coords = location.getWorld().getName() + " "
-                + format(location.getX(), decimals) + " "
-                + format(location.getY(), decimals) + " "
-                + format(location.getZ(), decimals);
+        String coords = block.getWorld().getName() + " "
+                + block.getX() + " "
+                + block.getY() + " "
+                + block.getZ();
         sender.sendMessage(this.plugin.messages().component("copycoord.copied", Map.of(
                 "player", target.getName(),
                 "coords", coords

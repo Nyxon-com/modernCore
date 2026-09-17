@@ -157,7 +157,7 @@ Messaggi in `mechanics.yml` → `deaths.messages.<CAUSE>`.
 `/checkdeath restore [player]` — ripristina quell'inventario sul player (online). Permesso `valary.checkdeath.restore`.
 
 ### Coordinate
-`/copycoord [player]` — click sul messaggio = Ctrl+C (`world x y z`).
+`/copycoord [player]` — click sul messaggio = Ctrl+C del **blocco mirato** (`world x y z`). Raggio in `mechanics.yml` → `copycoord.range`.
 
 ### Pressure plate long-jump
 Piastre per materiale in `long-jump.plates`.
