@@ -1,6 +1,7 @@
 package com.valaryrpg.core.module.players;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import com.valaryrpg.core.module.chat.ChatModule;
 import com.valaryrpg.core.util.Perms;
 import com.valaryrpg.core.util.Sounds;
 import com.valaryrpg.core.util.Tasks;
@@ -37,6 +38,9 @@ public final class PrivateMessageService {
         if (sender instanceof Player player && player.getUniqueId().equals(target.getUniqueId())
                 && !this.plugin.configs().players().getBoolean("msg.allow-self", false)) {
             this.plugin.messages().send(sender, "msg.self");
+            return;
+        }
+        if (sender instanceof Player player && blockedPrivate(player, message)) {
             return;
         }
 
@@ -121,6 +125,14 @@ public final class PrivateMessageService {
                     "message", escaped
             ));
         }
+    }
+
+    private boolean blockedPrivate(Player sender, String message) {
+        if (this.plugin.modules() == null || !this.plugin.modules().isEnabled("chat")) {
+            return false;
+        }
+        ChatModule module = this.plugin.modules().get("chat");
+        return module != null && module.chat() != null && module.chat().blocked(sender, message, true);
     }
 
     private String display(CommandSender sender) {

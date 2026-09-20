@@ -68,3 +68,13 @@ holo-click:
   sound: minecraft:block.amethyst_block.chime
   volume: 0.8
   pitch: 1.35
+
+clearchat:
+  sound: minecraft:item.bucket.empty
+  volume: 0.6
+  pitch: 1.4
+
+chat-filtered:
+  sound: minecraft:entity.villager.no
+  volume: 0.7
+  pitch: 0.7

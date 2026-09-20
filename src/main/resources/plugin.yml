@@ -69,6 +69,9 @@ permissions:
       valary.holo: true
       valary.triggerblock: true
       valary.pressureplayerjump: true
+      valary.clearchat: true
+      valary.chat.filter.bypass: true
+      valary.chat.notify: true
   valary.reload:
     description: Ricarica i file di configurazione
     default: op
@@ -272,4 +275,13 @@ permissions:
     default: op
   valary.pressureplayerjump:
     description: Usa /pressureplayerjump
+    default: op
+  valary.clearchat:
+    description: Pulisce la chat di tutti i giocatori
+    default: op
+  valary.chat.filter.bypass:
+    description: Ignora il filtro chat
+    default: op
+  valary.chat.notify:
+    description: Riceve gli avvisi del filtro chat
     default: op

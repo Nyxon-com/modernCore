@@ -58,6 +58,9 @@ public final class CommandService {
             if (enabled("sell")) {
                 new SellCommands(this.plugin).register(registrar);
             }
+            if (enabled("chat")) {
+                new ChatCommands(this.plugin).register(registrar);
+            }
         });
     }
 

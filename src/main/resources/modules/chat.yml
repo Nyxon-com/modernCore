@@ -1,0 +1,38 @@
+# =============================================================================
+# Chat: /clearchat, annunci ciclici, filtro parole/link/IP
+# Testi: lang/messages.yml → chat.*   Permessi: config.yml → permissions.clearchat
+# =============================================================================
+
+clearchat:
+  # Righe vuote inviate a tutti i player online
+  blank-lines: 120
+
+announcements:
+  enabled: true
+  # Secondi tra un annuncio e il successivo
+  interval-seconds: 180
+  # false = in ordine, true = casuale
+  random: false
+  # MiniMessage. {prefix} = plugin.prefix
+  messages:
+    - "{prefix} <gray>Benvenuto su <white>ValaryRPG</white>. Rispetta le regole in chat."
+    - "{prefix} <gray>Usa <white>/spawn</white> per tornare allo spawn e <white>/warp</white> per i warp."
+    - "{prefix} <gray>I messaggi con insulti, link o IP vengono bloccati dal filtro."
+
+filter:
+  enabled: true
+  # Applica il filtro anche a /msg e /r
+  private-messages: true
+  # Avvisa lo staff (permesso chat-notify) quando un messaggio viene bloccato
+  notify-staff: true
+  words:
+    - esempio-parola-bloccata
+  # Regex Java. Vuoto = nessuno extra
+  regex: []
+  block-ips: true
+  block-links: true
+  link-patterns:
+    - "(?i)https?://"
+    - "(?i)www\\."
+    - "(?i)discord\\.gg/"
+    - "(?i)discord\\.com/invite"

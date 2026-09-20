@@ -9,7 +9,7 @@ Repository: https://github.com/Nyxon-com/ValaryRPGcore
 ## Installazione
 
 1. JDK 21+, Paper 1.21.11
-2. `./gradlew.bat build` → `build/libs/ValaryRPG-Core-1.0.0.jar`
+2. `./gradlew.bat build` → `build/libs/ValaryRPG-Core-1.0.1.jar`
 3. Metti il JAR in `plugins/`
 4. Soft-depend opzionali: Vault, CoinsEngine, MMOItems, MythicLib, Multiverse-Core, PlaceholderAPI
 5. Avvia, poi edita i YAML in `plugins/ValaryRPG-Core/`
@@ -43,6 +43,8 @@ I YAML stanno in cartelle, non tutti in root. Al primo avvio (o al reload) i fil
 | `holo/<nome>.yml` | Un hologram testo (Fancy-style) |
 | `modules/kits.yml` | GUI kit + contenuto kit |
 | `modules/prices.yml` | GUI sell, prezzi vanilla/MMOItems, reward custom |
+| `modules/chat.yml` | `/clearchat`, annunci ciclici, filtro chat |
+| `modules/webhooks.yml` | Webhook Discord (log staff + errori SEVERE) |
 
 Permessi: cambia il nodo in `config.yml` → `permissions.*`, non nel Java. Default in `plugin.yml`.
 
@@ -83,6 +85,9 @@ PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary
 - `/nick <testo|off>` MiniMessage. Colori: `valary.nick.color`. Altri: `valary.nick.others`
   - Chat: `modules/players.yml` → `chat.format` (`{displayname}` `{message}` `%luckperms_prefix%`)
   - Tab vanilla: `playerListName`. Se usi **TAB** (NEZNAMY), Valary imposta il nome via API; in config TAB puoi anche usare `%valary_nick%` / `%valary_nick_mm%`
+- `/clearchat` (`/cc`) — solo admin, pulisce la chat di **tutti** i player online
+- Annunci automatici ogni N secondi in `modules/chat.yml` → `announcements`
+- Filtro chat (parole, regex, IP, link) anche su `/msg` se `filter.private-messages: true`. Bypass: `valary.chat.filter.bypass`
 - `/msg` `/tell` `/w` `/whisper` `/m` `/r` — testi in `lang/messages.yml` → `msg.*` (`to-sender`, `to-target`, `spy`)
 - `/socialspy` (`/ss`): vedi i privati in `[SS]`. `msg.spy-self: true` mostra anche i tuoi (test a 2 account). `false` = solo gli altri
 - `/fly` persiste al relog e dopo la morte. `/gamemode` persiste **tra i mondi** e dopo respawn (anche Multiverse), tranne se `worlds.<mondo>.force-gamemode: true`
@@ -214,7 +219,18 @@ Placeholder: `{player}` `{world}` `{x}` `{y}` `{z}` e quelli extra del contesto 
 
 Gruppo default: `valary.spawn`, `valary.home*`, `valary.warp`, `valary.msg`, `valary.nick`, `valary.kit`, `valary.sell`, `valary.checkdeath`, `valary.copycoord`, `valary.back`
 
-Staff: `valary.admin` (tutti i figli) oppure i singoli `valary.kick`, `valary.ban`, `valary.vanish`, `valary.invsee`, `valary.portal`, `valary.holo`, `valary.triggerblock`, `valary.limity`, `valary.time.lock`, `valary.pressureplayerjump`, ...
+Staff: `valary.admin` (tutti i figli) oppure i singoli `valary.kick`, `valary.ban`, `valary.vanish`, `valary.invsee`, `valary.portal`, `valary.holo`, `valary.triggerblock`, `valary.limity`, `valary.time.lock`, `valary.pressureplayerjump`, `valary.clearchat`, ...
+
+---
+
+## Webhook Discord
+
+URL in `modules/webhooks.yml`. HTTP async, un thread `valary-webhook`.
+
+- `logs`: kick/ban/mute/warn, filtro, clearchat, reload. Chat intera solo se `logs.categories.chat: true`
+- `errors`: solo **SEVERE** della console. Niente warning, niente OOM/heap/GC/memory
+
+Wiki: [wiki/Chat.md](wiki/Chat.md) e [wiki/Webhooks.md](wiki/Webhooks.md).
 
 ---
 

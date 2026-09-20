@@ -6,6 +6,7 @@ import com.valaryrpg.core.economy.EconomyService;
 import com.valaryrpg.core.message.MessageService;
 import com.valaryrpg.core.message.VanillaTranslator;
 import com.valaryrpg.core.module.ModuleManager;
+import com.valaryrpg.core.module.chat.ChatModule;
 import com.valaryrpg.core.module.holograms.HologramsModule;
 import com.valaryrpg.core.module.homes.HomesModule;
 import com.valaryrpg.core.module.kits.KitsModule;
@@ -19,6 +20,7 @@ import com.valaryrpg.core.papi.PlaceholderHook;
 import com.valaryrpg.core.storage.StorageManager;
 import com.valaryrpg.core.util.LastLocations;
 import com.valaryrpg.core.util.Teleports;
+import com.valaryrpg.core.webhook.WebhookService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -35,6 +37,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
     private CommandService commands;
     private LastLocations lastLocations;
     private Teleports teleports;
+    private WebhookService webhooks;
 
     @Override
     public void onLoad() {
@@ -62,6 +65,9 @@ public final class ValaryCorePlugin extends JavaPlugin {
         this.teleports = new Teleports(this);
         getServer().getPluginManager().registerEvents(this.teleports, this);
 
+        this.webhooks = new WebhookService(this);
+        this.webhooks.enable();
+
         this.modules = new ModuleManager(this);
         this.modules.register(new WorldsModule(this));
         this.modules.register(new HomesModule(this));
@@ -72,6 +78,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
         this.modules.register(new HologramsModule(this));
         this.modules.register(new KitsModule(this));
         this.modules.register(new SellModule(this));
+        this.modules.register(new ChatModule(this));
         this.modules.enableAll();
 
         this.commands = new CommandService(this);
@@ -91,6 +98,9 @@ public final class ValaryCorePlugin extends JavaPlugin {
         }
         if (this.modules != null) {
             this.modules.disableAll();
+        }
+        if (this.webhooks != null) {
+            this.webhooks.disable();
         }
         if (this.storage != null) {
             this.storage.close();
@@ -125,6 +135,9 @@ public final class ValaryCorePlugin extends JavaPlugin {
             if (this.vanillaTranslator != null) {
                 this.vanillaTranslator.sync();
             }
+            if (this.webhooks != null) {
+                this.webhooks.reload();
+            }
             int moduleCount = 0;
             if (this.modules != null) {
                 moduleCount = this.modules.reloadAll();
@@ -152,6 +165,9 @@ public final class ValaryCorePlugin extends JavaPlugin {
             if (commandsRestart) {
                 getLogger().warning("Nomi/alias comandi cambiati: Paper li aggiornerà al riavvio.");
             }
+            if (this.webhooks != null) {
+                this.webhooks.log("reload", "Reload", "YAML e moduli ricaricati.");
+            }
             return ReloadResult.ok(
                     candidate.managedFiles(),
                     hologramCount,
@@ -163,6 +179,9 @@ public final class ValaryCorePlugin extends JavaPlugin {
         } catch (Exception exception) {
             this.configs.activate(previous);
             try {
+                if (this.webhooks != null) {
+                    this.webhooks.reload();
+                }
                 if (this.modules != null) {
                     this.modules.restore(previousModules);
                 }
@@ -245,6 +264,10 @@ public final class ValaryCorePlugin extends JavaPlugin {
 
     public ModuleManager modules() {
         return this.modules;
+    }
+
+    public WebhookService webhooks() {
+        return this.webhooks;
     }
 
     public LastLocations lastLocations() {

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.valaryrpg"
-version = "1.0.0"
+version = "1.0.1"
 description = "Modular Paper 1.21.11 core plugin"
 
 java {
@@ -60,6 +60,19 @@ tasks {
             exclude(dependency("org.xerial:sqlite-jdbc:.*"))
             exclude(dependency("org.mariadb.jdbc:mariadb-java-client:.*"))
         }
+        exclude("org/sqlite/native/Linux-Android/**")
+        exclude("org/sqlite/native/Linux-Musl/**")
+        exclude("org/sqlite/native/Linux-Alpine/**")
+        exclude("org/sqlite/native/FreeBSD/**")
+        exclude("org/sqlite/native/Windows/x86/**")
+        exclude("org/sqlite/native/Linux/x86/**")
+        exclude("org/sqlite/native/Linux/arm/**")
+        exclude("org/sqlite/native/Linux/armv6/**")
+        exclude("org/sqlite/native/Linux/armv7/**")
+        exclude("org/sqlite/native/Linux/android-arm/**")
+        exclude("org/sqlite/native/Linux/ppc64/**")
+        exclude("org/sqlite/native/Linux/riscv64/**")
+        exclude("org/sqlite/native/Mac/x86/**")
     }
 
     jar {

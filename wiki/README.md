@@ -6,5 +6,7 @@ Guide dei YAML. I file da editare sono in `plugins/ValaryRPG-Core/` sul server, 
 |---|---|
 | [Holograms](Holograms.md) | `/vholo` — file in `holo/<nome>.yml` |
 | [Triggerblocks](Triggerblocks.md) | `/triggerblock` — `modules/mechanics.yml` → `holo-blocks` |
+| [Chat](Chat.md) | `/clearchat`, annunci, filtro |
+| [Webhooks](Webhooks.md) | Discord: log + errori SEVERE |
 
 Guida generale: [GUIDE.md](../GUIDE.md)

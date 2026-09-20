@@ -43,19 +43,24 @@ public final class ModerationService {
 
     public void kick(CommandSender staff, Player target, String reason) {
         String finalReason = reasonOrDefault(reason, "kick.default-reason");
-        this.repository.insert(PunishmentType.KICK, target.getUniqueId(), target.getName(), ip(target), staff.getName(), finalReason, null);
+        Tasks.async(this.plugin, () -> this.repository.insert(
+                PunishmentType.KICK, target.getUniqueId(), target.getName(), ip(target), staff.getName(), finalReason, null
+        ));
         target.kick(DisconnectScreens.kick(this.plugin, target.getName(), staff.getName(), finalReason));
         this.plugin.messages().send(staff, "moderation.kick-staff", Map.of(
                 "player", target.getName(),
                 "reason", this.plugin.messages().escape(finalReason)
         ));
+        logAction("Kick", staff.getName(), target.getName(), finalReason, "");
     }
 
     public void ban(CommandSender staff, String targetName, String durationRaw, String reason) {
         Target target = resolve(targetName);
         String finalReason = reasonOrDefault(reason, "ban.default-reason");
         Long expiry = parseExpiry(durationRaw);
-        this.repository.insert(PunishmentType.BAN, target.uuid, target.name, target.ip, staff.getName(), finalReason, expiry);
+        Tasks.async(this.plugin, () -> this.repository.insert(
+                PunishmentType.BAN, target.uuid, target.name, target.ip, staff.getName(), finalReason, expiry
+        ));
         if (target.online != null) {
             disconnect(target.online, new Punishment(
                     -1L,
@@ -78,6 +83,7 @@ public final class ModerationService {
                 "reason", this.plugin.messages().escape(finalReason),
                 "duration", Durations.formatRemaining(this.plugin, expiry)
         ));
+        logAction("Ban", staff.getName(), target.name, finalReason, Durations.formatRemaining(this.plugin, expiry));
     }
 
     public void ipBan(CommandSender staff, String targetOrIp, String durationRaw, String reason) {
@@ -97,8 +103,12 @@ public final class ModerationService {
         }
         String finalReason = reasonOrDefault(reason, "ipban.default-reason");
         Long expiry = parseExpiry(durationRaw);
-        this.repository.insert(PunishmentType.IPBAN, uuid, name, ip, staff.getName(), finalReason, expiry);
+        UUID bannedUuid = uuid;
+        String bannedName = name;
         String bannedIp = ip;
+        Tasks.async(this.plugin, () -> this.repository.insert(
+                PunishmentType.IPBAN, bannedUuid, bannedName, bannedIp, staff.getName(), finalReason, expiry
+        ));
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (bannedIp.equals(ip(player))) {
                 disconnect(player, new Punishment(
@@ -119,11 +129,12 @@ public final class ModerationService {
             }
         }
         this.plugin.messages().send(staff, "moderation.ipban-staff", Map.of(
-                "target", name,
-                "ip", ip,
+                "target", bannedName,
+                "ip", bannedIp,
                 "reason", this.plugin.messages().escape(finalReason),
                 "duration", Durations.formatRemaining(this.plugin, expiry)
         ));
+        logAction("IP ban", staff.getName(), bannedName + " (" + bannedIp + ")", finalReason, Durations.formatRemaining(this.plugin, expiry));
     }
 
     public void unban(CommandSender staff, String target, String reason) {
@@ -153,12 +164,14 @@ public final class ModerationService {
                     "ip", ip.isBlank() ? target : ip,
                     "reason", this.plugin.messages().escape(finalReason)
             ));
+            logAction("Pardon IP", staff.getName(), resolved.name, finalReason, ip.isBlank() ? target : ip);
             return;
         }
         this.plugin.messages().send(staff, "moderation.unban-staff", Map.of(
                 "player", resolved.name,
                 "reason", this.plugin.messages().escape(finalReason)
         ));
+        logAction("Pardon", staff.getName(), resolved.name, finalReason, "");
     }
 
     public void pardonList(CommandSender staff) {
@@ -229,6 +242,7 @@ public final class ModerationService {
                 "reason", this.plugin.messages().escape(finalReason),
                 "duration", Durations.formatRemaining(this.plugin, expiry)
         ));
+        logAction("Mute", staff.getName(), target.name, finalReason, Durations.formatRemaining(this.plugin, expiry));
     }
 
     public void unmute(CommandSender staff, String targetName) {
@@ -244,6 +258,7 @@ public final class ModerationService {
                     return;
                 }
                 this.plugin.messages().send(staff, "moderation.unmute-staff", Map.of("player", target.name));
+                logAction("Unmute", staff.getName(), target.name, "", "");
             });
         });
     }
@@ -251,7 +266,9 @@ public final class ModerationService {
     public void warn(CommandSender staff, String targetName, String reason) {
         Target target = resolve(targetName);
         String finalReason = reasonOrDefault(reason, "warn.default-reason");
-        this.repository.insert(PunishmentType.WARN, target.uuid, target.name, target.ip, staff.getName(), finalReason, null);
+        Tasks.async(this.plugin, () -> this.repository.insert(
+                PunishmentType.WARN, target.uuid, target.name, target.ip, staff.getName(), finalReason, null
+        ));
         if (target.online != null) {
             this.plugin.messages().send(target.online, "moderation.warn-target", Map.of(
                     "reason", this.plugin.messages().escape(finalReason),
@@ -262,6 +279,7 @@ public final class ModerationService {
                 "player", target.name,
                 "reason", this.plugin.messages().escape(finalReason)
         ));
+        logAction("Warn", staff.getName(), target.name, finalReason, "");
     }
 
     public void warnings(CommandSender staff, String targetName) {
@@ -478,6 +496,20 @@ public final class ModerationService {
             return null;
         }
         return null;
+    }
+
+    private void logAction(String action, String staff, String target, String reason, String extra) {
+        if (this.plugin.webhooks() == null) {
+            return;
+        }
+        String body = staff + " → " + target;
+        if (reason != null && !reason.isBlank()) {
+            body = body + "\n" + reason;
+        }
+        if (extra != null && !extra.isBlank()) {
+            body = body + "\n" + extra;
+        }
+        this.plugin.webhooks().log("moderation", action, body);
     }
 
     private String reasonOrDefault(String reason, String configKey) {

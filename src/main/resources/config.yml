@@ -21,6 +21,8 @@ modules:
   holograms: true
   kits: true
   sell: true
+  chat: true
+  webhooks: true
 
 commands:
   root: valary
@@ -147,6 +149,10 @@ commands:
   pressureplayerjump-aliases:
     - ppjump
     - longjump
+  clearchat: clearchat
+  clearchat-aliases:
+    - cc
+    - clearchatall
 
 permissions:
   admin: valary.admin
@@ -212,6 +218,9 @@ permissions:
   holo: valary.holo
   triggerblock: valary.triggerblock
   pressureplayerjump: valary.pressureplayerjump
+  clearchat: valary.clearchat
+  chat-filter-bypass: valary.chat.filter.bypass
+  chat-notify: valary.chat.notify
   teleport-cooldown-bypass: valary.teleport.cooldown.bypass
 
 # Countdown a schermo per warmup/cooldown di /home /warp /spawn

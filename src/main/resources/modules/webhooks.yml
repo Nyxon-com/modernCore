@@ -1,0 +1,30 @@
+# =============================================================================
+# Webhook Discord (HTTP async, nessun thread sul main).
+# URL vuoto = disattivato. logs = azioni staff/chat; errors = solo SEVERE, no warning/memoria.
+# =============================================================================
+
+enabled: true
+timeout-millis: 4000
+username: ValaryRPG
+# URL di default se logs.url / errors.url sono vuoti
+url: ""
+
+logs:
+  enabled: true
+  url: ""
+  color: 5793266
+  categories:
+    moderation: true
+    chat-filter: true
+    clearchat: true
+    chat: false
+    reload: true
+
+errors:
+  enabled: true
+  url: ""
+  color: 15158332
+  # Stesso testo SEVERE non viene ripostato prima di questo intervallo
+  same-message-cooldown-millis: 15000
+  # Ignora OOM / heap / GC / memory
+  ignore-memory: true

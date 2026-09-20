@@ -34,6 +34,8 @@ public final class ConfigManager {
     private YamlFile holograms;
     private YamlFile kits;
     private YamlFile prices;
+    private YamlFile chat;
+    private YamlFile webhooks;
 
     public ConfigManager(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -65,14 +67,14 @@ public final class ConfigManager {
     public ReloadCandidate prepareReload() throws Exception {
         Snapshot snapshot = loadSnapshot(true);
         int hologramFiles = validateHologramFiles(snapshot.holograms().config());
-        return new ReloadCandidate(snapshot, 14, hologramFiles);
+        return new ReloadCandidate(snapshot, 16, hologramFiles);
     }
 
     public Snapshot current() {
         return new Snapshot(
                 this.root, this.storage, this.messages, this.vanilla, this.sounds,
                 this.worlds, this.homes, this.warps, this.players, this.moderation,
-                this.mechanics, this.holograms, this.kits, this.prices
+                this.mechanics, this.holograms, this.kits, this.prices, this.chat, this.webhooks
         );
     }
 
@@ -91,6 +93,8 @@ public final class ConfigManager {
         this.holograms = snapshot.holograms();
         this.kits = snapshot.kits();
         this.prices = snapshot.prices();
+        this.chat = snapshot.chat();
+        this.webhooks = snapshot.webhooks();
     }
 
     public List<String> loadedPaths(Snapshot snapshot) {
@@ -108,7 +112,9 @@ public final class ConfigManager {
                 snapshot.mechanics().file().getAbsolutePath(),
                 snapshot.holograms().file().getAbsolutePath(),
                 snapshot.kits().file().getAbsolutePath(),
-                snapshot.prices().file().getAbsolutePath()
+                snapshot.prices().file().getAbsolutePath(),
+                snapshot.chat().file().getAbsolutePath(),
+                snapshot.webhooks().file().getAbsolutePath()
         );
     }
 
@@ -166,6 +172,14 @@ public final class ConfigManager {
 
     public FileConfiguration prices() {
         return this.prices.config();
+    }
+
+    public FileConfiguration chat() {
+        return this.chat.config();
+    }
+
+    public FileConfiguration webhooks() {
+        return this.webhooks.config();
     }
 
     public void saveWorlds() {
@@ -479,7 +493,9 @@ public final class ConfigManager {
                     load("modules/mechanics.yml", strict),
                     load("modules/holograms.yml", strict),
                     load("modules/kits.yml", strict),
-                    load("modules/prices.yml", strict)
+                    load("modules/prices.yml", strict),
+                    load("modules/chat.yml", strict),
+                    load("modules/webhooks.yml", strict)
             );
         } catch (Exception exception) {
             throw new IllegalStateException("YAML non valido: " + exception.getMessage(), exception);
@@ -538,7 +554,9 @@ public final class ConfigManager {
             YamlFile mechanics,
             YamlFile holograms,
             YamlFile kits,
-            YamlFile prices
+            YamlFile prices,
+            YamlFile chat,
+            YamlFile webhooks
     ) {
     }
 }

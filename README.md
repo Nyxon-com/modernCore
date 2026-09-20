@@ -5,7 +5,7 @@ Plugin Core modulare per **Paper 1.21.11**. Sostituisce CMI/Essentials con coman
 Build: **Gradle** (JDK 21). Repository: https://github.com/Nyxon-com/ValaryRPGcore
 
 **Guida completa:** [GUIDE.md](GUIDE.md)  
-**Wiki hologram:** [wiki/Holograms.md](wiki/Holograms.md) · [wiki/Triggerblocks.md](wiki/Triggerblocks.md)
+**Wiki:** [Holograms](wiki/Holograms.md) · [Triggerblocks](wiki/Triggerblocks.md) · [Chat](wiki/Chat.md) · [Webhooks](wiki/Webhooks.md)
 
 ---
 
@@ -23,6 +23,8 @@ Feature complete rispetto alla spec, con perfezionamento (step 2):
 - LimitY con comandi YAML, hologram drop (font piccolo + despawn 5 min), morti configurabili, `/checkdeath` con inventario, `/copycoord`
 - Long-jump con checker dello sguardo + `/pressureplayerjump`
 - Portali: wand, click sui blocchi, comandi all'ingresso
+- Chat: `/clearchat`, annunci ciclici, filtro parole/link/IP
+- Webhook Discord async: log staff + errori console SEVERE (no warning/memoria)
 - Reload YAML con merge chiavi e rigenerazione file corrotti
 - Zero prefisso `/cmi`
 
@@ -34,4 +36,4 @@ Feature complete rispetto alla spec, con perfezionamento (step 2):
 ./gradlew.bat build
 ```
 
-JAR: `build/libs/ValaryRPG-Core-1.0.0.jar`
+JAR: `build/libs/ValaryRPG-Core-1.0.1.jar`
