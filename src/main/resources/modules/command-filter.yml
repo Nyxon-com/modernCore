@@ -29,6 +29,8 @@ visible:
   - vault
   - pv
   - nvault
+  - sv
+  - svault
   - hs
 vip:
   kryndel:
