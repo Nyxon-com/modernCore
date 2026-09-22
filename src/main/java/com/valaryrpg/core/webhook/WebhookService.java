@@ -3,6 +3,7 @@ package com.valaryrpg.core.webhook;
 import com.valaryrpg.core.ValaryCorePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.HandlerList;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -10,11 +11,15 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -22,19 +27,22 @@ import java.util.logging.LogRecord;
 
 /**
  * Invia log e SEVERE su Discord via HttpClient async. Un solo thread daemon.
+ * I log attività vengono raggruppati ogni 2s per non saturare Discord.
  */
 public final class WebhookService {
 
     private final ValaryCorePlugin plugin;
-    private final ExecutorService executor;
+    private final ScheduledExecutorService executor;
     private final HttpClient http;
     private final Map<String, Long> errorCooldown = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedQueue<Pending> activity = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean sending = new AtomicBoolean();
     private Handler consoleHandler;
+    private WebhookActivityListener listener;
 
     public WebhookService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
-        this.executor = Executors.newSingleThreadExecutor(runnable -> {
+        this.executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "valary-webhook");
             thread.setDaemon(true);
             return thread;
@@ -43,20 +51,26 @@ public final class WebhookService {
                 .executor(this.executor)
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
+        this.executor.scheduleAtFixedRate(this::flushActivity, 2L, 2L, TimeUnit.SECONDS);
     }
 
     public void enable() {
         attachConsole();
+        attachListener();
     }
 
     public void reload() {
         detachConsole();
+        detachListener();
         this.errorCooldown.clear();
         attachConsole();
+        attachListener();
     }
 
     public void disable() {
         detachConsole();
+        detachListener();
+        flushActivity();
         this.executor.shutdownNow();
     }
 
@@ -72,7 +86,10 @@ public final class WebhookService {
         if (url.isBlank()) {
             return;
         }
-        post(url, title, body, yaml.getInt("logs.color", 5793266));
+        this.activity.add(new Pending(title, body, yaml.getInt("logs.color", 5793266), url));
+        if (this.activity.size() >= 20) {
+            this.executor.execute(this::flushActivity);
+        }
     }
 
     public void severe(String loggerName, String message, Throwable thrown) {
@@ -107,6 +124,47 @@ public final class WebhookService {
             body = body + "\n" + thrown.getClass().getName() + ": " + String.valueOf(thrown.getMessage());
         }
         post(url, "Errore grave", body, yaml.getInt("errors.color", 15158332));
+    }
+
+    private void attachListener() {
+        if (this.listener != null) {
+            return;
+        }
+        this.listener = new WebhookActivityListener(this.plugin);
+        Bukkit.getPluginManager().registerEvents(this.listener, this.plugin);
+    }
+
+    private void detachListener() {
+        if (this.listener == null) {
+            return;
+        }
+        HandlerList.unregisterAll(this.listener);
+        this.listener = null;
+    }
+
+    private void flushActivity() {
+        if (this.activity.isEmpty()) {
+            return;
+        }
+        List<Pending> batch = new ArrayList<>(24);
+        Pending next;
+        while (batch.size() < 20 && (next = this.activity.poll()) != null) {
+            batch.add(next);
+        }
+        if (batch.isEmpty()) {
+            return;
+        }
+        String url = batch.get(0).url();
+        int color = batch.get(0).color();
+        StringBuilder description = new StringBuilder();
+        String title = batch.size() == 1 ? batch.get(0).title() : "Attività (" + batch.size() + ")";
+        for (Pending pending : batch) {
+            if (!description.isEmpty()) {
+                description.append("\n");
+            }
+            description.append("**").append(pending.title()).append("**\n").append(pending.body());
+        }
+        post(url, title, description.toString(), color);
     }
 
     private void attachConsole() {
@@ -256,5 +314,8 @@ public final class WebhookService {
             }
         }
         return builder.toString();
+    }
+
+    private record Pending(String title, String body, int color, String url) {
     }
 }

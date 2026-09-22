@@ -66,6 +66,13 @@ public final class PrivateMessageService {
         }
         Sounds.play(this.plugin, target, "msg-receive");
         spy(sender, target, escaped, senderName, targetName);
+        if (this.plugin.webhooks() != null) {
+            this.plugin.webhooks().log(
+                    "msg",
+                    "Messaggio privato",
+                    sender.getName() + " → " + target.getName() + "\n" + message
+            );
+        }
     }
 
     public void reply(Player sender, String message) {

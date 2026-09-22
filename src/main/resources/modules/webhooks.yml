@@ -17,7 +17,16 @@ logs:
     moderation: true
     chat-filter: true
     clearchat: true
-    chat: false
+    chat: true
+    msg: true
+    commands: true
+    command-blocked: true
+    command-unknown: true
+    keys: true
+    signs: true
+    join: true
+    quit: true
+    death: true
     reload: true
 
 errors:
