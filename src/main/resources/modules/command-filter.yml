@@ -27,13 +27,14 @@ visible:
   - infomobterra
   - help
   - menu
+  - vault
+  - pv
+  - nvault
+  - hs
 vip:
   kryndel:
     commands:
       - nick
-      - vault
-      - vaults
-      - pv
     prefixes: []
   vaelorn:
     commands: []
@@ -105,7 +106,6 @@ disabled:
   - deposit
   - dungeon
   - friends
-  - hs
   - client
   - fcc
   - homes
