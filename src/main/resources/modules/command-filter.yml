@@ -26,7 +26,6 @@ visible:
   - infomob
   - infomobterra
   - help
-  - menu
   - vault
   - pv
   - nvault
@@ -106,6 +105,7 @@ disabled:
   - deposit
   - dungeon
   - friends
+  - menu
   - client
   - fcc
   - homes
