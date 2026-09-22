@@ -1,15 +1,23 @@
 package com.valaryrpg.core.command;
 
+import com.destroystokyo.paper.event.brigadier.AsyncPlayerSendCommandsEvent;
+import com.mojang.brigadier.tree.CommandNode;
 import com.valaryrpg.core.ValaryCorePlugin;
 import org.bukkit.command.Command;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerCommandSendEvent;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
- * Tab-complete e digitazione: toglie i comandi filtrati ai player.
+ * Tab Brigadier + digitazione: toglie i comandi filtrati.
  */
 final class CommandFilterListener implements Listener {
 
@@ -23,33 +31,67 @@ final class CommandFilterListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onCommandSend(PlayerCommandSendEvent event) {
-        if (this.filter.seeAll(event.getPlayer())) {
+        Player player = event.getPlayer();
+        event.getCommands().removeIf(name -> hidden(player, name));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onBrigadier(AsyncPlayerSendCommandsEvent<?> event) {
+        if (!event.hasFiredAsync()) {
             return;
         }
-        event.getCommands().removeIf(name -> {
-            if (name != null && name.indexOf(':') >= 0) {
-                return true;
-            }
-            Command command = this.plugin.getServer().getCommandMap().getCommand(name);
-            return !this.filter.allowed(event.getPlayer(), name, command);
-        });
+        strip(event.getCommandNode(), event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
-        if (this.filter.seeAll(event.getPlayer())) {
-            return;
-        }
         String message = event.getMessage();
         if (message == null || message.isBlank()) {
             return;
         }
         String label = CommandFilter.normalize(message.split("\\s+")[0]);
-        Command command = this.plugin.getServer().getCommandMap().getCommand(label);
-        if (this.filter.allowed(event.getPlayer(), label, command)) {
+        if (!hidden(event.getPlayer(), label)) {
             return;
         }
         event.setCancelled(true);
         this.plugin.messages().send(event.getPlayer(), "general.no-permission");
+    }
+
+    private boolean hidden(Player player, String name) {
+        if (name != null && name.indexOf(':') >= 0) {
+            return true;
+        }
+        Command command = this.plugin.getServer().getCommandMap().getCommand(name);
+        return !this.filter.allowed(player, name, command);
+    }
+
+    private void strip(CommandNode<?> root, Player player) {
+        List<String> drop = new ArrayList<>();
+        for (CommandNode<?> child : List.copyOf(root.getChildren())) {
+            String name = child.getName();
+            if (hidden(player, name)) {
+                drop.add(name);
+            }
+        }
+        for (String name : drop) {
+            removeChild(root, name);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void removeChild(CommandNode<?> root, String name) {
+        try {
+            Field children = CommandNode.class.getDeclaredField("children");
+            Field literals = CommandNode.class.getDeclaredField("literals");
+            Field arguments = CommandNode.class.getDeclaredField("arguments");
+            children.setAccessible(true);
+            literals.setAccessible(true);
+            arguments.setAccessible(true);
+            ((Map<String, ?>) children.get(root)).remove(name);
+            ((Map<String, ?>) literals.get(root)).remove(name);
+            ((Map<String, ?>) arguments.get(root)).remove(name);
+        } catch (ReflectiveOperationException ignored) {
+            // Paper/Brigadier interno diverso: resta PlayerCommandSendEvent
+        }
     }
 }

@@ -1,51 +1,27 @@
 # visible = comandi del rank default (recluta).
 # vip = extra per gruppo LuckPerms (i rank sopra ereditano i parent).
-# disabled = sempre nascosti/bloccati per i player (anche VIP). Lo staff see-all li vede.
+# disabled = sempre nascosti/bloccati (anche staff see-all).
+# Il file usato dal server e' plugins/ValaryRPG-Core/modules/command-filter.yml
+# (il jar non sovrascrive le liste gia' presenti).
 enabled: true
 
 visible:
-  - arena
-  - attributes
-  - back
   - bal
   - baltop
-  - cast
-  - checkdeath
-  - chiave
-  - coins
-  - command
-  - copycoord
-  - delhome
-  - deposit
   - diamanti
-  - dungeon
-  - friends
   - gilda
-  - home
-  - homes
-  - hs
-  - journal
   - kit
   - kits
   - msg
-  - open
   - party
   - pay
-  - pvp
-  - quests
   - r
   - sell
   - sellall
-  - sethome
-  - skills
-  - skilltrees
   - spawn
-  - stats
   - valutaclasse
   - warp
   - warps
-  - waypoints
-  - withdraw
 
 vip:
   kryndel:
@@ -130,15 +106,13 @@ disabled:
   - fcc
   - homes
   - home
-  - journal 
+  - journal
   - open
   - pvp
   - quests
   - quest
-  - coins 
+  - coins
   - sethome
-  
-
 
 disabled-prefixes:
   - commandpanel

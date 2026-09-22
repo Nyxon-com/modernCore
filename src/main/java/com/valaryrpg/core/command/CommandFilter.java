@@ -64,6 +64,9 @@ final class CommandFilter {
         }
         loadRanks(yaml.getConfigurationSection("vip"), "group.");
         loadRanks(yaml.getConfigurationSection("staff"), "group.");
+        this.visible.removeAll(this.disabled);
+        this.plugin.getLogger().info("Command filter: " + this.visible.size() + " visibili, "
+                + this.disabled.size() + " disabilitati, " + this.unlocks.size() + " rank VIP.");
     }
 
     private void loadRanks(ConfigurationSection section, String permissionPrefix) {
@@ -102,6 +105,13 @@ final class CommandFilter {
     boolean allowed(CommandSender sender, String rawName, Command command) {
         if (!this.enabled) {
             return true;
+        }
+        String name = normalize(rawName);
+        if (name.isEmpty()) {
+            return false;
+        }
+        if (blocked(name, rawName, command)) {
+            return false;
         }
         if (seeAll(sender)) {
             return true;
