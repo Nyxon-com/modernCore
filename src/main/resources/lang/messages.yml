@@ -13,6 +13,11 @@ general:
   cooldown: "{prefix} <red>Attendi un attimo prima di riusare il comando."
   quotes: "{prefix} <red>Non usare virgolette. Esempio: <white>/warp spawn</white> non <white>/warp \"spawn\"</white>."
 
+command-list:
+  usage: "{prefix} <gray>Uso: <white>/{label} list</white> <dark_gray>(staff: /{label} list all)"
+  copied: "{prefix} <gray>Lista comandi di <white>{player}</white> <dark_gray>(<green>{allowed} si</green> / <red>{denied} no</red> / {total}) <aqua>click per copiare tutto</aqua>"
+  hover: "<gray>Click per copiare l'elenco completo"
+
 duration:
   permanent: permanente
   expired: scaduto
@@ -461,14 +466,14 @@ kits:
   given: "{prefix} <green>Kit <white>{kit}</white> dato a <white>{player}</white>."
   one-time: "{prefix} <red>Il kit <white>{kit}</white> si ritira una sola volta."
   no-page: "{prefix} <red>Pagina kit <white>{page}</white> inesistente."
-  preview-title: "<dark_gray>Anteprima <white>{kit}"
+  preview-title: "<gradient:#E5A2C1:#9711EA><bold>Anteprima</bold></gradient> <gray>{kit}"
   preview-close-name: "<gray>Indietro"
   preview-claim-name: "<green>Ritira"
-  hint-claim: "<dark_gray>Click sinistro: <white>ritira"
-  hint-preview: "<dark_gray>Click destro: <white>anteprima"
-  status-ready: "<green>Disponibile"
-  status-cooldown: "<red>Tra {duration}"
-  status-locked: "<red>Nessun permesso"
+  hint-claim: "<dark_gray>▸ <white>Sinistro <gray>ritira"
+  hint-preview: "<dark_gray>▸ <white>Destro <gray>anteprima"
+  status-ready: "<gradient:#7CFF4A:#22C55E>Disponibile oggi</gradient>"
+  status-cooldown: "<red>Disponibile tra <white>{duration}</white>"
+  status-locked: "<red>Sbloccato da un rank superiore"
   status-one-time-used: "<dark_gray>Già ritirato"
   contents-line: "<dark_gray>• <gray>{item} <white>x{amount}"
   contents-more: "<dark_gray>• …"

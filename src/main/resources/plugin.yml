@@ -72,6 +72,7 @@ permissions:
       valary.clearchat: true
       valary.chat.filter.bypass: true
       valary.chat.notify: true
+      valary.command.see-all: true
   valary.reload:
     description: Ricarica i file di configurazione
     default: op
@@ -140,7 +141,7 @@ permissions:
     default: op
   valary.nick:
     description: Usa /nick
-    default: true
+    default: false
   valary.nick.color:
     description: Colori MiniMessage nel nick
     default: op
@@ -284,4 +285,10 @@ permissions:
     default: op
   valary.chat.notify:
     description: Riceve gli avvisi del filtro chat
+    default: op
+  valary.command.list:
+    description: Usa /command list
+    default: true
+  valary.command.see-all:
+    description: Vede tutti i comandi (tab, /command list all)
     default: op

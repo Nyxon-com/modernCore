@@ -21,13 +21,19 @@ public final class CommandService {
 
     private final ValaryCorePlugin plugin;
     private final CommandSettings settings;
+    private final CommandFilter filter;
 
     public CommandService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
         this.settings = new CommandSettings(plugin);
+        this.filter = new CommandFilter(plugin);
     }
 
     public void register() {
+        this.plugin.getServer().getPluginManager().registerEvents(
+                new CommandFilterListener(this.plugin, this.filter),
+                this.plugin
+        );
         this.plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands registrar = event.registrar();
             registrar.register(rootCommand(), "Comandi amministrativi ValaryRPG-Core", aliases("commands.root-aliases"));
@@ -61,7 +67,15 @@ public final class CommandService {
             if (enabled("chat")) {
                 new ChatCommands(this.plugin).register(registrar);
             }
+            new CommandListCommands(this.plugin, this.filter).register(registrar);
         });
+    }
+
+    public void reloadFilter() {
+        this.filter.reload();
+        for (Player player : this.plugin.getServer().getOnlinePlayers()) {
+            player.updateCommands();
+        }
     }
 
     private LiteralCommandNode<CommandSourceStack> rootCommand() {

@@ -36,7 +36,11 @@ public final class TabNickHook {
                 if (!"setName".equals(method.getName()) || method.getParameterCount() != 2) {
                     continue;
                 }
-                method.invoke(list, tabPlayer, nickOrNull);
+                String name = nickOrNull;
+                if (name != null && !name.isBlank() && !name.contains("<gray>") && !name.contains("&7")) {
+                    name = "<gray>" + name + "</gray>";
+                }
+                method.invoke(list, tabPlayer, name);
                 return;
             }
         } catch (ReflectiveOperationException ignored) {

@@ -59,18 +59,14 @@ commands:
   warps: warps
   warps-aliases: []
   msg: msg
-  msg-aliases:
-    - whisper
-    - m
+  msg-aliases: []
   reply: r
-  reply-aliases:
-    - reply
+  reply-aliases: []
   socialspy: socialspy
   socialspy-aliases:
     - ss
   nick: nick
-  nick-aliases:
-    - nickname
+  nick-aliases: []
   fly: fly
   fly-aliases: []
   kick: kick
@@ -110,12 +106,9 @@ commands:
   limity: limity
   limity-aliases: []
   checkdeath: checkdeath
-  checkdeath-aliases:
-    - death
+  checkdeath-aliases: []
   copycoord: copycoord
-  copycoord-aliases:
-    - coords
-    - getpos
+  copycoord-aliases: []
   kit: kit
   kit-aliases: []
   kits: kits
@@ -153,6 +146,8 @@ commands:
   clearchat-aliases:
     - cc
     - clearchatall
+  command: command
+  command-aliases: []
 
 permissions:
   admin: valary.admin
@@ -221,6 +216,8 @@ permissions:
   clearchat: valary.clearchat
   chat-filter-bypass: valary.chat.filter.bypass
   chat-notify: valary.chat.notify
+  command-list: valary.command.list
+  command-see-all: valary.command.see-all
   teleport-cooldown-bypass: valary.teleport.cooldown.bypass
 
 # Countdown a schermo per warmup/cooldown di /home /warp /spawn

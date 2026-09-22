@@ -142,6 +142,9 @@ public final class ValaryCorePlugin extends JavaPlugin {
             if (this.modules != null) {
                 moduleCount = this.modules.reloadAll();
             }
+            if (this.commands != null) {
+                this.commands.reloadFilter();
+            }
             int triggerCount = activeCount("mechanics")
                     ? ((MechanicsModule) this.modules.get("mechanics")).holos().names().size()
                     : 0;

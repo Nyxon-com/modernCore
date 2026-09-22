@@ -18,7 +18,7 @@ nick:
 
 chat:
   enabled: true
-  format: "%luckperms_prefix%{displayname} <dark_gray>» <reset>{message}"
+  format: "%luckperms_prefix%<gray>{displayname}</gray> <dark_gray>» <reset>{message}"
 
 msg:
   allow-self: false

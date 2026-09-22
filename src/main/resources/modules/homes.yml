@@ -16,6 +16,12 @@ limits:
   permission-prefix: valary.home.limit.
   groups:
     default: 1
-    vip: 3
-    mvp: 8
+    kryndel: 2
+    vaelorn: 3
+    orynth: 4
+    nymira: 5
+    quirith: 6
+    eldryn: 7
+    volnaire: 8
+    iskara: 10
     staff: -1

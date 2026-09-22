@@ -122,8 +122,11 @@ public final class NickService {
     private ChatRenderer formatted(Player player, Component nick, String format) {
         return (source, sourceDisplayName, message, viewer) -> {
             String filled = Placeholders.apply(player, format == null ? "" : format);
+            String display = this.plugin.messages().escape(
+                    PlainTextComponentSerializer.plainText().serialize(nick)
+            );
             filled = filled
-                    .replace("{displayname}", MiniMessage.miniMessage().serialize(nick))
+                    .replace("{displayname}", display)
                     .replace("{player}", this.plugin.messages().escape(player.getName()))
                     .replace("{name}", this.plugin.messages().escape(player.getName()));
             int split = filled.indexOf("{message}");
