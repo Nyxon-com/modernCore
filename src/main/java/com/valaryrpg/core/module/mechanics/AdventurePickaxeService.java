@@ -1,7 +1,6 @@
 package com.valaryrpg.core.module.mechanics;
 
 import com.valaryrpg.core.ValaryCorePlugin;
-import com.valaryrpg.core.util.MmoItems;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.TooltipDisplay;
@@ -11,8 +10,11 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -20,7 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Nasconde la lore vanilla "Can break" sui picconi MMOItems.
+ * Nasconde la lore vanilla "Can break" sui picconi.
  */
 public final class AdventurePickaxeService implements Listener {
 
@@ -36,6 +38,7 @@ public final class AdventurePickaxeService implements Listener {
             stamp(item);
         }
         stamp(inventory.getItemInOffHand());
+        stamp(player.getItemOnCursor());
     }
 
     public void stamp(ItemStack item) {
@@ -45,12 +48,7 @@ public final class AdventurePickaxeService implements Listener {
         if (!item.getType().name().endsWith("_PICKAXE")) {
             return;
         }
-        if (!MmoItems.matches(item, "TOOL", null)) {
-            return;
-        }
-        if (!item.hasData(DataComponentTypes.CAN_BREAK)) {
-            return;
-        }
+        item.editMeta(meta -> meta.addItemFlags(ItemFlag.HIDE_DESTROYS));
         Set<DataComponentType> hidden = new HashSet<>();
         if (item.hasData(DataComponentTypes.TOOLTIP_DISPLAY)) {
             hidden.addAll(item.getData(DataComponentTypes.TOOLTIP_DISPLAY).hiddenComponents());
@@ -62,32 +60,53 @@ public final class AdventurePickaxeService implements Listener {
         );
     }
 
+    private void later(Player player) {
+        this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
+            if (player.isOnline()) {
+                stampInventory(player);
+            }
+        });
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        stampInventory(player);
+        later(player);
         this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
             if (player.isOnline()) {
                 stampInventory(player);
             }
-        }, 20L);
+        }, 40L);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onHeld(PlayerItemHeldEvent event) {
-        stamp(event.getPlayer().getInventory().getItem(event.getNewSlot()));
+        later(event.getPlayer());
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onClick(InventoryClickEvent event) {
-        stamp(event.getCurrentItem());
-        stamp(event.getCursor());
+        if (event.getWhoClicked() instanceof Player player) {
+            later(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDrag(InventoryDragEvent event) {
+        if (event.getWhoClicked() instanceof Player player) {
+            later(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onSwap(PlayerSwapHandItemsEvent event) {
+        later(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPickup(EntityPickupItemEvent event) {
         if (event.getEntity() instanceof Player player) {
-            stampInventory(player);
+            later(player);
         }
     }
 }
