@@ -61,10 +61,11 @@ public final class GroundItemService {
         if (item.getPersistentDataContainer().has(Items.noHologramKey(this.plugin), PersistentDataType.BYTE)) {
             return;
         }
-        int despawnSeconds = Math.max(0, this.plugin.configs().mechanics().getInt("ground-items.despawn-seconds", 300));
-        if (this.tracked.size() >= this.plugin.configs().mechanics().getInt("ground-items.max-holograms", 80)) {
+        if (this.tracked.containsKey(item.getUniqueId()) && hologramPresent(item.getUniqueId())) {
             return;
         }
+        int despawnSeconds = Math.max(0, this.plugin.configs().mechanics().getInt("ground-items.despawn-seconds", 300));
+        evictIfNeeded();
         if (despawnSeconds > 0) {
             item.setUnlimitedLifetime(true);
         }
@@ -74,13 +75,57 @@ public final class GroundItemService {
             this.tracked.put(item.getUniqueId(), new Tracked(null, System.currentTimeMillis(), despawnSeconds));
             return;
         }
+        spawnDisplay(item, text, System.currentTimeMillis(), despawnSeconds);
+    }
+
+    public void scanChunk(org.bukkit.Chunk chunk) {
+        if (!this.plugin.configs().mechanics().getBoolean("ground-items.enabled", true)) {
+            return;
+        }
+        for (org.bukkit.entity.Entity entity : chunk.getEntities()) {
+            if (entity instanceof Item item && item.isValid()) {
+                attach(item);
+            }
+        }
+    }
+
+    private boolean hologramPresent(UUID itemId) {
+        Tracked found = this.tracked.get(itemId);
+        if (found == null || found.displayId == null) {
+            return false;
+        }
+        return this.plugin.getServer().getEntity(found.displayId) instanceof TextDisplay;
+    }
+
+    private void evictIfNeeded() {
+        int max = this.plugin.configs().mechanics().getInt("ground-items.max-holograms", 400);
+        if (max <= 0) {
+            return;
+        }
+        while (this.tracked.size() >= max) {
+            UUID oldest = null;
+            long oldestAt = Long.MAX_VALUE;
+            for (Map.Entry<UUID, Tracked> entry : this.tracked.entrySet()) {
+                if (entry.getValue().spawnedAt < oldestAt) {
+                    oldestAt = entry.getValue().spawnedAt;
+                    oldest = entry.getKey();
+                }
+            }
+            if (oldest == null) {
+                return;
+            }
+            remove(oldest);
+        }
+    }
+
+    private void spawnDisplay(Item item, Component text, long spawnedAt, int despawnSeconds) {
         float scale = (float) this.plugin.configs().mechanics().getDouble("ground-items.scale", 0.8D);
         TextDisplay display = item.getWorld().spawn(item.getLocation(), TextDisplay.class, spawned -> {
             spawned.text(text);
             style(spawned, scale);
         });
         item.addPassenger(display);
-        this.tracked.put(item.getUniqueId(), new Tracked(display.getUniqueId(), System.currentTimeMillis(), despawnSeconds));
+        this.tracked.put(item.getUniqueId(), new Tracked(display.getUniqueId(), spawnedAt, despawnSeconds));
     }
 
     public void remove(UUID itemId) {
@@ -129,6 +174,10 @@ public final class GroundItemService {
                 continue;
             }
             if (data.displayId == null) {
+                Component text = label(item.getItemStack(), Math.max(0, remaining));
+                if (!text.equals(Component.empty())) {
+                    spawnDisplay(item, text, data.spawnedAt, data.despawnSeconds);
+                }
                 continue;
             }
             var display = this.plugin.getServer().getEntity(data.displayId);

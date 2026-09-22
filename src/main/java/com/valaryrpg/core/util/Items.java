@@ -2,11 +2,9 @@ package com.valaryrpg.core.util;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Map;
@@ -46,8 +44,7 @@ public final class Items {
             }
             left += piece.getAmount();
             if (dropOverflow) {
-                Item dropped = player.getWorld().dropItemNaturally(player.getLocation(), piece);
-                dropped.getPersistentDataContainer().set(noHologramKey(plugin), PersistentDataType.BYTE, (byte) 1);
+                player.getWorld().dropItemNaturally(player.getLocation(), piece);
             }
         }
         return dropOverflow ? 0 : left;

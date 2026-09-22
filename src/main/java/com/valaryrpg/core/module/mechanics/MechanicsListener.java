@@ -148,6 +148,7 @@ public final class MechanicsListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChunkLoad(ChunkLoadEvent event) {
         this.holos.onChunkLoad(event.getWorld(), event.getChunk().getX(), event.getChunk().getZ());
+        this.groundItems.scanChunk(event.getChunk());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
