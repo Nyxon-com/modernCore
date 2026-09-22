@@ -32,6 +32,9 @@ final class CommandFilterListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onCommandSend(PlayerCommandSendEvent event) {
         Player player = event.getPlayer();
+        if (this.filter.seeAll(player)) {
+            return;
+        }
         event.getCommands().removeIf(name -> hidden(player, name));
     }
 
@@ -40,11 +43,17 @@ final class CommandFilterListener implements Listener {
         if (!event.hasFiredAsync()) {
             return;
         }
+        if (this.filter.seeAll(event.getPlayer())) {
+            return;
+        }
         strip(event.getCommandNode(), event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        if (this.filter.seeAll(event.getPlayer())) {
+            return;
+        }
         String message = event.getMessage();
         if (message == null || message.isBlank()) {
             return;
@@ -58,6 +67,9 @@ final class CommandFilterListener implements Listener {
     }
 
     private boolean hidden(Player player, String name) {
+        if (this.filter.seeAll(player)) {
+            return false;
+        }
         if (name != null && name.indexOf(':') >= 0) {
             return true;
         }

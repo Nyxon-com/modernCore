@@ -99,19 +99,12 @@ final class CommandFilter {
     }
 
     boolean seeAll(CommandSender sender) {
-        return Perms.has(this.plugin, sender, "command-see-all");
+        return sender.isOp() || Perms.has(this.plugin, sender, "command-see-all");
     }
 
     boolean allowed(CommandSender sender, String rawName, Command command) {
         if (!this.enabled) {
             return true;
-        }
-        String name = normalize(rawName);
-        if (name.isEmpty()) {
-            return false;
-        }
-        if (blocked(name, rawName, command)) {
-            return false;
         }
         if (seeAll(sender)) {
             return true;
