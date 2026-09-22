@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
@@ -15,6 +16,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -34,6 +36,7 @@ public final class MechanicsListener implements Listener {
     private final LongJumpService longJumps;
     private final PortalService portals;
     private final HoloBlockService holos;
+    private final AdventurePickaxeService pickaxes;
 
     public MechanicsListener(
             ValaryCorePlugin plugin,
@@ -41,7 +44,8 @@ public final class MechanicsListener implements Listener {
             GroundItemService groundItems,
             LongJumpService longJumps,
             PortalService portals,
-            HoloBlockService holos
+            HoloBlockService holos,
+            AdventurePickaxeService pickaxes
     ) {
         this.plugin = plugin;
         this.deaths = deaths;
@@ -49,6 +53,7 @@ public final class MechanicsListener implements Listener {
         this.longJumps = longJumps;
         this.portals = portals;
         this.holos = holos;
+        this.pickaxes = pickaxes;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -76,6 +81,9 @@ public final class MechanicsListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPickup(EntityPickupItemEvent event) {
         this.groundItems.remove(event.getItem().getUniqueId());
+        if (event.getEntity() instanceof Player player) {
+            this.plugin.getServer().getScheduler().runTask(this.plugin, () -> this.pickaxes.stampInventory(player));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -158,6 +166,23 @@ public final class MechanicsListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         this.portals.rememberInside(event.getPlayer());
+        this.pickaxes.stampInventory(event.getPlayer());
+        this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+            if (event.getPlayer().isOnline()) {
+                this.pickaxes.stampInventory(event.getPlayer());
+            }
+        }, 20L);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHeld(PlayerItemHeldEvent event) {
+        this.pickaxes.stamp(event.getPlayer().getInventory().getItem(event.getNewSlot()));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPickaxeClick(InventoryClickEvent event) {
+        this.pickaxes.stamp(event.getCurrentItem());
+        this.pickaxes.stamp(event.getCursor());
     }
 
     @EventHandler(ignoreCancelled = true)
