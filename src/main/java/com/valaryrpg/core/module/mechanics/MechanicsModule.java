@@ -17,7 +17,6 @@ public final class MechanicsModule implements Module {
     private LongJumpService longJumps;
     private PortalService portals;
     private HoloBlockService holos;
-    private AdventurePickaxeService pickaxes;
     private MechanicsListener listener;
     private boolean initialized;
 
@@ -39,10 +38,8 @@ public final class MechanicsModule implements Module {
         this.longJumps = new LongJumpService(this.plugin);
         this.portals = new PortalService(this.plugin);
         this.holos = new HoloBlockService(this.plugin);
-        this.pickaxes = new AdventurePickaxeService(this.plugin);
         this.listener = new MechanicsListener(this.plugin, this.deaths, this.groundItems, this.longJumps, this.portals, this.holos);
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
-        this.plugin.getServer().getPluginManager().registerEvents(this.pickaxes, this.plugin);
         if (this.initialized) {
             this.limitY.start();
         } else {
@@ -70,9 +67,6 @@ public final class MechanicsModule implements Module {
         }
         if (this.listener != null) {
             HandlerList.unregisterAll(this.listener);
-        }
-        if (this.pickaxes != null) {
-            HandlerList.unregisterAll(this.pickaxes);
         }
     }
 
