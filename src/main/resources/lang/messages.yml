@@ -69,7 +69,7 @@ warps:
   teleported-other: "{prefix} <gray>Hai teletrasportato <white>{target}</white> al warp <white>{warp}</white>."
   teleported-by-staff: "{prefix} <gray>Sei stato portato al warp <white>{warp}</white> da <white>{player}</white>."
   deleted: "{prefix} <green>Warp <white>{warp}</white> eliminato."
-  not-found: "{prefix} <red>Il warp <white>{warp}</white> non esiste."
+  no-access: "{prefix} <red>Non puoi usare il warp <white>{warp}</white>."
   invalid-name: "{prefix} <red>Nome warp non valido. Usa lettere, numeri e underscore."
   list: "{prefix} <gray>Warp ({count}): <white>{warps}</white>"
   list-empty: "{prefix} <gray>Nessun warp configurato. Usa <white>/setwarp</white>."

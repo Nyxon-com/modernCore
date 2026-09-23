@@ -44,7 +44,7 @@ final class WarpsCommands {
                 .then(Commands.argument("args", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> {
                             String remaining = CommandText.firstToken(builder.getRemainingLowerCase());
-                            for (String warp : warps().names()) {
+                            for (String warp : warps().names(ctx.getSource().getSender())) {
                                 if (warp.startsWith(remaining)) {
                                     builder.suggest(warp);
                                 }

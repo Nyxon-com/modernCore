@@ -57,6 +57,10 @@ public final class WarpService {
 
     public void teleport(CommandSender initiator, Player target, String rawName) {
         String name = normalize(rawName);
+        if (initiator == target && !canUse(initiator, name)) {
+            this.plugin.messages().send(initiator, "warps.no-access", Map.of("warp", name));
+            return;
+        }
         StoredLocation warp = find(name);
         if (warp == null) {
             this.plugin.messages().send(initiator, "warps.not-found", Map.of("warp", name));
@@ -74,7 +78,7 @@ public final class WarpService {
         boolean cancel = this.plugin.configs().warps().getBoolean("settings.cancel-on-move", true);
         this.teleports.go(target, destination, warmup, cooldown, cancel, player -> {
             this.plugin.messages().send(player, "warps.teleported", Map.of("warp", name));
-            if (staff) {
+            if (staff && initiator instanceof Player) {
                 this.plugin.messages().send(initiator, "warps.teleported-other", Map.of(
                         "target", player.getName(),
                         "warp", name
@@ -99,7 +103,7 @@ public final class WarpService {
     }
 
     public void list(CommandSender sender) {
-        List<String> names = names();
+        List<String> names = names(sender);
         if (names.isEmpty()) {
             this.plugin.messages().send(sender, "warps.list-empty");
             return;
@@ -116,6 +120,18 @@ public final class WarpService {
             return List.of();
         }
         return new ArrayList<>(section.getKeys(false)).stream().sorted().collect(Collectors.toList());
+    }
+
+    public List<String> names(CommandSender sender) {
+        return names().stream().filter(name -> canUse(sender, name)).collect(Collectors.toList());
+    }
+
+    public boolean canUse(CommandSender sender, String rawName) {
+        if (!(sender instanceof Player)) {
+            return true;
+        }
+        String perm = this.plugin.configs().warps().getString("warps." + normalize(rawName) + ".permission", "");
+        return perm == null || perm.isBlank() || sender.hasPermission(perm);
     }
 
     private StoredLocation find(String name) {
