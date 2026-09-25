@@ -60,7 +60,7 @@ public final class PortalService {
     }
 
     public void tryEnter(Player player, Location to) {
-        if (player == null || to == null || to.getWorld() == null) {
+        if (player == null || loaded(to) == null) {
             return;
         }
         UUID uuid = player.getUniqueId();
@@ -80,7 +80,7 @@ public final class PortalService {
      * Al join: se sei già nel cubo non attivare finché non esci e rientri.
      */
     public void rememberInside(Player player) {
-        if (player == null || player.getLocation().getWorld() == null) {
+        if (player == null || loaded(player.getLocation()) == null) {
             return;
         }
         String now = nameAt(player.getLocation());
@@ -128,14 +128,17 @@ public final class PortalService {
             this.plugin.messages().send(player, "portals.invalid-name");
             return;
         }
-        Location first = this.selection.pos1(player.getUniqueId());
-        Location second = this.selection.pos2(player.getUniqueId());
-        Location destination = this.selection.dest(player.getUniqueId());
-        if (first == null || second == null || first.getWorld() == null || second.getWorld() == null) {
+        UUID uuid = player.getUniqueId();
+        Location first = this.selection.pos1(uuid);
+        Location second = this.selection.pos2(uuid);
+        Location destination = this.selection.dest(uuid);
+        String world = this.selection.pos1World(uuid);
+        String other = this.selection.pos2World(uuid);
+        if (first == null || second == null || world == null || other == null) {
             this.plugin.messages().send(player, "portals.incomplete");
             return;
         }
-        if (!first.getWorld().equals(second.getWorld())) {
+        if (!world.equals(other)) {
             this.plugin.messages().send(player, "portals.world-mismatch");
             return;
         }
@@ -143,11 +146,12 @@ public final class PortalService {
         String base = "portals." + id;
         yaml.set(base, null);
         yaml.set(base + ".enabled", true);
-        yaml.set(base + ".world", first.getWorld().getName());
+        yaml.set(base + ".world", world);
         writeBlock(yaml, base + ".pos1", first);
         writeBlock(yaml, base + ".pos2", second);
-        if (destination != null && destination.getWorld() != null) {
-            writeDestination(yaml, base + ".destination", destination);
+        String destinationWorld = this.selection.destWorld(uuid);
+        if (destination != null && destinationWorld != null) {
+            writeDestination(yaml, base + ".destination", destinationWorld, destination);
         }
         yaml.set(base + ".commands", List.of());
         yaml.set(base + ".permission", "");
@@ -156,6 +160,9 @@ public final class PortalService {
         rebuild();
         this.forgetInside(id);
         this.plugin.messages().send(player, "portals.created", Map.of("portal", id));
+        if (destination != null && destinationWorld == null) {
+            this.plugin.messages().send(player, "portals.dest-lost", Map.of("portal", id));
+        }
     }
 
     public void setItem(Player player, String name) {
@@ -358,7 +365,7 @@ public final class PortalService {
     }
 
     private void teleport(Player player, Location destination) {
-        if (!player.isOnline() || destination.getWorld() == null) {
+        if (!player.isOnline() || loaded(destination) == null) {
             return;
         }
         player.teleport(destination);
@@ -380,15 +387,20 @@ public final class PortalService {
         yaml.set(path + ".z", location.getBlockZ());
     }
 
-    private static void writeDestination(FileConfiguration yaml, String path, Location location) {
-        if (location.getWorld() != null) {
-            yaml.set(path + ".world", location.getWorld().getName());
-        }
+    private static void writeDestination(FileConfiguration yaml, String path, String world, Location location) {
+        yaml.set(path + ".world", world);
         yaml.set(path + ".x", location.getX());
         yaml.set(path + ".y", location.getY());
         yaml.set(path + ".z", location.getZ());
         yaml.set(path + ".yaw", location.getYaw());
         yaml.set(path + ".pitch", location.getPitch());
+    }
+
+    private static World loaded(Location location) {
+        if (location == null || !location.isWorldLoaded()) {
+            return null;
+        }
+        return location.getWorld();
     }
 
     private static String normalize(String name) {
@@ -400,12 +412,13 @@ public final class PortalService {
     }
 
     private String nameAt(Location location) {
-        if (location == null || location.getWorld() == null) {
+        World worldRef = loaded(location);
+        if (worldRef == null) {
             return null;
         }
         int yPad = Math.max(0, this.plugin.configs().mechanics().getInt("portal-settings.y-padding", 1));
         int xzPad = Math.max(0, this.plugin.configs().mechanics().getInt("portal-settings.xz-padding", 1));
-        String world = location.getWorld().getName();
+        String world = worldRef.getName();
         int x = location.getBlockX();
         int y = location.getBlockY();
         int z = location.getBlockZ();

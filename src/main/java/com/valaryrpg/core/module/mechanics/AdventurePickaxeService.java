@@ -1,6 +1,7 @@
 package com.valaryrpg.core.module.mechanics;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import com.valaryrpg.core.util.MmoItems;
 import io.papermc.paper.block.BlockPredicate;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
@@ -25,53 +26,23 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Picconi in adventure: scavano ore base + note block (Nexo) e nascondono "Can break".
+ * In adventure applica il can-break del template MMOItems e nasconde la riga in tooltip.
  */
 public final class AdventurePickaxeService implements Listener {
 
-    private static final Material[] BREAKABLE = {
-            Material.NOTE_BLOCK,
-            Material.COAL_ORE,
-            Material.DEEPSLATE_COAL_ORE,
-            Material.COAL_BLOCK,
-            Material.IRON_ORE,
-            Material.DEEPSLATE_IRON_ORE,
-            Material.RAW_IRON_BLOCK,
-            Material.IRON_BLOCK,
-            Material.GOLD_ORE,
-            Material.DEEPSLATE_GOLD_ORE,
-            Material.NETHER_GOLD_ORE,
-            Material.RAW_GOLD_BLOCK,
-            Material.GOLD_BLOCK,
-            Material.DIAMOND_ORE,
-            Material.DEEPSLATE_DIAMOND_ORE,
-            Material.DIAMOND_BLOCK,
-            Material.ANCIENT_DEBRIS,
-            Material.NETHERITE_BLOCK
-    };
-
     private final ValaryCorePlugin plugin;
-    private final ItemAdventurePredicate canBreak;
+    private final Map<String, ItemAdventurePredicate> predicates = new HashMap<>();
 
     public AdventurePickaxeService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
-        List<BlockType> types = new ArrayList<>();
-        for (Material material : BREAKABLE) {
-            BlockType type = material.asBlockType();
-            if (type != null) {
-                types.add(type);
-            }
-        }
-        this.canBreak = ItemAdventurePredicate.itemAdventurePredicate()
-                .addPredicate(BlockPredicate.predicate()
-                        .blocks(RegistrySet.keySetFromValues(RegistryKey.BLOCK, types))
-                        .build())
-                .build();
     }
 
     public void stampInventory(Player player) {
@@ -84,13 +55,14 @@ public final class AdventurePickaxeService implements Listener {
     }
 
     public void stamp(ItemStack item) {
-        if (item == null || item.getType().isAir()) {
+        if (item == null || item.getType().isAir() || !item.getType().name().endsWith("_PICKAXE")) {
             return;
         }
-        if (!item.getType().name().endsWith("_PICKAXE")) {
+        List<Material> materials = MmoItems.canBreakBlocks(item);
+        if (materials == null || materials.isEmpty()) {
             return;
         }
-        item.setData(DataComponentTypes.CAN_BREAK, this.canBreak);
+        item.setData(DataComponentTypes.CAN_BREAK, predicate(materials));
         item.editMeta(meta -> meta.addItemFlags(ItemFlag.HIDE_DESTROYS));
         Set<DataComponentType> hidden = new HashSet<>();
         if (item.hasData(DataComponentTypes.TOOLTIP_DISPLAY)) {
@@ -101,6 +73,24 @@ public final class AdventurePickaxeService implements Listener {
                 DataComponentTypes.TOOLTIP_DISPLAY,
                 TooltipDisplay.tooltipDisplay().hiddenComponents(hidden).build()
         );
+    }
+
+    private ItemAdventurePredicate predicate(List<Material> materials) {
+        String key = materials.stream().map(Material::name).sorted().collect(Collectors.joining(","));
+        return this.predicates.computeIfAbsent(key, ignored -> {
+            List<BlockType> types = new ArrayList<>();
+            for (Material material : materials) {
+                BlockType type = material.asBlockType();
+                if (type != null) {
+                    types.add(type);
+                }
+            }
+            return ItemAdventurePredicate.itemAdventurePredicate()
+                    .addPredicate(BlockPredicate.predicate()
+                            .blocks(RegistrySet.keySetFromValues(RegistryKey.BLOCK, types))
+                            .build())
+                    .build();
+        });
     }
 
     private void later(Player player) {

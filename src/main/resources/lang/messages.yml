@@ -360,6 +360,8 @@ portals:
   pos1: "{prefix} <green>Angolo 1 del portale impostato."
   pos2: "{prefix} <green>Angolo 2 del portale impostato."
   dest: "{prefix} <green>Destinazione del portale impostata."
+  world-unloaded: "{prefix} <red>Quel mondo non è caricato. Entra nel mondo e ripeti la selezione."
+  dest-lost: "{prefix} <yellow>Portale <white>{portal}</white> creato senza destinazione: il mondo era scaricato. Rifai <white>/portal dest</white>."
   wand-given: "{prefix} <green>Wand portale in inventario. Destro = pos1, Shift+destro = pos2, Shift+sinistro = dest."
   command-usage: "{prefix} <gray>Uso: <white>/{label} command <nome> [player] spawn</white>  oppure  <white>[message] <green>testo</green></white>  oppure  <white>[console] say ciao</white>"
   command-set: "{prefix} <green>Comando aggiunto al portale <white>{portal}</white>: <gray>{command}"

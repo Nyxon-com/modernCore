@@ -63,7 +63,7 @@ public final class WorldCatalog {
         changed |= write(yaml, base + ".force-gamemode", false, false);
         changed |= write(yaml, base + ".spawn-monsters", bool(mv, world.getAllowMonsters(), "canMonstersSpawn", "getMonsterSpawn"), overwrite);
         changed |= write(yaml, base + ".spawn-animals", bool(mv, world.getAllowAnimals(), "canAnimalsSpawn", "getAnimalSpawn"), overwrite);
-        changed |= write(yaml, base + ".hunger", bool(mv, true, "isHunger", "getHunger", "isHungerEnabled"), mvSync);
+        changed |= write(yaml, base + ".hunger", bool(mv, defaultHunger(), "isHunger", "getHunger", "isHungerEnabled"), mvSync);
         changed |= write(yaml, base + ".allow-flight", bool(mv, false, "isAllowFlight", "getAllowFlight"), mvSync);
         changed |= write(yaml, base + ".fall-damage", true, false);
         changed |= write(yaml, base + ".keep-spawn-in-memory", bool(mv, world.getKeepSpawnInMemory(), "isKeepSpawnInMemory", "getKeepSpawnInMemory"), overwrite);
@@ -113,11 +113,16 @@ public final class WorldCatalog {
     }
 
     public boolean hunger(World world) {
+        boolean fallback = defaultHunger();
         Object mv = liveMultiverse(world);
         if (mv != null) {
-            return bool(mv, true, "isHunger", "getHunger", "isHungerEnabled");
+            return bool(mv, fallback, "isHunger", "getHunger", "isHungerEnabled");
         }
-        return this.plugin.configs().worlds().getBoolean("worlds." + world.getName() + ".hunger", true);
+        return this.plugin.configs().worlds().getBoolean("worlds." + world.getName() + ".hunger", fallback);
+    }
+
+    private boolean defaultHunger() {
+        return this.plugin.configs().worlds().getBoolean("settings.default-hunger", false);
     }
 
     public boolean allowFlight(World world) {

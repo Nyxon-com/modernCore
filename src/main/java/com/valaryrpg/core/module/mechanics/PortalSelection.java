@@ -25,6 +25,9 @@ final class PortalSelection {
     private final Map<UUID, Location> pos1 = new ConcurrentHashMap<>();
     private final Map<UUID, Location> pos2 = new ConcurrentHashMap<>();
     private final Map<UUID, Location> dest = new ConcurrentHashMap<>();
+    private final Map<UUID, String> pos1World = new ConcurrentHashMap<>();
+    private final Map<UUID, String> pos2World = new ConcurrentHashMap<>();
+    private final Map<UUID, String> destWorld = new ConcurrentHashMap<>();
 
     PortalSelection(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -42,10 +45,25 @@ final class PortalSelection {
         return this.dest.get(uuid);
     }
 
+    String pos1World(UUID uuid) {
+        return this.pos1World.get(uuid);
+    }
+
+    String pos2World(UUID uuid) {
+        return this.pos2World.get(uuid);
+    }
+
+    String destWorld(UUID uuid) {
+        return this.destWorld.get(uuid);
+    }
+
     void forget(UUID uuid) {
         this.pos1.remove(uuid);
         this.pos2.remove(uuid);
         this.dest.remove(uuid);
+        this.pos1World.remove(uuid);
+        this.pos2World.remove(uuid);
+        this.destWorld.remove(uuid);
     }
 
     void markPos1(Player player) {
@@ -53,7 +71,14 @@ final class PortalSelection {
     }
 
     void markPos1(Player player, Location location) {
-        this.pos1.put(player.getUniqueId(), blockOf(location));
+        Location block = blockOf(location);
+        String world = worldName(block);
+        if (world == null) {
+            this.plugin.messages().send(player, "portals.world-unloaded");
+            return;
+        }
+        this.pos1.put(player.getUniqueId(), block);
+        this.pos1World.put(player.getUniqueId(), world);
         this.plugin.messages().send(player, "portals.pos1");
     }
 
@@ -62,12 +87,26 @@ final class PortalSelection {
     }
 
     void markPos2(Player player, Location location) {
-        this.pos2.put(player.getUniqueId(), blockOf(location));
+        Location block = blockOf(location);
+        String world = worldName(block);
+        if (world == null) {
+            this.plugin.messages().send(player, "portals.world-unloaded");
+            return;
+        }
+        this.pos2.put(player.getUniqueId(), block);
+        this.pos2World.put(player.getUniqueId(), world);
         this.plugin.messages().send(player, "portals.pos2");
     }
 
     void markDest(Player player) {
-        this.dest.put(player.getUniqueId(), player.getLocation().clone());
+        Location location = player.getLocation().clone();
+        String world = worldName(location);
+        if (world == null) {
+            this.plugin.messages().send(player, "portals.world-unloaded");
+            return;
+        }
+        this.dest.put(player.getUniqueId(), location);
+        this.destWorld.put(player.getUniqueId(), world);
         this.plugin.messages().send(player, "portals.dest");
     }
 
@@ -111,9 +150,16 @@ final class PortalSelection {
     }
 
     private static Location blockOf(Location location) {
-        if (location.getWorld() == null) {
-            return location.clone();
+        if (location == null || !location.isWorldLoaded()) {
+            return location == null ? null : location.clone();
         }
         return new Location(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
+    }
+
+    private static String worldName(Location location) {
+        if (location == null || !location.isWorldLoaded()) {
+            return null;
+        }
+        return location.getWorld().getName();
     }
 }

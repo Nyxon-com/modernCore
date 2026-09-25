@@ -1,8 +1,12 @@
 package com.valaryrpg.core.util;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * MMOItems via MythicLib/MMOItems reflection: match, icona GUI, give da comando YAML.
@@ -73,6 +77,56 @@ public final class MmoItems {
 
     public static String[] typeAndId(ItemStack item) {
         return nbt(item);
+    }
+
+    /**
+     * Blocchi dello stat can-break del template MMOItems.
+     * Null se l'item non è un MMOItem o lo stat non c'è.
+     */
+    public static List<Material> canBreakBlocks(ItemStack item) {
+        String[] found = typeAndId(item);
+        if (found == null || isBlank(found[0]) || isBlank(found[1])) {
+            return null;
+        }
+        if (Bukkit.getPluginManager().getPlugin("MMOItems") == null) {
+            return null;
+        }
+        try {
+            Class<?> mmoClass = Class.forName("net.Indyuce.mmoitems.MMOItems");
+            Object plugin = mmoClass.getField("plugin").get(null);
+            Class<?> typeClass = Class.forName("net.Indyuce.mmoitems.api.Type");
+            Object mmoType = typeClass.getMethod("get", String.class).invoke(null, found[0]);
+            if (mmoType == null) {
+                return null;
+            }
+            Object template = mmoClass.getMethod("getMMOItem", typeClass, String.class).invoke(plugin, mmoType, found[1]);
+            if (template == null) {
+                return null;
+            }
+            Class<?> statClass = Class.forName("net.Indyuce.mmoitems.stat.type.ItemStat");
+            Object canBreakStat = Class.forName("net.Indyuce.mmoitems.ItemStats").getField("CAN_BREAK").get(null);
+            Object data = template.getClass().getMethod("getData", statClass).invoke(template, canBreakStat);
+            if (data == null) {
+                return null;
+            }
+            if (!(data.getClass().getMethod("getList").invoke(data) instanceof List<?> names)) {
+                return List.of();
+            }
+            List<Material> materials = new ArrayList<>();
+            for (Object name : names) {
+                Material material = Material.matchMaterial(String.valueOf(name));
+                if (material != null && material.isBlock()) {
+                    materials.add(material);
+                }
+            }
+            return materials;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank() || "null".equals(value);
     }
 
     private static String[] nbt(ItemStack item) {

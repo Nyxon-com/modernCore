@@ -1,0 +1,6 @@
+cose da fare per la nuova versione 1.0.1:
+comando /clearchat ( solo per admin per cleannare tutta la chat) ( per tutti=)
+
+annunci ogni tot tempo ( annunci che ciclano ogni tot tempo configurabili)
+
+chatcontrol(filter della caht)
