@@ -88,7 +88,13 @@ public final class WorldCatalog {
     }
 
     public boolean importWorld(World world) {
+        if (world == null) {
+            return false;
+        }
         FileConfiguration yaml = this.plugin.configs().worlds();
+        if (ignored(world.getName(), yaml.getStringList("settings.ignore-prefixes"))) {
+            return false;
+        }
         String base = "worlds." + world.getName();
         Object mv = mvWorld(world);
         boolean overwrite = syncFromMultiverse();

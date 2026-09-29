@@ -17,6 +17,9 @@ settings:
   cancel-on-move: false
   teleport-sound: true
   import-on-start: true
+  ignore-prefixes:
+  - arena_
+  - dungeon_
   # Se Multiverse-Core è presente: non riscrivere pvp/difficulty/gamemode/hunger/fly.
   # Le config restano quelle di MV, worlds.yml viene allineato da solo.
   use-multiverse-world-config: false
