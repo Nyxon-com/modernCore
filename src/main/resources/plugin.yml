@@ -14,7 +14,7 @@ softdepend:
   - ExcellentEconomy
   - MMOItems
   - MythicLib
-  - Multiverse-Core
+  - VoidGen
   - PlaceholderAPI
   - TAB
 libraries: []

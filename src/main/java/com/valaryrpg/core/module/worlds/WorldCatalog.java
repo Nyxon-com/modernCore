@@ -6,10 +6,15 @@ import org.bukkit.Difficulty;
 import org.bukkit.GameMode;
 import org.bukkit.GameRules;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -22,6 +27,41 @@ public final class WorldCatalog {
 
     public WorldCatalog(ValaryCorePlugin plugin) {
         this.plugin = plugin;
+    }
+
+    /** Carica i mondi del catalogo. I template boss restano spenti: li clona l'arena. */
+    public void loadConfigured() {
+        if (multiverseEnabled()) {
+            return;
+        }
+        FileConfiguration yaml = this.plugin.configs().worlds();
+        ConfigurationSection section = yaml.getConfigurationSection("worlds");
+        if (section == null) {
+            return;
+        }
+        List<String> prefixes = yaml.getStringList("settings.ignore-prefixes");
+        Path container = Bukkit.getWorldContainer().toPath();
+        for (String name : section.getKeys(false)) {
+            if (ignored(name, prefixes) || Bukkit.getWorld(name) != null) {
+                continue;
+            }
+            if (!yaml.getBoolean("worlds." + name + ".load", !name.endsWith("_boss"))) {
+                continue;
+            }
+            if (!Files.isDirectory(container.resolve(name))) {
+                this.plugin.getLogger().warning("Mondo in catalogo senza cartella: " + name);
+                continue;
+            }
+            WorldCreator creator = new WorldCreator(name);
+            creator.environment(environment(yaml.getString("worlds." + name + ".environment", "NORMAL")));
+            String generator = yaml.getString("worlds." + name + ".generator", "default");
+            if (generator != null && generator.toLowerCase(Locale.ROOT).contains("voidgen")) {
+                creator.generator("VoidGen");
+            }
+            if (creator.createWorld() == null) {
+                this.plugin.getLogger().warning("Load mondo fallito: " + name);
+            }
+        }
     }
 
     public void syncAll() {
@@ -196,6 +236,26 @@ public final class WorldCatalog {
     private boolean syncFromMultiverse() {
         return this.plugin.configs().worlds().getBoolean("settings.sync-worlds-from-multiverse", true)
                 && useMultiverseConfig();
+    }
+
+    private static boolean ignored(String name, List<String> prefixes) {
+        for (String prefix : prefixes) {
+            if (prefix != null && !prefix.isBlank() && name.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static World.Environment environment(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return World.Environment.NORMAL;
+        }
+        try {
+            return World.Environment.valueOf(raw.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            return World.Environment.NORMAL;
+        }
     }
 
     private static boolean multiverseEnabled() {

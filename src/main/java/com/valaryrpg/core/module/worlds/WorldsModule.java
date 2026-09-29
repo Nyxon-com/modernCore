@@ -32,6 +32,7 @@ public final class WorldsModule implements Module {
         this.spawns = new SpawnService(this.plugin);
         this.weather = new WeatherService(this.plugin);
         this.time = new TimeService(this.plugin);
+        this.catalog.loadConfigured();
         this.catalog.syncAll();
         this.catalog.syncFromMultiverseLater();
         this.weather.applyCatalogAll();

@@ -30,7 +30,7 @@ dependencies:
       required: false
       load: BEFORE
       join-classpath: true
-    Multiverse-Core:
+    VoidGen:
       required: false
       load: BEFORE
       join-classpath: true
