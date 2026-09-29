@@ -6,7 +6,7 @@
 # =============================================================================
 
 plugin:
-  prefix: "<gradient:#8B5CF6:#EC4899><bold>Valary</bold></gradient> <dark_gray>»"
+  prefix: "<gradient:#8B5CF6:#EC4899><bold>ᴠᴀʟᴀʀʏʀᴘɢ</bold></gradient><dark_gray>»</dark_gray>"
   language: it
   # Sostituisce i testi vanilla (give, gamemode, time, weather, tp, advancement…) con lang/vanilla.yml
   vanilla-messages: true
