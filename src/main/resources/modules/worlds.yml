@@ -22,8 +22,8 @@ settings:
   - dungeon_
   # Se Multiverse-Core è presente: non riscrivere pvp/difficulty/gamemode/hunger/fly.
   # Le config restano quelle di MV, worlds.yml viene allineato da solo.
-  use-multiverse-world-config: false
-  sync-worlds-from-multiverse: false
+  use-multiverse-world-config: true
+  sync-worlds-from-multiverse: true
   time-lock-interval-ticks: 20
   weather-lock-client-particles: true
   weather-lock-particle: FALLING_WATER

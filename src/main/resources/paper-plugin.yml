@@ -10,6 +10,10 @@ website: https://github.com/Nyxon-com/ValaryRPGcore
 folia-supported: false
 dependencies:
   server:
+    Multiverse-Core:
+      required: false
+      load: BEFORE
+      join-classpath: true
     Vault:
       required: false
       load: BEFORE
