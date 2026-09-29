@@ -18,9 +18,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -58,11 +60,19 @@ public final class AdventurePickaxeService implements Listener {
         if (item == null || item.getType().isAir() || !item.getType().name().endsWith("_PICKAXE")) {
             return;
         }
-        List<Material> materials = MmoItems.canBreakBlocks(item);
-        if (materials == null || materials.isEmpty()) {
+        if (canBreakHidden(item) && item.hasData(DataComponentTypes.CAN_BREAK)) {
             return;
         }
-        item.setData(DataComponentTypes.CAN_BREAK, predicate(materials));
+        List<Material> materials = MmoItems.canBreakBlocks(item);
+        if (materials != null && !materials.isEmpty()) {
+            item.setData(DataComponentTypes.CAN_BREAK, predicate(materials));
+        } else if (!item.hasData(DataComponentTypes.CAN_BREAK)) {
+            return;
+        }
+        hideCanBreak(item);
+    }
+
+    private void hideCanBreak(ItemStack item) {
         item.editMeta(meta -> meta.addItemFlags(ItemFlag.HIDE_DESTROYS));
         Set<DataComponentType> hidden = new HashSet<>();
         if (item.hasData(DataComponentTypes.TOOLTIP_DISPLAY)) {
@@ -73,6 +83,30 @@ public final class AdventurePickaxeService implements Listener {
                 DataComponentTypes.TOOLTIP_DISPLAY,
                 TooltipDisplay.tooltipDisplay().hiddenComponents(hidden).build()
         );
+    }
+
+    private boolean canBreakHidden(ItemStack item) {
+        if (!item.hasData(DataComponentTypes.TOOLTIP_DISPLAY)) {
+            return false;
+        }
+        TooltipDisplay display = item.getData(DataComponentTypes.TOOLTIP_DISPLAY);
+        return display != null && display.hiddenComponents().contains(DataComponentTypes.CAN_BREAK);
+    }
+
+    private void stampView(Player player) {
+        stampInventory(player);
+        Inventory top = player.getOpenInventory().getTopInventory();
+        if (top == null) {
+            return;
+        }
+        for (int slot = 0; slot < top.getSize(); slot++) {
+            ItemStack item = top.getItem(slot);
+            if (item == null || item.getType().isAir() || !item.getType().name().endsWith("_PICKAXE") || canBreakHidden(item)) {
+                continue;
+            }
+            stamp(item);
+            top.setItem(slot, item);
+        }
     }
 
     private ItemAdventurePredicate predicate(List<Material> materials) {
@@ -96,9 +130,22 @@ public final class AdventurePickaxeService implements Listener {
     private void later(Player player) {
         this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
             if (player.isOnline()) {
-                stampInventory(player);
+                stampView(player);
             }
         });
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onOpen(InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
+        }
+        later(player);
+        this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+            if (player.isOnline()) {
+                stampView(player);
+            }
+        }, 2L);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

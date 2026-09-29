@@ -37,6 +37,8 @@ public final class PlayersModule implements Module {
         this.repository = new PlayerDataRepository(this.plugin);
         this.nicks = new NickService(this.plugin, this.repository);
         this.fly = new FlyService(this.plugin, this.repository);
+        this.fly.start();
+        this.plugin.getServer().getPluginManager().registerEvents(this.fly, this.plugin);
         this.god = new GodService(this.plugin, this.repository);
         this.gamemodes = new GameModeService(this.plugin, this.repository);
         this.vitals = new VitalService(this.plugin);
@@ -77,6 +79,10 @@ public final class PlayersModule implements Module {
 
     @Override
     public void disable() {
+        if (this.fly != null) {
+            this.fly.stop();
+            HandlerList.unregisterAll(this.fly);
+        }
         if (this.listener != null) {
             HandlerList.unregisterAll(this.listener);
         }

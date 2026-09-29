@@ -132,6 +132,8 @@ fly:
   enabled-by: "{prefix} <gray>Il volo ti è stato attivato da <white>{player}</white>."
   disabled-by: "{prefix} <gray>Il volo ti è stato disattivato da <white>{player}</white>."
   usage: "{prefix} <gray>Uso da console: <white>/{label} <player> [on|off]</white>"
+  blocked-world: "{prefix} <yellow>Il volo è disattivato in questo mondo."
+  blocked-world-other: "{prefix} <yellow>Il volo è disattivato nel mondo di <white>{player}</white>."
 
 give:
   usage: "{prefix} <gray>Uso: <white>/{label} <player> <item> [quantità]</white>"

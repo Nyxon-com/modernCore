@@ -160,6 +160,9 @@ permissions:
   valary.warp.terrestre:
     description: Usa /warp terrestre (non il portale)
     default: false
+  valary.warp.marte:
+    description: Usa /warp marte (non il portale)
+    default: false
   valary.msg:
     description: Usa /msg e /r
     default: true
