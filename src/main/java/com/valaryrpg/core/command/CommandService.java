@@ -30,6 +30,8 @@ public final class CommandService {
     }
 
     public void register() {
+        TrashCommands trash = new TrashCommands(this.plugin);
+        this.plugin.getServer().getPluginManager().registerEvents(trash, this.plugin);
         this.plugin.getServer().getPluginManager().registerEvents(
                 new CommandFilterListener(this.plugin, this.filter),
                 this.plugin
@@ -64,6 +66,7 @@ public final class CommandService {
             if (enabled("sell")) {
                 new SellCommands(this.plugin).register(registrar);
             }
+            trash.register(registrar);
             if (enabled("chat")) {
                 new ChatCommands(this.plugin).register(registrar);
             }

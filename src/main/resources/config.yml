@@ -117,6 +117,9 @@ commands:
   sell-aliases: []
   sellall: sellall
   sellall-aliases: []
+  trash: cestino
+  trash-aliases:
+    - trash
   back: back
   back-aliases: []
   god: god
@@ -201,6 +204,7 @@ permissions:
   kit-bypass: valary.kit.bypass
   sell: valary.sell
   sellall: valary.sellall
+  trash: valary.trash
   back: valary.back
   god: valary.god
   god-others: valary.god.others

@@ -18,6 +18,8 @@ visible:
   - r
   - sell
   - sellall
+  - cestino
+  - trash
   - spawn
   - valutaclasse
   - warp

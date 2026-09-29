@@ -247,6 +247,9 @@ permissions:
   valary.sellall:
     description: Usa /sellall
     default: true
+  valary.trash:
+    description: Usa /cestino e /trash
+    default: true
   valary.back:
     description: Usa /back
     default: true

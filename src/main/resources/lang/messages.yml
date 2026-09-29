@@ -490,6 +490,10 @@ long-jump:
   unbound: "{prefix} <yellow>Plate <white>{block}</white> rimossa dai long jump custom."
   info: "{prefix} <gray>Miri <white>{material}</white> in <aqua>{block}</aqua>."
 
+trash:
+  title: "<dark_gray>Cestino"
+  dropped: "{prefix} <gray>Hai buttato <white>{amount}</white> oggetti."
+
 sell:
   gui-title: "<dark_gray>Sell"
   confirm: "<green>Conferma vendita"
