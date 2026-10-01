@@ -120,12 +120,17 @@ public final class GroundItemService {
 
     private void spawnDisplay(Item item, Component text, long spawnedAt, int despawnSeconds) {
         float scale = (float) this.plugin.configs().mechanics().getDouble("ground-items.scale", 0.8D);
-        TextDisplay display = item.getWorld().spawn(item.getLocation(), TextDisplay.class, spawned -> {
+        // Mai passenger sull'item: in creative il pickup synca male e l'item sembra eliminato.
+        TextDisplay display = item.getWorld().spawn(labelLocation(item), TextDisplay.class, spawned -> {
             spawned.text(text);
             style(spawned, scale);
         });
-        item.addPassenger(display);
         this.tracked.put(item.getUniqueId(), new Tracked(display.getUniqueId(), spawnedAt, despawnSeconds));
+    }
+
+    private org.bukkit.Location labelLocation(Item item) {
+        double offsetY = this.plugin.configs().mechanics().getDouble("ground-items.offset-y", 0.32D);
+        return item.getLocation().clone().add(0.0D, offsetY, 0.0D);
     }
 
     public void remove(UUID itemId) {
@@ -183,6 +188,13 @@ public final class GroundItemService {
             var display = this.plugin.getServer().getEntity(data.displayId);
             if (display instanceof TextDisplay textDisplay) {
                 textDisplay.text(label(item.getItemStack(), Math.max(0, remaining)));
+                textDisplay.teleportAsync(labelLocation(item));
+            } else {
+                remove(entry.getKey());
+                Component text = label(item.getItemStack(), Math.max(0, remaining));
+                if (!text.equals(Component.empty())) {
+                    spawnDisplay(item, text, data.spawnedAt, data.despawnSeconds);
+                }
             }
         }
     }
@@ -198,9 +210,8 @@ public final class GroundItemService {
         display.setPersistent(false);
         display.setTextOpacity((byte) yaml.getInt("ground-items.text-opacity", -1));
         display.setAlignment(alignment(yaml.getString("ground-items.alignment", "CENTER")));
-        float offsetY = (float) yaml.getDouble("ground-items.offset-y", 0.32D);
         display.setTransformation(new Transformation(
-                new Vector3f(0f, offsetY, 0f),
+                new Vector3f(0f, 0f, 0f),
                 new Quaternionf(),
                 new Vector3f(scale, scale, scale),
                 new Quaternionf()

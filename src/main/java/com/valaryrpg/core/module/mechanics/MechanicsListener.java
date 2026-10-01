@@ -23,6 +23,8 @@ import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
+import java.util.List;
+
 /**
  * Eventi mechanics: morti, item a terra, long-jump, portali, holo-block.
  */
@@ -73,9 +75,14 @@ public final class MechanicsListener implements Listener {
         });
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPickup(EntityPickupItemEvent event) {
+        // Prima del pickup: togli hologram / eventuali passenger residui.
         this.groundItems.remove(event.getItem().getUniqueId());
+        for (var passenger : List.copyOf(event.getItem().getPassengers())) {
+            event.getItem().removePassenger(passenger);
+            passenger.remove();
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
