@@ -456,6 +456,7 @@ public final class HoloBlockService {
                 this.plugin.messages().send(player, "holos.no-command", Map.of("holo", holoId));
                 return;
             }
+            // Panel/comandi pesanti: lascia prima particle/sound, poi esegui (supporta [delay] N).
             ActionCommands.run(this.plugin, player, commands, Map.of("holo", holoId), true);
         });
         return true;

@@ -9,8 +9,9 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Esegue liste di comandi YAML: [close] [console] [player] [sound] [message].
+ * Esegue liste di comandi YAML: [close] [console] [player] [sound] [message] [delay].
  * Senza tag: console (kit/sell) oppure player se {@code playerDefault}.
+ * {@code [delay] N} = aspetta N tick prima dei comandi successivi (stessa lista).
  */
 public final class ActionCommands {
 
@@ -35,8 +36,20 @@ public final class ActionCommands {
         if (lines == null || lines.isEmpty() || player == null) {
             return false;
         }
+        return runFrom(plugin, player, lines, extra, playerDefault, 0);
+    }
+
+    private static boolean runFrom(
+            ValaryCorePlugin plugin,
+            Player player,
+            List<String> lines,
+            Map<String, String> extra,
+            boolean playerDefault,
+            int start
+    ) {
         boolean close = false;
-        for (String raw : lines) {
+        for (int i = start; i < lines.size(); i++) {
+            String raw = lines.get(i);
             if (raw == null || raw.isBlank()) {
                 continue;
             }
@@ -44,6 +57,19 @@ public final class ActionCommands {
             String lower = line.toLowerCase(Locale.ROOT);
             if (lower.equals("[close]") || lower.equals("close")) {
                 close = true;
+                continue;
+            }
+            if (lower.startsWith("[delay]")) {
+                long ticks = parseDelay(line.substring("[delay]".length()).trim());
+                int next = i + 1;
+                if (ticks > 0 && next < lines.size()) {
+                    Tasks.later(plugin, ticks, () -> {
+                        if (player.isOnline()) {
+                            runFrom(plugin, player, lines, extra, playerDefault, next);
+                        }
+                    });
+                    return close;
+                }
                 continue;
             }
             if (lower.startsWith("[console]")) {
@@ -76,6 +102,13 @@ public final class ActionCommands {
         return close;
     }
 
+    private static long parseDelay(String raw) {
+        try {
+            return Math.max(0L, Long.parseLong(raw.trim().split("\\s+")[0]));
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
+            return 0L;
+        }
+    }
     private static String fill(Player player, String raw, Map<String, String> extra) {
         String line = raw
                 .replace("{player}", player.getName())
