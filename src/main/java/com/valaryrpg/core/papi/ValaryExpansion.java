@@ -17,7 +17,8 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Placeholder RAM-only: %valary_nick%, %valary_nick_mm%, %valary_god%, %valary_vanished%,
- * %valary_world%, %valary_world_alias%, %valary_fly%, %valary_hp_bar%, %valary_mana_bar%.
+ * %valary_world%, %valary_world_alias%, %valary_fly%,
+ * %valary_hp_bar%, %valary_mana_bar%, %valary_level_bar%.
  */
 public final class ValaryExpansion extends PlaceholderExpansion {
 
@@ -61,8 +62,9 @@ public final class ValaryExpansion extends PlaceholderExpansion {
             case "fly" -> flag(online != null && online.getAllowFlight());
             case "world" -> online == null || online.getWorld() == null ? "" : online.getWorld().getName();
             case "world_alias" -> alias(online);
-            case "hp_bar" -> online == null ? "" : nexoBar(online, "hp_bar", hpRatio(online));
-            case "mana_bar" -> online == null ? "" : nexoBar(online, "mana_bar", manaRatio(online));
+            case "hp_bar" -> online == null ? "" : nexoBar(online, "fh_hp", hpRatio(online));
+            case "mana_bar" -> online == null ? "" : nexoBar(online, "fh_mana", manaRatio(online));
+            case "level_bar" -> online == null ? "" : nexoBar(online, "fh_level", levelRatio(online));
             default -> null;
         };
     }
@@ -90,12 +92,26 @@ public final class ValaryExpansion extends PlaceholderExpansion {
         return Math.max(0.0D, Math.min(1.0D, cur / max));
     }
 
+    private static double levelRatio(Player player) {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
+            return 0.0D;
+        }
+        // 0..100 percent → 0..1
+        double pct = parseDouble(PlaceholderAPI.setPlaceholders(player, "%mmocore_level_percent%"));
+        if (pct > 1.0D) {
+            pct = pct / 100.0D;
+        }
+        return Math.max(0.0D, Math.min(1.0D, pct));
+    }
+
+    /** Fantasy HUD bars use glyphs fh_*_1 .. fh_*_25 (empty when ratio ~ 0). */
     private static String nexoBar(Player player, String prefix, double ratio) {
-        int index = (int) Math.round(ratio * 10.0D);
-        if (index < 0) {
-            index = 0;
-        } else if (index > 10) {
-            index = 10;
+        int index = (int) Math.round(ratio * 25.0D);
+        if (index <= 0) {
+            return "";
+        }
+        if (index > 25) {
+            index = 25;
         }
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
             return "";
