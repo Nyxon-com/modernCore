@@ -4,17 +4,24 @@ import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.moderation.ModerationModule;
 import com.valaryrpg.core.module.players.PlayersModule;
 import com.valaryrpg.core.module.worlds.WorldsModule;
+import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Placeholder RAM-only: %valary_nick%, %valary_nick_mm%, %valary_god%, %valary_vanished%, %valary_world%, %valary_world_alias%, %valary_fly%.
+ * Placeholder RAM-only: %valary_nick%, %valary_nick_mm%, %valary_god%, %valary_vanished%,
+ * %valary_world%, %valary_world_alias%, %valary_fly%, %valary_hp_bar%, %valary_mana_bar%.
  */
 public final class ValaryExpansion extends PlaceholderExpansion {
+
+    private static final int BAR_STEPS = 20;
 
     private final ValaryCorePlugin plugin;
 
@@ -56,8 +63,55 @@ public final class ValaryExpansion extends PlaceholderExpansion {
             case "fly" -> flag(online != null && online.getAllowFlight());
             case "world" -> online == null || online.getWorld() == null ? "" : online.getWorld().getName();
             case "world_alias" -> alias(online);
+            case "hp_bar" -> online == null ? "" : nexoBar(online, "vh_hp", hpRatio(online));
+            case "mana_bar" -> online == null ? "" : nexoBar(online, "vh_mana", manaRatio(online));
             default -> null;
         };
+    }
+
+    private static double hpRatio(Player player) {
+        AttributeInstance max = player.getAttribute(Attribute.MAX_HEALTH);
+        double maxHp = max == null ? 20.0D : max.getValue();
+        if (maxHp <= 0.0D) {
+            return 0.0D;
+        }
+        return Math.max(0.0D, Math.min(1.0D, player.getHealth() / maxHp));
+    }
+
+    private static double manaRatio(Player player) {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
+            return 0.0D;
+        }
+        double cur = parseDouble(PlaceholderAPI.setPlaceholders(player, "%mmocore_mana%"));
+        double max = parseDouble(PlaceholderAPI.setPlaceholders(player, "%mmocore_max_mana%"));
+        if (max <= 0.0D) {
+            return 0.0D;
+        }
+        return Math.max(0.0D, Math.min(1.0D, cur / max));
+    }
+
+    private static String nexoBar(Player player, String prefix, double ratio) {
+        int index = (int) Math.round(ratio * BAR_STEPS);
+        if (index < 0) {
+            index = 0;
+        } else if (index > BAR_STEPS) {
+            index = BAR_STEPS;
+        }
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
+            return "";
+        }
+        return PlaceholderAPI.setPlaceholders(player, "%nexo_" + prefix + "_" + index + "%");
+    }
+
+    private static double parseDouble(String raw) {
+        if (raw == null || raw.isBlank() || raw.contains("%")) {
+            return 0.0D;
+        }
+        try {
+            return Double.parseDouble(raw.replace(",", ".").trim());
+        } catch (NumberFormatException ignored) {
+            return 0.0D;
+        }
     }
 
     private String nick(Player online, OfflinePlayer offline) {
