@@ -8,7 +8,7 @@ import com.valaryrpg.core.module.tomb.TombService;
 import org.bukkit.event.HandlerList;
 
 /**
- * LimitY, morti, tombe, hologram a terra, long-jump, portali e holo-block.
+ * LimitY, morti, tombe, hologram a terra, long-jump, portali, holo-block e multi-hit sui mob.
  */
 public final class MechanicsModule implements Module {
 
@@ -22,6 +22,7 @@ public final class MechanicsModule implements Module {
     private PortalService portals;
     private HoloBlockService holos;
     private AdventurePickaxeService pickaxes;
+    private MultiHitService multiHit;
     private MechanicsListener listener;
     private TombListener tombListener;
     private boolean initialized;
@@ -47,11 +48,14 @@ public final class MechanicsModule implements Module {
         this.portals = new PortalService(this.plugin);
         this.holos = new HoloBlockService(this.plugin);
         this.pickaxes = new AdventurePickaxeService(this.plugin);
+        this.multiHit = new MultiHitService(this.plugin);
         this.listener = new MechanicsListener(this.plugin, this.deaths, this.groundItems, this.longJumps, this.portals, this.holos);
         this.tombListener = new TombListener(this.tombs);
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
         this.plugin.getServer().getPluginManager().registerEvents(this.tombListener, this.plugin);
         this.plugin.getServer().getPluginManager().registerEvents(this.pickaxes, this.plugin);
+        this.plugin.getServer().getPluginManager().registerEvents(this.multiHit, this.plugin);
+        this.multiHit.start();
         if (this.initialized) {
             this.limitY.start();
         } else {
@@ -92,6 +96,10 @@ public final class MechanicsModule implements Module {
         }
         if (this.pickaxes != null) {
             HandlerList.unregisterAll(this.pickaxes);
+        }
+        if (this.multiHit != null) {
+            HandlerList.unregisterAll(this.multiHit);
+            this.multiHit.stop();
         }
     }
 

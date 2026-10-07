@@ -327,3 +327,11 @@ holo-blocks:
       sound: holo-click
       commands:
         - "[message] <gray>Hologram example"
+
+# Multi-hit: piu' player possono colpire lo stesso mob nello stesso momento.
+# L'immunita' dopo un colpo (no-damage ticks) diventa per-player invece che globale.
+# attacker-window-ticks: -1 = meta' dell'immunita' originale del mob (MythicMobs NoDamageTicks 10 -> 5 tick,
+#   mob vanilla 20 -> 10 tick), cioe' un singolo player colpisce con lo stesso ritmo di prima.
+multi-hit:
+  enabled: true
+  attacker-window-ticks: -1
