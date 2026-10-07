@@ -153,7 +153,7 @@ final class ExpeditionMenu {
         };
         if (slot == gui.getInt("status-slot", -1)) {
             if (state != null && state.isPresent() && state.get().endsAt() <= System.currentTimeMillis()) {
-                this.service.claim(player, refresh);
+                this.service.openClaim(player);
             }
             return;
         }
@@ -165,7 +165,7 @@ final class ExpeditionMenu {
             if (state != null && state.isPresent()) {
                 ExpeditionRepository.Run run = state.get();
                 if (run.expedition().equalsIgnoreCase(id) && run.endsAt() <= System.currentTimeMillis()) {
-                    this.service.claim(player, refresh);
+                    this.service.openClaim(player);
                 } else if (run.expedition().equalsIgnoreCase(id)) {
                     this.service.send(player, "not-ready", Map.of(
                             "remaining", Durations.formatRemaining(this.service.plugin, run.endsAt())));

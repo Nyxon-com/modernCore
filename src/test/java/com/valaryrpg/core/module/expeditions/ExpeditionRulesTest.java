@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ExpeditionRulesTest {
@@ -61,5 +63,36 @@ class ExpeditionRulesTest {
         String bar = ExpeditionRules.bar(50);
         assertEquals(20, bar.chars().filter(c -> c == '|').count());
         assertFalse(bar.isEmpty());
+    }
+
+    @Test
+    void parseMmoGiveReadsTypeIdAmount() {
+        assertArrayEquals(new String[]{"MATERIAL", "PERLA_TERRESTRE", "4"},
+                ExpeditionRules.parseMmoGive("[console] mmoitems give MATERIAL PERLA_TERRESTRE {player} 4"));
+        assertArrayEquals(new String[]{"GEM_STONE", "MAGMITE0", "1"},
+                ExpeditionRules.parseMmoGive("mi give gem_stone magmite0 Steve"));
+        assertNull(ExpeditionRules.parseMmoGive("[console] crate give {player} terratron 1"));
+        assertNull(ExpeditionRules.parseMmoGive("[console] mmocore admin exp give {player} main 300"));
+        assertEquals("crate give x 1", ExpeditionRules.stripPrefix("[CONSOLE]  crate give x 1"));
+    }
+
+    @Test
+    void rewardSlotsAreCenteredInsideTheFrame() {
+        assertEquals(List.of(), ExpeditionRules.rewardSlots(0));
+        assertEquals(List.of(22), ExpeditionRules.rewardSlots(1));
+        assertEquals(List.of(20, 22, 24), ExpeditionRules.rewardSlots(3));
+        assertEquals(List.of(19, 20, 21, 23, 24, 25), ExpeditionRules.rewardSlots(6));
+        assertEquals(List.of(10, 11, 12, 14, 15, 16, 20, 21, 22, 23, 24), ExpeditionRules.rewardSlots(11));
+        assertEquals(21, ExpeditionRules.rewardSlots(40).size());
+        for (int count = 1; count <= 21; count++) {
+            List<Integer> slots = ExpeditionRules.rewardSlots(count);
+            assertEquals(count, slots.size());
+            assertEquals(count, slots.stream().distinct().count());
+            for (int slot : slots) {
+                int row = slot / 9;
+                int column = slot % 9;
+                assertTrue(row >= 1 && row <= 3 && column >= 1 && column <= 7, count + " -> " + slot);
+            }
+        }
     }
 }

@@ -12,7 +12,8 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Map;
 
 /**
- * Spedizioni VIP: timer a timestamp nel DB (avanza anche offline), GUI con timer live.
+ * Spedizioni VIP: timer a timestamp nel DB (avanza anche offline), GUI con timer live,
+ * GUI di riscatto animata e avviso quando la spedizione torna.
  */
 public final class ExpeditionsModule implements Module {
 
@@ -21,6 +22,7 @@ public final class ExpeditionsModule implements Module {
     private ExpeditionMenu menu;
     private ExpeditionsListener listener;
     private BukkitTask refresh;
+    private BukkitTask notifier;
 
     public ExpeditionsModule(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -40,6 +42,8 @@ public final class ExpeditionsModule implements Module {
         this.service.start();
         long period = Math.max(5L, this.service.config().getLong("settings.refresh-ticks", 20L));
         this.refresh = this.plugin.getServer().getScheduler().runTaskTimer(this.plugin, this::refreshOpen, period, period);
+        long notifyPeriod = Math.max(20L, this.service.config().getLong("settings.notify-check-ticks", 100L));
+        this.notifier = this.plugin.getServer().getScheduler().runTaskTimer(this.plugin, this.service::notifyCompleted, notifyPeriod, notifyPeriod);
     }
 
     @Override
@@ -48,13 +52,22 @@ public final class ExpeditionsModule implements Module {
             this.refresh.cancel();
             this.refresh = null;
         }
+        if (this.notifier != null) {
+            this.notifier.cancel();
+            this.notifier = null;
+        }
+        if (this.service != null) {
+            // consegna i riscatti aperti prima di chiudere le GUI (player ancora online)
+            this.service.flushClaims();
+        }
         if (this.listener != null) {
             HandlerList.unregisterAll(this.listener);
             this.listener = null;
         }
         if (this.menu != null) {
             for (Player player : this.plugin.getServer().getOnlinePlayers()) {
-                if (this.menu.isMenu(player.getOpenInventory().getTopInventory())) {
+                Inventory top = player.getOpenInventory().getTopInventory();
+                if (this.menu.isMenu(top) || this.service.claimMenu().isMenu(top)) {
                     player.closeInventory();
                 }
             }

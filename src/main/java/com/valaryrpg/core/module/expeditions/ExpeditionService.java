@@ -34,6 +34,9 @@ public final class ExpeditionService {
     private final ExpeditionRepository repository;
     private final Map<UUID, Optional<ExpeditionRepository.Run>> cache = new ConcurrentHashMap<>();
     private final Set<UUID> busy = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, ClaimSession> sessions = new ConcurrentHashMap<>();
+    private final Set<String> notified = ConcurrentHashMap.newKeySet();
+    private final ExpeditionClaimMenu claimMenu;
     private volatile boolean ready;
 
     ExpeditionService(ValaryCorePlugin plugin) {
@@ -41,6 +44,11 @@ public final class ExpeditionService {
         this.file = new YamlFile(plugin, "modules/expeditions.yml");
         this.file.load();
         this.repository = new ExpeditionRepository(plugin);
+        this.claimMenu = new ExpeditionClaimMenu(this);
+    }
+
+    ExpeditionClaimMenu claimMenu() {
+        return this.claimMenu;
     }
 
     void start() {
@@ -60,8 +68,10 @@ public final class ExpeditionService {
     }
 
     void shutdown() {
+        flushClaims();
         this.cache.clear();
         this.busy.clear();
+        this.notified.clear();
         this.ready = false;
     }
 
@@ -83,6 +93,8 @@ public final class ExpeditionService {
     void forget(UUID uuid) {
         this.cache.remove(uuid);
         this.busy.remove(uuid);
+        String prefix = uuid + ":";
+        this.notified.removeIf(key -> key.startsWith(prefix));
     }
 
     void load(Player player, boolean notify) {
@@ -94,11 +106,17 @@ public final class ExpeditionService {
             try {
                 Optional<ExpeditionRepository.Run> run = this.repository.find(uuid);
                 this.cache.put(uuid, run);
-                if (notify && run.isPresent() && run.get().endsAt() <= System.currentTimeMillis()
-                        && config().getBoolean("settings.notify-on-join", true)) {
+                boolean readyNow = run.isPresent() && run.get().endsAt() <= System.currentTimeMillis();
+                if (readyNow) {
+                    // già pronta al caricamento: niente doppio avviso dal task periodico
+                    this.notified.add(notifyKey(uuid, run.get()));
+                }
+                if (notify && readyNow && config().getBoolean("settings.notify-on-join", true)) {
+                    String name = displayName(run.get().expedition());
                     Tasks.sync(this.plugin, () -> {
                         if (player.isOnline()) {
-                            send(player, "ready-join", Map.of());
+                            send(player, "ready-join", Map.of("name", name));
+                            readySound(player);
                         }
                     });
                 }
@@ -234,11 +252,28 @@ public final class ExpeditionService {
         });
     }
 
-    void claim(Player player, Runnable after) {
+    // --------------------------------------------------------------- riscatto
+
+    ClaimSession session(UUID uuid) {
+        return this.sessions.get(uuid);
+    }
+
+    /**
+     * Apre la GUI di riscatto: tira le ricompense in RAM (DB intatto) e avvia l'animazione.
+     * La consegna avviene una sola volta in {@link #commit} (bottone, chiusura, uscita o disable).
+     */
+    void openClaim(Player player) {
         UUID uuid = player.getUniqueId();
         if (!this.ready || !loaded(uuid)) {
             send(player, "loading", Map.of());
             load(player, false);
+            return;
+        }
+        ClaimSession existing = this.sessions.get(uuid);
+        if (existing != null) {
+            if (!existing.committing && existing.inventory != null) {
+                player.openInventory(existing.inventory);
+            }
             return;
         }
         Optional<ExpeditionRepository.Run> cached = this.cache.get(uuid);
@@ -246,20 +281,89 @@ public final class ExpeditionService {
             return;
         }
         ExpeditionRepository.Run run = cached.get();
-        long now = System.currentTimeMillis();
-        if (run.endsAt() > now) {
+        if (run.endsAt() > System.currentTimeMillis()) {
             send(player, "not-ready", Map.of("remaining", Durations.formatRemaining(this.plugin, run.endsAt())));
             return;
         }
-        if (!this.busy.add(uuid)) {
+        if (this.busy.contains(uuid)) {
+            return;
+        }
+        ConfigurationSection expedition = expedition(run.expedition());
+        if (expedition == null) {
+            this.plugin.getLogger().warning("Spedizioni: spedizione '" + run.expedition() + "' non più in config, riscatto bloccato per " + player.getName());
+            send(player, "error", Map.of());
+            return;
+        }
+        ClaimSession session = new ClaimSession(uuid, run, roll(player, expedition));
+        this.sessions.put(uuid, session);
+        this.claimMenu.open(player, session);
+    }
+
+    /** Bottone "Riscatta tutto". */
+    void claimAll(Player player) {
+        ClaimSession session = this.sessions.get(player.getUniqueId());
+        if (session == null || session.committing) {
+            return;
+        }
+        this.claimMenu.revealAll(player, session);
+        commit(player, session, false);
+    }
+
+    /** Chiusura GUI / uscita / disable: se non ancora confermato, consegna adesso. */
+    void closeClaim(Player player, boolean sync) {
+        ClaimSession session = this.sessions.get(player.getUniqueId());
+        if (session == null) {
+            return;
+        }
+        session.cancelTask();
+        if (!session.committing) {
+            commit(player, session, sync);
+        }
+    }
+
+    /** Disable modulo: chiude e consegna tutti i riscatti aperti (sync: i player sono ancora online). */
+    void flushClaims() {
+        for (ClaimSession session : new ArrayList<>(this.sessions.values())) {
+            session.cancelTask();
+            Player player = Bukkit.getPlayer(session.uuid);
+            if (player != null && !session.committing) {
+                commit(player, session, true);
+            }
+        }
+        this.sessions.clear();
+    }
+
+    /**
+     * Unico punto di consegna. committing (main thread) blocca doppi click/chiusure;
+     * il DELETE atomico (== 1) blocca qualsiasi altro doppio riscatto, anche tra server.
+     * sync = true solo per uscita/disable, quando il callback async troverebbe il player offline.
+     */
+    private void commit(Player player, ClaimSession session, boolean sync) {
+        if (session.committing) {
+            return;
+        }
+        session.committing = true;
+        UUID uuid = session.uuid;
+        this.busy.add(uuid);
+        long now = System.currentTimeMillis();
+        if (sync) {
+            boolean claimed = false;
+            boolean error = false;
+            try {
+                claimed = this.repository.claim(uuid, session.run, now);
+            } catch (Exception exception) {
+                error = true;
+                this.plugin.getLogger().warning("Spedizioni: riscatto fallito per " + player.getName() + ": " + exception.getMessage());
+            }
+            complete(player, session, claimed, error, null);
             return;
         }
         Tasks.async(this.plugin, () -> {
             boolean claimed = false;
             boolean failed = false;
-            Optional<ExpeditionRepository.Run> fresh = Optional.empty();
+            Optional<ExpeditionRepository.Run> fresh = null;
             try {
-                claimed = this.repository.claim(uuid, run, now);
+                claimed = this.repository.claim(uuid, session.run, now);
                 if (!claimed) {
                     fresh = this.repository.find(uuid);
                 }
@@ -269,42 +373,111 @@ public final class ExpeditionService {
             }
             boolean ok = claimed;
             boolean error = failed;
-            Optional<ExpeditionRepository.Run> state = ok ? Optional.empty() : fresh;
-            Tasks.sync(this.plugin, () -> {
-                try {
-                    if (!error) {
-                        this.cache.put(uuid, state);
-                    }
-                    if (error) {
-                        if (player.isOnline()) {
-                            send(player, "error", Map.of());
-                        }
-                        return;
-                    }
-                    if (!ok) {
-                        return;
-                    }
-                    if (!player.isOnline()) {
-                        // uscito durante il riscatto: ripristina la riga, potrà riscattare al prossimo login
-                        this.cache.remove(uuid);
-                        Tasks.async(this.plugin, () -> {
-                            try {
-                                this.repository.insert(uuid, run);
-                            } catch (Exception exception) {
-                                this.plugin.getLogger().warning("Spedizioni: ripristino fallito per " + uuid + " (" + run.expedition() + "): " + exception.getMessage());
-                            }
-                        });
-                        return;
-                    }
-                    reward(player, run.expedition());
-                } finally {
-                    this.busy.remove(uuid);
-                    if (after != null && player.isOnline()) {
-                        after.run();
-                    }
-                }
-            });
+            Optional<ExpeditionRepository.Run> state = fresh;
+            Tasks.sync(this.plugin, () -> complete(player, session, ok, error, state));
         });
+    }
+
+    private void complete(Player player, ClaimSession session, boolean claimed, boolean error,
+                          Optional<ExpeditionRepository.Run> fresh) {
+        UUID uuid = session.uuid;
+        this.sessions.remove(uuid, session);
+        try {
+            if (error) {
+                // DB non toccato o stato ignoto: nessun premio, la riga resta per un nuovo tentativo
+                if (player.isOnline()) {
+                    send(player, "error", Map.of());
+                    closeIfOpen(player, session);
+                }
+                return;
+            }
+            if (!claimed) {
+                // riga già riscattata/cambiata altrove: niente premi
+                if (fresh != null) {
+                    this.cache.put(uuid, fresh);
+                } else {
+                    this.cache.remove(uuid);
+                }
+                if (player.isOnline()) {
+                    send(player, "claim-gone", Map.of());
+                    closeIfOpen(player, session);
+                }
+                return;
+            }
+            this.cache.put(uuid, Optional.empty());
+            this.notified.remove(notifyKey(uuid, session.run));
+            if (!player.isOnline()) {
+                // uscito durante il riscatto async: ripristina la riga, riscatterà al prossimo login
+                this.cache.remove(uuid);
+                ExpeditionRepository.Run run = session.run;
+                Tasks.async(this.plugin, () -> {
+                    try {
+                        this.repository.insert(uuid, run);
+                    } catch (Exception exception) {
+                        this.plugin.getLogger().warning("Spedizioni: ripristino fallito per " + uuid + " (" + run.expedition() + "): " + exception.getMessage());
+                    }
+                });
+                return;
+            }
+            grant(player, session);
+        } finally {
+            this.busy.remove(uuid);
+        }
+    }
+
+    private void grant(Player player, ClaimSession session) {
+        session.granted = true;
+        boolean full = player.getInventory().firstEmpty() < 0;
+        for (ClaimSession.Reward reward : session.rewards) {
+            ActionCommands.run(this.plugin, player, reward.commands());
+        }
+        send(player, "claimed", Map.of("name", displayName(session.run.expedition())));
+        for (ClaimSession.Reward reward : session.rewards) {
+            send(player, reward.bonus() ? "roll" : "reward-line", Map.of("reward", reward.label()));
+        }
+        if (full || player.getInventory().firstEmpty() < 0) {
+            send(player, "inventory-full", Map.of());
+        }
+        this.claimMenu.sound(player, "claim", 1.0f);
+        this.claimMenu.markClaimed(player, session);
+    }
+
+    private void closeIfOpen(Player player, ClaimSession session) {
+        if (session.inventory != null && player.getOpenInventory().getTopInventory() == session.inventory) {
+            player.closeInventory();
+        }
+    }
+
+    // ---------------------------------------------------------------- notifiche
+
+    private static String notifyKey(UUID uuid, ExpeditionRepository.Run run) {
+        return uuid + ":" + run.expedition() + ":" + run.endsAt();
+    }
+
+    /** Task periodico: avvisa (chat + suono) chi è online quando la spedizione finisce. Una volta per spedizione. */
+    void notifyCompleted() {
+        if (!this.ready) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            UUID uuid = player.getUniqueId();
+            Optional<ExpeditionRepository.Run> state = this.cache.get(uuid);
+            if (state == null || state.isEmpty() || state.get().endsAt() > now || this.sessions.containsKey(uuid)) {
+                continue;
+            }
+            if (this.notified.add(notifyKey(uuid, state.get()))) {
+                send(player, "ready-now", Map.of("name", displayName(state.get().expedition())));
+                readySound(player);
+            }
+        }
+    }
+
+    private void readySound(Player player) {
+        String sound = config().getString("settings.ready-sound", "");
+        if (sound != null && !sound.isBlank()) {
+            com.valaryrpg.core.util.Sounds.playRaw(this.plugin, player, sound, "expeditions.settings.ready-sound");
+        }
     }
 
     /** Admin: completa subito la spedizione di un player. */
@@ -331,22 +504,23 @@ public final class ExpeditionService {
         });
     }
 
-    private void reward(Player player, String expeditionId) {
-        ConfigurationSection expedition = expedition(expeditionId);
-        if (expedition == null) {
-            this.plugin.getLogger().warning("Spedizioni: spedizione '" + expeditionId + "' non più in config, nessun premio per " + player.getName());
-            send(player, "error", Map.of());
-            return;
-        }
+    /** Tira le ricompense (garantite + tiri bonus) senza eseguire nulla. */
+    private List<ClaimSession.Reward> roll(Player player, ConfigurationSection expedition) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        ActionCommands.run(this.plugin, player, randomize(expedition.getStringList("guaranteed"), random));
+        List<ClaimSession.Reward> rewards = new ArrayList<>();
+        for (String line : randomize(expedition.getStringList("guaranteed"), random)) {
+            if (line == null || line.isBlank()) {
+                continue;
+            }
+            rewards.add(this.claimMenu.reward(List.of(line), null, null, false, false));
+        }
         int rolls = Math.max(0, expedition.getInt("rolls", 1)) + extraRolls(player);
         List<Map<?, ?>> pool = expedition.getMapList("pool");
         List<Integer> weights = new ArrayList<>();
         for (Map<?, ?> entry : pool) {
             weights.add(asInt(entry.get("weight"), 0));
         }
-        send(player, "claimed", Map.of("name", displayName(expeditionId)));
+        int rareWeight = config().getInt("claim-gui.rare-weight", 10);
         for (int i = 0; i < rolls; i++) {
             int index = ExpeditionRules.pickWeighted(weights, random);
             if (index < 0) {
@@ -358,10 +532,16 @@ public final class ExpeditionService {
             if (!randomLines.isEmpty()) {
                 lines.add(randomLines.get(random.nextInt(randomLines.size())));
             }
-            ActionCommands.run(this.plugin, player, randomize(lines, random));
             Object name = entry.get("name");
-            send(player, "roll", Map.of("reward", name == null ? "?" : String.valueOf(name)));
+            Object icon = entry.get("icon");
+            Object rareFlag = entry.get("rare");
+            boolean rare = rareFlag != null ? Boolean.parseBoolean(String.valueOf(rareFlag)) : weights.get(index) <= rareWeight;
+            rewards.add(this.claimMenu.reward(randomize(lines, random),
+                    name == null ? null : String.valueOf(name),
+                    icon == null ? null : String.valueOf(icon),
+                    rare, true));
         }
+        return rewards;
     }
 
     private static List<String> randomize(List<String> lines, ThreadLocalRandom random) {

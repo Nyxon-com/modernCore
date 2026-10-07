@@ -2,7 +2,9 @@
 # Spedizioni VIP — /spedizioni
 # Solo i rank elencati in "ranks" possono partire. Il timer è un timestamp
 # salvato nel DB: la spedizione avanza anche da offline o a server spento.
-# Una spedizione alla volta per player. Riscatto dalla GUI quando è pronta.
+# Una spedizione alla volta per player. Quando è pronta si riscatta dalla GUI
+# di riscatto (claim-gui): ricompense rivelate una alla volta + "Riscatta tutto".
+# Le ricompense si consegnano una sola volta: bottone, chiusura GUI o uscita.
 #
 # Comandi ricompensa: come i kit ([console], [player], [message], [sound]).
 # Senza prefisso = console. Placeholder: {player} {rand:MIN-MAX}
@@ -13,10 +15,16 @@ settings:
   refresh-ticks: 20
   # avvisa al join se una spedizione è pronta
   notify-on-join: true
+  # ogni quanti tick controllare le spedizioni finite dei player online (avviso chat + suono)
+  notify-check-ticks: 100
+  # suono dell'avviso "spedizione tornata" (join e mentre sei online)
+  ready-sound: BLOCK_NOTE_BLOCK_BELL
 
 # rank -> durata (ore). Se il player ha più rank vince la durata più corta.
 # permission: nodo controllato (default group.<rank>)
 # extra-rolls: tiri bonus sulla tabella "rolls" (vince il valore più alto)
+# pool: name = etichetta (chat + icona), weight = peso, opzionali icon: MATERIALE e rare: true/false
+#       (default rare se weight <= claim-gui.rare-weight). Le icone dei "mmoitems give" sono l'item vero.
 ranks:
   quirith:
     hours: 48
@@ -195,10 +203,89 @@ gui:
         - '<gray>{name}'
         - '<green>▸ Click per riscattare'
 
+# GUI di riscatto (5 righe). Si apre cliccando una spedizione pronta.
+claim-gui:
+  title: '<b><gradient:#E5A2C1:#9711EA>ʀɪᴛᴏʀɴᴏ ᴅᴀʟʟᴀ ꜱᴘᴇᴅɪᴢɪᴏɴᴇ</gradient></b>'
+  # cornice animata: alterna questi vetri a ogni ricompensa rivelata
+  frame:
+    - PURPLE_STAINED_GLASS_PANE
+    - MAGENTA_STAINED_GLASS_PANE
+  # riempimento interno (AIR = vuoto)
+  inner: AIR
+  header-slot: 4
+  header-lore:
+    - '<gray>La spedizione è tornata con:'
+  button-slot: 40
+  start-delay-ticks: 20
+  reveal-interval-ticks: 12
+  # dopo il riscatto la GUI si chiude da sola dopo N tick (-1 = resta aperta)
+  close-delay-ticks: 50
+  # tiri bonus con weight <= di questo sono "rari" (suono speciale + glow)
+  rare-weight: 10
+  # ricompensa coperta (texture: base64 testa custom opzionale, sostituisce il materiale)
+  hidden:
+    material: ENDER_CHEST
+    name: '<b><gradient:#E5A2C1:#9711EA>???</gradient></b>'
+    lore:
+      - '<dark_gray>Rivelazione in corso…'
+    texture: ''
+  button:
+    revealing:
+      material: NETHER_STAR
+      name: '<b><gradient:#E5A2C1:#9711EA>ʀɪꜱᴄᴀᴛᴛᴀ ᴛᴜᴛᴛᴏ</gradient></b>'
+      lore:
+        - '<gray>Salta l''animazione e ricevi'
+        - '<gray>subito tutte le ricompense.'
+    ready:
+      material: NETHER_STAR
+      glow: true
+      name: '<b><gradient:#E5A2C1:#9711EA>ʀɪꜱᴄᴀᴛᴛᴀ ᴛᴜᴛᴛᴏ</gradient></b>'
+      lore:
+        - '<green>▸ Click per ricevere tutto'
+        - '<dark_gray>Chiudere la GUI riscatta comunque.'
+        - '<dark_gray>Inventario pieno? Il resto cade a terra.'
+    claimed:
+      material: LIME_DYE
+      glow: true
+      name: '<b><gradient:#00FF79:#00FF07>ʀɪꜱᴄᴀᴛᴛᴀᴛᴏ ✔</gradient></b>'
+      lore:
+        - '<gray>Ricompense consegnate.'
+  # lore aggiunta alle icone non-MMOItems
+  reward-lore:
+    - '<dark_gray>Ricompensa garantita'
+  bonus-lore:
+    - '<gold>✦ Tiro bonus'
+  # icone per comandi non-MMOItems: prima regola che combacia ($1, $2 = gruppi regex)
+  icons:
+    - match: '^mmocore admin exp give \S+ \S+ (\d+)'
+      material: EXPERIENCE_BOTTLE
+      name: '<green>+$1 XP classe'
+    - match: '^crate give \S+ (\S+) (\d+)'
+      material: TRIPWIRE_HOOK
+      name: '<gold>$2 key $1'
+      amount-group: 2
+  default-icon: CHEST_MINECART
+  default-name: '<light_purple>Ricompensa'
+  sounds:
+    open: BLOCK_ENDER_CHEST_OPEN
+    reveal: BLOCK_AMETHYST_BLOCK_CHIME
+    rare: ENTITY_PLAYER_LEVELUP
+    fanfare: UI_TOAST_CHALLENGE_COMPLETE
+    claim: ENTITY_ITEM_PICKUP
+  fanfare:
+    title: '<b><gradient:#E5A2C1:#9711EA>ꜱᴘᴇᴅɪᴢɪᴏɴᴇ ᴄᴏᴍᴘʟᴇᴛᴀᴛᴀ</gradient></b>'
+    subtitle: '{name}'
+    particle: TOTEM_OF_UNDYING
+    particle-count: 60
+
 messages:
   started: '{prefix} <gray>Spedizione partita: {name}<gray>. Ritorno tra <white>{duration}</white>.'
-  claimed: '{prefix} <green>Spedizione completata! <gray>Ricompense ricevute.'
-  roll: '{prefix} <gray>Tiro bonus: {reward}'
+  claimed: '{prefix} <green>Spedizione completata! <gray>Ricompense ricevute:'
+  reward-line: ' <dark_gray>• {reward}'
+  roll: ' <gold>✦ <gray>Tiro bonus: {reward}'
+  inventory-full: '{prefix} <yellow>Inventario pieno: gli oggetti in eccesso sono caduti a terra.'
+  claim-gone: '{prefix} <red>Questa spedizione è già stata riscattata.'
+  ready-now: '{prefix} <green>La tua {name} <green>è tornata! <gray>Riscattala con <white>/spedizioni</white>.'
   not-ready: '{prefix} <gray>La spedizione torna tra <white>{remaining}</white>.'
   no-rank: '{prefix} <red>Le spedizioni sono per VIP Quirith o superiore. <gray>store.valaryrpg.net'
   locked: '{prefix} {hint}'
