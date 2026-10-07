@@ -5,35 +5,73 @@
 # (il jar non sovrascrive le liste gia' presenti).
 enabled: true
 
+# Anti-spam comandi player (ms). Bypass: valary.command.cooldown-bypass / OP see-all
+cooldown-millis: 800
+# Cooldown piu' lungo per aprire panel CP (anche da /cp)
+panel-cooldown-millis: 1500
+cooldown-exempt:
+  - login
+  - log
+  - register
+  - reg
+  - totp
+  - changepassword
+  - changepass
+  - leveling
+panel-commands:
+  - cp
+  - commandpanel
+  - commandpanels
+  - panel
 visible:
-  - bal
-  - baltop
-  - diamanti
-  - gilda
-  - kit
-  - kits
-  - msg
-  - party
-  - pay
-  - r
-  - sell
-  - sellall
   - cestino
   - trash
-  - spawn
-  - valutaclasse
-  - warp
-  - warps
+  - changepassword
+  - changepass
+  - reciclatore
+  - tokenwarmup
+  - resetwarmup
+  - warmupreset
+  - rwu
+  - diamanti
+  - gilda
+  - grave
+  - graves
   - guida
+  - help
+  - ns
   - infomob
   - infomobterra
-  - help
-  - vault
-  - pv
+  - kit
+  - kits
+  - log
+  - login
+  - msg
   - nvault
+  - party
+  - pay
+  - playtime
+  - pt
+  - pv
+  - r
+  - reg
+  - register
+  - sell
+  - sellall
+  - spawn
   - sv
   - svault
-  - hs
+  - tempo
+  - tomba
+  - tombe
+  - valutaclasse
+  - vault
+  - warp
+  - warps
+  - leveling
+  - milestones
+  - milestone
+  - milestoni
 vip:
   kryndel:
     commands:
@@ -77,6 +115,18 @@ disabled:
   - ver
   - version
   - "?"
+  - bal
+  - baltop
+  - balance
+  - money
+  - captcha
+  - 2fa
+  - totp
+  - email
+  - l
+  - clearlag
+  - clag
+  - lagclear
   - cp
   - cpdata
   - cpb
@@ -90,6 +140,7 @@ disabled:
   - cpv
   - fucina
   - fucinaterrestre
+  - fucinamarte
   - crates
   - bosscrates
   - rtp
@@ -121,6 +172,57 @@ disabled:
   - quest
   - coins
   - sethome
+  # Sicurezza: comandi admin/vanilla pericolosi
+  - op
+  - deop
+  - stop
+  - reload
+  - restart
+  - ban
+  - ban-ip
+  - pardon
+  - pardon-ip
+  - whitelist
+  - gamemode
+  - gm
+  - give
+  - xp
+  - experience
+  - enchant
+  - effect
+  - summon
+  - setblock
+  - fill
+  - clone
+  - execute
+  - datapack
+  - gamerule
+  - difficulty
+  - time
+  - weather
+  - kill
+  - clear
+  - tp
+  - teleport
+  - tphere
+  - sudo
+  - lp
+  - luckperms
+  - perm
+  - perms
+  - permission
+  - permissions
+  - mv
+  - mvtp
+  - multiverse
+  - worldedit
+  - we
+  - fawe
+  - "/"
+  - "//"
+  - calc
+  - eval
+  - solve
 
 disabled-prefixes:
   - commandpanel
@@ -148,3 +250,15 @@ disabled-prefixes:
   - fabric
   - fabric-command
   - fzzy
+  # Sicurezza
+  - multiverse
+  - mv
+  - fawe
+  - worldguard
+  - wg
+  - authme
+  - paper
+  - bukkit
+  - minecraft
+  - spigot
+  - essentials

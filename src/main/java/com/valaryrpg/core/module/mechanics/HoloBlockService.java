@@ -438,9 +438,11 @@ public final class HoloBlockService {
             return true;
         }
         long now = System.currentTimeMillis();
-        long wait = Math.max(0L, yaml().getLong("holo-blocks.click-cooldown-millis", 400L));
+        long wait = Math.max(0L, yaml().getLong("holo-blocks.click-cooldown-millis", 1500L));
         Long until = this.clickUntil.get(player.getUniqueId());
         if (until != null && until > now) {
+            String seconds = String.format(java.util.Locale.ROOT, "%.1f", (until - now) / 1000.0D);
+            this.plugin.messages().send(player, "holos.cooldown", Map.of("seconds", seconds, "holo", spawned.id));
             return true;
         }
         this.clickUntil.put(player.getUniqueId(), now + wait);
@@ -467,14 +469,17 @@ public final class HoloBlockService {
         long now = System.currentTimeMillis();
         double range = yaml().getDouble("holo-blocks.view-range", 24.0D);
         double rangeSq = range * range;
-        int particleEvery = Math.max(1, yaml().getInt("holo-blocks.particle-every-ticks", 8));
+        int particleEvery = Math.max(1, yaml().getInt("holo-blocks.particle-every-ticks", 20));
         boolean particles = this.ticks % particleEvery == 0;
         for (Spawned spawned : this.spawned.values()) {
             Location center = spawned.block.clone().add(0.5, spawned.offsetY, 0.5);
             if (center.getWorld() == null || !nearby(center, rangeSq)) {
                 continue;
             }
-            animate(spawned, now);
+            // none = niente transform ogni tick (Spark: HoloBlockService.tick)
+            if (spawned.animation != null && !spawned.animation.equalsIgnoreCase("none")) {
+                animate(spawned, now);
+            }
             if (particles) {
                 burst(center, spawned.particle, "holo-blocks.particles");
             }
@@ -484,6 +489,9 @@ public final class HoloBlockService {
     private void animate(Spawned spawned, long now) {
         var text = entity(spawned.textId, TextDisplay.class);
         var icon = entity(spawned.iconId, ItemDisplay.class);
+        if (text == null && icon == null) {
+            return;
+        }
         ConfigurationSection preset = yaml().getConfigurationSection("holo-blocks.animations." + spawned.animation);
         float offsetX = 0f;
         float offsetY = spawned.offsetY;
@@ -508,7 +516,7 @@ public final class HoloBlockService {
                 offsetY += (float) (Math.cos(t * speed) * preset.getDouble("height", 0.10D));
             }
         }
-        int duration = Math.max(1, yaml().getInt("holo-blocks.tick-ticks", 2));
+        int duration = Math.max(1, yaml().getInt("holo-blocks.tick-ticks", 10));
         apply(text, offsetX, offsetY, offsetZ, scale, rotation, duration);
         apply(icon, offsetX, offsetY + spawned.iconOffsetY, offsetZ, spawned.iconScale, rotation, duration);
     }

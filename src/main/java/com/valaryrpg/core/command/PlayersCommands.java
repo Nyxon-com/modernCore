@@ -54,6 +54,7 @@ final class PlayersCommands {
             }
             registrar.register(GiveCommands.giveNode(alias), "Give Valary", List.of());
         }
+        new PlaytimeCommands(this.plugin).register(registrar);
     }
 
     private LiteralCommandNode<CommandSourceStack> replyCommand() {

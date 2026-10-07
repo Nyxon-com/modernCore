@@ -1,38 +1,91 @@
 # =============================================================================
-# Chat: /clearchat, annunci ciclici, filtro parole/link/IP
+# Chat: /clearchat, annunci ciclici, filtro parole/link/IP/flood/exploit
 # Testi: lang/messages.yml → chat.*   Permessi: config.yml → permissions.clearchat
 # =============================================================================
 
 clearchat:
-  # Righe vuote inviate a tutti i player online
   blank-lines: 120
 
 announcements:
   enabled: true
-  # Secondi tra un annuncio e il successivo
   interval-seconds: 180
-  # false = in ordine, true = casuale
   random: false
-  # MiniMessage. {prefix} = plugin.prefix
   messages:
     - "{prefix} <gray>Benvenuto su <white>ValaryRPG</white>. Rispetta le regole in chat."
     - "{prefix} <gray>Usa <white>/spawn</white> per tornare allo spawn e <white>/warp</white> per i warp."
-    - "{prefix} <gray>I messaggi con insulti, link o IP vengono bloccati dal filtro."
+    - "{prefix} <gray>Insulti, bestemmie, link, IP e spam vengono bloccati dal filtro chat."
 
 filter:
   enabled: true
-  # Applica il filtro anche a /msg e /r
   private-messages: true
-  # Avvisa lo staff (permesso chat-notify) quando un messaggio viene bloccato
   notify-staff: true
-  words:
-    - esempio-parola-bloccata
-  # Regex Java. Vuoto = nessuno extra
-  regex: []
   block-ips: true
   block-links: true
+  block-exploits: true
+  caps:
+    # 0 = disattivo. Blocca se >= min-length lettere e ratio maiuscole
+    min-length: 10
+    ratio: 0.75
+  flood:
+    max-messages: 5
+    window-millis: 5000
+    min-delay-millis: 750
+    max-repeats: 3
+    max-same-char: 8
   link-patterns:
     - "(?i)https?://"
     - "(?i)www\\."
     - "(?i)discord\\.gg/"
     - "(?i)discord\\.com/invite"
+    - "(?i)\\b[a-z0-9-]+\\.(com|net|org|gg|io|xyz|tk|ml|ga|cf|ru|it)\\b"
+  regex: []
+  words:
+    # Bestemmie / sacrilegio
+    - dio cane
+    - diocane
+    - dio porco
+    - dioporco
+    - porco dio
+    - porcodio
+    - porca madonna
+    - porcamadonna
+    - madonna puttana
+    - madonnaputtana
+    - dio bastardo
+    - dio merda
+    - cazzo dio
+    - vaffanculo dio
+    # Insulti pesanti
+    - puttana
+    - troia
+    - coglione
+    - stronz
+    - merda
+    - vaffanculo
+    - fanculo
+    - figa
+    - figlio di puttana
+    - testa di cazzo
+    - pezzo di merda
+    - deficiente
+    - ritardato
+    - mongoloide
+    - handicappato
+    # Discriminazione
+    - negro
+    - negri
+    - nigger
+    - nigga
+    - frocio
+    - froci
+    - ricchione
+    - culattone
+    - terrone
+    - polentone
+    - zingaro
+    - zingara
+    - ebreo di merda
+    - islamista di merda
+    - gay di merda
+    - lesbica di merda
+    - trans di merda

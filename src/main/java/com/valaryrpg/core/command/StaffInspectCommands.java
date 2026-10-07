@@ -7,16 +7,22 @@ import com.valaryrpg.core.Plugins;
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.module.moderation.ModerationModule;
 import com.valaryrpg.core.module.moderation.VanishService;
+import com.valaryrpg.core.module.players.PlayerProfile;
+import com.valaryrpg.core.module.players.PlayersModule;
+import com.valaryrpg.core.util.ItemStacks;
 import com.valaryrpg.core.util.OnlinePlayers;
 import com.valaryrpg.core.util.Perms;
+import com.valaryrpg.core.util.Tasks;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Vanish, vanishedit e invsee: ispezione staff senza punizioni.
@@ -67,7 +73,7 @@ final class StaffInspectCommands {
                 .requires(stack -> has("invsee", stack.getSender()))
                 .executes(ctx -> usage(ctx.getSource().getSender(), "invsee.usage", literal))
                 .then(Commands.argument("player", StringArgumentType.word())
-                        .suggests((ctx, builder) -> suggestOnline(builder))
+                        .suggests((ctx, builder) -> suggestPlayers(builder))
                         .executes(ctx -> invsee(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "player"))))
                 .build();
     }
@@ -145,16 +151,39 @@ final class StaffInspectCommands {
             Plugins.core().messages().send(sender, "general.player-only");
             return 0;
         }
-        Player target = OnlinePlayers.exact(playerName);
-        if (target == null) {
-            Plugins.core().messages().send(sender, "general.player-not-found", Map.of("target", playerName));
-            return 0;
-        }
         ModerationModule module = module();
         if (module == null) {
             return 0;
         }
-        module.invsee().open(viewer, target);
+        Player target = OnlinePlayers.exact(playerName);
+        if (target != null) {
+            module.invsee().open(viewer, target);
+            return Command.SINGLE_SUCCESS;
+        }
+        ValaryCorePlugin plugin = Plugins.core();
+        PlayersModule players = players();
+        if (plugin == null || players == null || players.repository() == null) {
+            Plugins.core().messages().send(sender, "general.player-not-found", Map.of("target", playerName));
+            return 0;
+        }
+        Tasks.async(plugin, () -> {
+            Optional<PlayerProfile> profile = players.repository().findByName(playerName);
+            if (profile.isEmpty()) {
+                Tasks.sync(plugin, () -> plugin.messages().send(sender, "general.player-not-found", Map.of("target", playerName)));
+                return;
+            }
+            Optional<String> raw = players.repository().inventory(profile.get().uuid());
+            ItemStack[] packed = raw.map(ItemStacks::decode).orElseGet(() -> new ItemStack[41]);
+            Tasks.sync(plugin, () -> {
+                if (!viewer.isOnline()) {
+                    return;
+                }
+                if (raw.isEmpty()) {
+                    plugin.messages().send(viewer, "invsee.offline-empty", Map.of("player", profile.get().name()));
+                }
+                module.invsee().openOffline(viewer, profile.get().uuid(), profile.get().name(), packed);
+            });
+        });
         return Command.SINGLE_SUCCESS;
     }
 
@@ -187,6 +216,29 @@ final class StaffInspectCommands {
     ) {
         OnlinePlayers.suggest(builder);
         return builder.buildFuture();
+    }
+
+    private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestPlayers(
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder
+    ) {
+        OnlinePlayers.suggest(builder);
+        PlayersModule players = players();
+        if (players != null && players.repository() != null) {
+            for (String name : players.repository().suggestNames(builder.getRemaining(), 40)) {
+                if (name.toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase())) {
+                    builder.suggest(name);
+                }
+            }
+        }
+        return builder.buildFuture();
+    }
+
+    private static PlayersModule players() {
+        ValaryCorePlugin plugin = Plugins.core();
+        if (plugin == null || plugin.modules() == null || !plugin.modules().isEnabled("players")) {
+            return null;
+        }
+        return plugin.modules().get("players");
     }
 
     private static VanishService vanish() {

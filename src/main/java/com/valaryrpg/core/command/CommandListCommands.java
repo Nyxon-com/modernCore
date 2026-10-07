@@ -106,8 +106,12 @@ final class CommandListCommands {
             if (key == null || key.isBlank() || key.indexOf(':') >= 0) {
                 continue;
             }
-            String name = key.toLowerCase(Locale.ROOT);
-            if (!seen.add(name)) {
+            // Es. WorldEdit "//help" registrato come "/help" — non listarlo come /help.
+            if (CommandFilter.isWorldEditSlashCommand(key)) {
+                continue;
+            }
+            String name = CommandFilter.normalize(key);
+            if (name.isEmpty() || !seen.add(name)) {
                 continue;
             }
             org.bukkit.command.Command command = entry.getValue();

@@ -100,6 +100,13 @@ permissions:
       valary.clearchat: true
       valary.chat.filter.bypass: true
       valary.chat.notify: true
+      valary.playtime: true
+      valary.playtime.others: true
+      valary.playerlist: true
+      valary.tomb: true
+      valary.tomb.free: true
+      valary.tomb.others: true
+      valary.clearlag: true
       valary.command.see-all: true
   valary.reload:
     description: Ricarica i file di configurazione
@@ -278,6 +285,9 @@ permissions:
   valary.trash:
     description: Usa /cestino e /trash
     default: true
+  valary.reciclatore:
+    description: Usa /reciclatore per riciclare armi e armature
+    default: true
   valary.back:
     description: Usa /back
     default: true
@@ -322,6 +332,27 @@ permissions:
     default: op
   valary.chat.notify:
     description: Riceve gli avvisi del filtro chat
+    default: op
+  valary.playtime:
+    description: Usa /playtime
+    default: true
+  valary.playtime.others:
+    description: /playtime <player>
+    default: op
+  valary.playerlist:
+    description: Usa /playerlist
+    default: op
+  valary.tomb:
+    description: Usa /tomba
+    default: true
+  valary.tomb.free:
+    description: Ritira tombe senza pagare
+    default: op
+  valary.tomb.others:
+    description: Apri tombe di altri player
+    default: op
+  valary.clearlag:
+    description: Usa /clearlag
     default: op
   valary.command.list:
     description: Usa /command list

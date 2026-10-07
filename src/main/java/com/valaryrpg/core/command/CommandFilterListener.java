@@ -14,10 +14,11 @@ import org.bukkit.event.player.PlayerCommandSendEvent;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
- * Tab Brigadier + digitazione: toglie i comandi filtrati.
+ * Tab Brigadier + digitazione: toglie i comandi filtrati e applica cooldown anti-spam.
  */
 final class CommandFilterListener implements Listener {
 
@@ -51,19 +52,23 @@ final class CommandFilterListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
-        if (this.filter.seeAll(event.getPlayer())) {
-            return;
-        }
+        Player player = event.getPlayer();
         String message = event.getMessage();
         if (message == null || message.isBlank()) {
             return;
         }
         String label = CommandFilter.normalize(message.split("\\s+")[0]);
-        if (!hidden(event.getPlayer(), label)) {
+        if (!this.filter.seeAll(player) && hidden(player, label)) {
+            event.setCancelled(true);
+            this.plugin.messages().send(player, "general.no-permission");
             return;
         }
-        event.setCancelled(true);
-        this.plugin.messages().send(event.getPlayer(), "general.no-permission");
+        double wait = this.filter.tryCommand(player, label);
+        if (wait > 0.0D) {
+            event.setCancelled(true);
+            String seconds = String.format(Locale.ROOT, "%.1f", wait);
+            this.plugin.messages().send(player, "general.cooldown", Map.of("seconds", seconds));
+        }
     }
 
     private boolean hidden(Player player, String name) {

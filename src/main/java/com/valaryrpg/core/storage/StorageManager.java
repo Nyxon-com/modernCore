@@ -171,6 +171,10 @@ public final class StorageManager {
             addColumn(statement, table("players"), "death_killer VARCHAR(64)");
             addColumn(statement, table("players"), "death_inventory TEXT");
             addColumn(statement, table("players"), "gamemode VARCHAR(16)");
+            addColumn(statement, table("players"), "last_quit BIGINT NOT NULL DEFAULT 0");
+            addColumn(statement, table("players"), "playtime_ms BIGINT NOT NULL DEFAULT 0");
+            addColumn(statement, table("players"), "inventory TEXT");
+            addColumn(statement, table("players"), "inventory_dirty INTEGER NOT NULL DEFAULT 0");
             addColumn(statement, table("punishments"), "revoked_at BIGINT");
             addColumn(statement, table("punishments"), "revoked_by VARCHAR(64)");
             addColumn(statement, table("punishments"), "revoke_reason VARCHAR(512)");
@@ -180,6 +184,27 @@ public final class StorageManager {
                     + "claimed_at BIGINT NOT NULL,"
                     + "PRIMARY KEY (uuid, kit)"
                     + ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS " + table("tombs") + " ("
+                    + (this.type == DatabaseType.SQLITE
+                    ? "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    : "id INT NOT NULL AUTO_INCREMENT,")
+                    + "uuid VARCHAR(36) NOT NULL,"
+                    + "name VARCHAR(16) NOT NULL,"
+                    + "created_at BIGINT NOT NULL,"
+                    + "world VARCHAR(64) NOT NULL,"
+                    + "x DOUBLE NOT NULL,"
+                    + "y DOUBLE NOT NULL,"
+                    + "z DOUBLE NOT NULL,"
+                    + "cause VARCHAR(64) NOT NULL DEFAULT '',"
+                    + "killer VARCHAR(64) NOT NULL DEFAULT '',"
+                    + "inventory TEXT,"
+                    + "xp INT NOT NULL DEFAULT 0"
+                    + (this.type == DatabaseType.SQLITE ? ")" : ", PRIMARY KEY (id))"));
+            try {
+                statement.execute("CREATE INDEX idx_" + table("tombs") + "_uuid ON " + table("tombs") + " (uuid)");
+            } catch (SQLException ignored) {
+                // indice già presente
+            }
         } catch (SQLException exception) {
             throw new StorageException("Migrazione schema fallita.", exception);
         }
@@ -190,7 +215,7 @@ public final class StorageManager {
         try (Connection connection = connection();
              PreparedStatement statement = connection.prepareStatement(upsert)) {
             statement.setString(1, "schema_version");
-            statement.setString(2, "10");
+            statement.setString(2, "12");
             statement.executeUpdate();
         } catch (SQLException exception) {
             throw new StorageException("Scrittura versione schema fallita.", exception);
@@ -206,6 +231,6 @@ public final class StorageManager {
     }
 
     private int currentVersion() {
-        return 10;
+        return 12;
     }
 }

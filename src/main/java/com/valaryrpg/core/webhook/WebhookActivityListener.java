@@ -42,26 +42,29 @@ public final class WebhookActivityListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onCommand(PlayerCommandPreprocessEvent event) {
-        if (this.plugin.webhooks() == null) {
-            return;
-        }
-        Player player = event.getPlayer();
-        String message = event.getMessage();
-        if (message == null || message.isBlank()) {
-            return;
-        }
-        String label = normalizeLabel(message.split("\\s+")[0]);
-        Command command = this.plugin.getServer().getCommandMap().getCommand(label);
-        if (command == null && !event.isCancelled()) {
-            return;
-        }
-        if (event.isCancelled()) {
-            this.plugin.webhooks().log("command-blocked", "Comando bloccato", player.getName() + "\n" + message);
-            return;
-        }
-        this.plugin.webhooks().log("commands", "Comando", player.getName() + "\n" + message);
-        if (isCrateLabel(label) || message.toLowerCase(Locale.ROOT).contains("crate")) {
-            this.plugin.webhooks().log("keys", "Crate / key", player.getName() + "\n" + message);
+        try {
+            if (this.plugin.webhooks() == null) {
+                return;
+            }
+            Player player = event.getPlayer();
+            String message = event.getMessage();
+            if (message == null || message.isBlank()) {
+                return;
+            }
+            String label = normalizeLabel(message.split("\\s+")[0]);
+            Command command = this.plugin.getServer().getCommandMap().getCommand(label);
+            if (command == null && !event.isCancelled()) {
+                return;
+            }
+            if (event.isCancelled()) {
+                this.plugin.webhooks().log("command-blocked", "Comando bloccato", player.getName() + "\n" + message);
+                return;
+            }
+            this.plugin.webhooks().log("commands", "Comando", player.getName() + "\n" + message);
+            if (isCrateLabel(label) || message.toLowerCase(Locale.ROOT).contains("crate")) {
+                this.plugin.webhooks().log("keys", "Crate / key", player.getName() + "\n" + message);
+            }
+        } catch (Throwable ignored) {
         }
     }
 

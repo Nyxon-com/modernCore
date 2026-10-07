@@ -67,6 +67,7 @@ public final class CommandService {
                 new SellCommands(this.plugin).register(registrar);
             }
             trash.register(registrar);
+            new ReciclatoreCommands(this.plugin).register(registrar);
             if (enabled("chat")) {
                 new ChatCommands(this.plugin).register(registrar);
             }
@@ -105,6 +106,15 @@ public final class CommandService {
                             } else {
                                 this.plugin.messages().send(sender, "reload.failed", Map.of("error", result.error()));
                             }
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .then(Commands.literal("fixperms")
+                        .requires(stack -> Perms.has(this.plugin, stack.getSender(), "admin")
+                                || stack.getSender().isOp())
+                        .executes(ctx -> {
+                            new com.valaryrpg.core.security.OwnerPermsBootstrap(this.plugin).apply();
+                            new com.valaryrpg.core.security.DefaultRankBootstrap(this.plugin).apply();
+                            this.plugin.messages().send(ctx.getSource().getSender(), "security.fixperms-done");
                             return Command.SINGLE_SUCCESS;
                         }))
                 .executes(ctx -> {

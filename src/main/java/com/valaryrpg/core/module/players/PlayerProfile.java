@@ -11,6 +11,8 @@ public record PlayerProfile(
         String gamemode,
         long firstJoin,
         long lastJoin,
+        long lastQuit,
+        long playtimeMs,
         String lastIp
 ) {
 }

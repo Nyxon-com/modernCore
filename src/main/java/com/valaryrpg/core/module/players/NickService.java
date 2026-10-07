@@ -1,6 +1,7 @@
 package com.valaryrpg.core.module.players;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import com.valaryrpg.core.util.LegacyFormats;
 import com.valaryrpg.core.util.Perms;
 import com.valaryrpg.core.util.Placeholders;
 import com.valaryrpg.core.util.Tasks;
@@ -8,7 +9,6 @@ import io.papermc.paper.chat.ChatRenderer;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -143,10 +143,8 @@ public final class NickService {
         if (raw == null || raw.isEmpty()) {
             return Component.empty();
         }
-        if (raw.indexOf('&') >= 0 || raw.indexOf('§') >= 0) {
-            return LegacyComponentSerializer.legacySection().deserialize(raw.replace('&', '§'));
-        }
-        return this.plugin.messages().deserialize(raw);
+        // Prefix LP spesso in &legacy: converti in MiniMessage senza rompere <gray> ecc.
+        return this.plugin.messages().deserialize(LegacyFormats.toMiniMessage(raw));
     }
 
     private void apply(Player player, String nick) {

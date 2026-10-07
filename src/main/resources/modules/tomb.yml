@@ -1,0 +1,146 @@
+# =============================================================================
+# Tombe virtuali: a morte niente drop a terra, loot in GUI. Ritiro a pagamento.
+# Comandi: /tomba  |  Permessi: valary.tomb / valary.tomb.free / valary.tomb.others
+# Item MMOItems soulbound / disable-death-drop restano al player (non vanno in tomba).
+# =============================================================================
+
+enabled: true
+
+disabled-worlds: []
+
+max-tombs: 10
+
+# XP: keep | store | lose
+xp-mode: store
+
+auto-open-on-respawn: true
+auto-open-delay-ticks: 40
+notify-on-death: true
+
+price:
+  enabled: true
+  amount: 1000.0
+
+claim:
+  drop-overflow: true
+  delete-after-claim: true
+  preview-before-pay: true
+
+sounds:
+  open: BLOCK_CHEST_OPEN
+  claim: ENTITY_PLAYER_LEVELUP
+  fail: ENTITY_VILLAGER_NO
+  death: BLOCK_RESPAWN_ANCHOR_DEPLETE
+
+gui-list:
+  title: "<b><gradient:#9CA3AF:#E5E7EB>ᴛᴏᴍʙᴇ</gradient></b> <gray>{player} <dark_gray>· <white>{playtime}"
+  rows: 6
+  open-sound: BLOCK_CHEST_OPEN
+  fill:
+    enabled: true
+    material: BLACK_STAINED_GLASS_PANE
+    name: "<black>"
+    hide-flags: true
+  frame:
+    enabled: true
+    corners:
+      material: GRAY_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
+    accents:
+      material: LIGHT_GRAY_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
+    edges:
+      material: GRAY_STAINED_GLASS_PANE
+      name: "<black>"
+      hide-flags: true
+  tomb-slots: "10-16,19-25,28-34"
+  tomb-icon:
+    material: SKELETON_SKULL
+    name: "<white>Tomba #{id}"
+    lore:
+      - "<gray>Morte: <white>{when}"
+      - "<gray>Mondo: <white>{world}"
+      - "<gray>Pos: <aqua>{coords}"
+      - "<gray>Causa: <white>{cause}"
+      - "<gray>Item: <white>{items}"
+      - "<gray>XP: <white>{xp}"
+      - "<dark_gray>Click per aprire"
+    glow: true
+    hide-flags: true
+  empty-icon:
+    material: GRAY_DYE
+    name: "<gray>Nessuna tomba"
+    lore:
+      - "<dark_gray>Quando muori il loot finisce qui"
+    hide-flags: true
+  slots:
+    "4":
+      action: none
+      material: TOTEM_OF_UNDYING
+      name: "<b><gradient:#9CA3AF:#E5E7EB>ʟᴇ ᴛᴜᴇ ᴛᴏᴍʙᴇ</gradient></b>"
+      lore:
+        - "<gray>Ritiro a pagamento: <white>{price}"
+        - "<gray>Saldo: <white>{balance}"
+      hide-flags: true
+    "45":
+      action: page
+      page: prev
+      material: ARROW
+      name: "<yellow>Pagina precedente"
+      hide-flags: true
+    "49":
+      action: close
+      material: BARRIER
+      name: "<red><bold>Chiudi</bold>"
+      hide-flags: true
+    "53":
+      action: page
+      page: next
+      material: ARROW
+      name: "<yellow>Pagina successiva"
+      hide-flags: true
+
+gui-view:
+  title: "<b><gradient:#9CA3AF:#E5E7EB>ᴛᴏᴍʙᴀ</gradient></b> <gray>#{id}"
+  rows: 6
+  open-sound: BLOCK_CHEST_OPEN
+  fill:
+    enabled: true
+    material: BLACK_STAINED_GLASS_PANE
+    name: "<black>"
+    hide-flags: true
+  contents-start: 9
+  armor-slots:
+    helmet: 0
+    chestplate: 1
+    leggings: 2
+    boots: 3
+    offhand: 4
+  filler-slots: "5-8"
+  filler:
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<black>"
+    hide-flags: true
+  slots:
+    "45":
+      action: back
+      material: ARROW
+      name: "<yellow>Indietro"
+      hide-flags: true
+    "49":
+      action: claim
+      material: EMERALD
+      name: "<green><bold>Ritira loot</bold>"
+      lore:
+        - "<gray>Costo: <white>{price}"
+        - "<gray>Saldo: <white>{balance}"
+        - "<dark_gray>Paga e ricevi tutti gli item"
+      glow: true
+      hide-flags: true
+    "53":
+      action: close
+      material: BARRIER
+      name: "<red><bold>Chiudi</bold>"
+      hide-flags: true

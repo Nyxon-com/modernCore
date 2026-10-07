@@ -10,7 +10,7 @@ general:
   invalid-world: "{prefix} <red>Il mondo <white>{world}</white> non è caricato."
   module-disabled: "{prefix} <red>Il modulo <white>{module}</white> è disabilitato."
   unknown-subcommand: "{prefix} <gray>Uso: <white>/{label} reload</white>"
-  cooldown: "{prefix} <red>Attendi un attimo prima di riusare il comando."
+  cooldown: "{prefix} <red>Attendi <white>{seconds}s</white> prima di riusare il comando."
   quotes: "{prefix} <red>Non usare virgolette. Esempio: <white>/warp spawn</white> non <white>/warp \"spawn\"</white>."
 
 command-list:
@@ -315,8 +315,10 @@ vanish:
   edit-unknown: "{prefix} <red>Flag sconosciuta. Usa nightvision o pickup."
 
 invsee:
-  usage: "{prefix} <gray>Uso: <white>/{label} <player></white>"
+  usage: "{prefix} <gray>Uso: <white>/{label} <player></white> <dark_gray>(online o offline)"
   title: "<dark_gray>Invsee <white>{player}"
+  offline: "{prefix} <gray>Inventario offline di <white>{player}</white>. Le modifiche si applicano al prossimo login."
+  offline-empty: "{prefix} <yellow>Nessuno snapshot inventario per <white>{player}</white> (si apre vuoto)."
 
 limity:
   usage: "{prefix} <gray>Uso: <white>/limity</white> | <white>/limity <min> <max></white> (solo il mondo in cui sei) | <white>/limity remove [mondo]</white> | <white>/limity command <comando></white> | <white>/limity notify <on|off></white>"
@@ -417,6 +419,7 @@ holos:
   offset-set: "{prefix} <green>Offset Y di <white>{holo}</white>: <white>{value}</white>."
   invalid-number: "{prefix} <red>Valore <white>{value}</white> non numerico."
   no-permission: "{prefix} <red>Non puoi usare l'hologram <white>{holo}</white>."
+  cooldown: "{prefix} <red>Attendi <white>{seconds}s</white> prima di riusare questo trigger."
   no-command: "{prefix} <gray>Trigger <white>{holo}</white> senza comandi. Staff: <white>/triggerblock command {holo} ...</white>"
   info: "{prefix} <gray>Trigger <white>{holo}</white> @ <white>{world} {x} {y} {z}</white> · anim <white>{animation}</white> · particelle <white>{particle}</white> · glow <white>{glow}</white> · comandi <white>{commands}</white>"
 
@@ -494,6 +497,11 @@ trash:
   title: "<dark_gray>Cestino"
   dropped: "{prefix} <gray>Hai buttato <white>{amount}</white> oggetti."
 
+reciclatore:
+  title: "<dark_green>Reciclatore"
+  hint: "{prefix} <gray>Metti armi, armature o gemme e chiudi: terrestre → rottami T1, Marte/gemme T2+ → rottami T2."
+  done: "{prefix} <green>Riciclo: <white>{weapons}</white> armi, <white>{armors}</white> armature, <white>{gems}</white> gemme (T1/T2 automatico)."
+
 sell:
   gui-title: "<dark_gray>Sell"
   confirm: "<green>Conferma vendita"
@@ -534,4 +542,44 @@ chat:
   filtered-regex: "{prefix} <red>Quel messaggio non è permesso."
   filtered-ip: "{prefix} <red>Gli indirizzi IP non sono permessi in chat."
   filtered-link: "{prefix} <red>I link non sono permessi in chat."
+  filtered-exploit: "{prefix} <red>Messaggio bloccato: contenuto non sicuro."
+  filtered-caps: "{prefix} <red>Troppe maiuscole. Scrivi normalmente."
+  filtered-flood: "{prefix} <red>Stai scrivendo troppo velocemente."
+  filtered-repeat: "{prefix} <red>Non ripetere lo stesso messaggio."
   filter-staff: "{prefix} <yellow>Filtro</yellow> <white>{player}</white> <dark_gray>({reason})</dark_gray><gray>: {message}"
+
+security:
+  fixperms-done: "{prefix} <green>OP sbloccati: possono fare tutto. Riprova i comandi admin (/mv, ecc.)."
+
+tomb:
+  disabled: "{prefix} <red>Le tombe virtuali sono disattivate."
+  created: "{prefix} <gray>Il tuo loot è nella tomba <white>#{id}</white>. Apri con <white>/{label}</white> <dark_gray>(costo {price})"
+  missing: "{prefix} <red>Tomba non trovata."
+  claimed: "{prefix} <green>Hai ritirato la tomba <white>#{id}</white> <dark_gray>(pagato {price})"
+  not-enough: "{prefix} <red>Soldi insufficienti. Serve <white>{price}</white>, hai <white>{balance}</white>."
+  economy-missing: "{prefix} <red>Economy non disponibile: impossibile ritirare la tomba."
+  price-free: "gratis"
+
+clearlag:
+  disabled: "{prefix} <red>ClearLag e' disattivato."
+  warning: "{prefix} <gray>Gli item a terra verranno eliminati tra <white>{seconds}s</white>."
+  cleared: "{prefix} <green>ClearLag: rimossi <white>{count}</white> oggetti a terra."
+  forced: "{prefix} <green>ClearLag forzato: rimossi <white>{count}</white>. Prossimo tra <white>{next}s</white>."
+
+playtime:
+  usage: "{prefix} <gray>Uso: <white>/{label} [player]</white>"
+  self: "{prefix} <gray>Il tuo playtime: <white>{playtime}</white>"
+  other: "{prefix} <gray>Playtime di <white>{player}</white>: <aqua>{playtime}</aqua>"
+  details: "{prefix} <gray>Primo login: <white>{first}</white> <dark_gray>|</dark_gray> Ultimo logout: <white>{last}</white>"
+  never: "mai"
+  online-now: "online ora"
+  format-days: "{days}g {hours}h {minutes}m"
+  format-hours: "{hours}h {minutes}m"
+  format-minutes: "{minutes}m"
+
+playerlist:
+  header: "{prefix} <gray>Player registrati <white>{total}</white> <dark_gray>(pagina {page}/{pages})"
+  entry-online: "<green>● <white>{player}</white> <dark_gray>|</dark_gray> <gray>primo <white>{first}</white>"
+  entry-offline: "<dark_gray>● <white>{player}</white> <dark_gray>|</dark_gray> <gray>primo <white>{first}</white> <dark_gray>|</dark_gray> <gray>logout <white>{last}</white>"
+  footer: "{prefix} <gray>Pagina <white>{page}</white>/<white>{pages}</white> — <white>/playerlist <pagina></white>"
+  empty: "{prefix} <gray>Nessun player in database."

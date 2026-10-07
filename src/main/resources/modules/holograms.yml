@@ -16,7 +16,7 @@
 enabled: true
 folder: holo
 max: 200
-tick-ticks: 10
+tick-ticks: 20
 near-range: 16
 default-visibility-distance: 64
 unlimited-view-blocks: 128

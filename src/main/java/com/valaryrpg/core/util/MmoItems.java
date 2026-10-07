@@ -125,6 +125,55 @@ public final class MmoItems {
         }
     }
 
+    /**
+     * Item che MMOItems trattiene a morte (soulbound del player o disable-death-drop).
+     * Non devono finire in tomba / drop.
+     */
+    public static boolean shouldKeepOnDeath(ItemStack item, Player owner) {
+        if (item == null || item.getType().isAir() || owner == null) {
+            return false;
+        }
+        if (Bukkit.getPluginManager().getPlugin("MMOItems") == null) {
+            return false;
+        }
+        try {
+            Class<?> nbtClass = Class.forName("io.lumine.mythic.lib.api.item.NBTItem");
+            Object nbt = nbtClass.getMethod("get", ItemStack.class).invoke(null, item);
+            if (hasBooleanTag(nbtClass, nbt, "MMOITEMS_DISABLE_DEATH_DROP")) {
+                return true;
+            }
+            if (!keepSoulboundOnDeath()) {
+                return false;
+            }
+            if (!(boolean) nbtClass.getMethod("hasTag", String.class).invoke(nbt, "MMOITEMS_SOULBOUND")) {
+                return false;
+            }
+            String soulbound = String.valueOf(nbtClass.getMethod("getString", String.class).invoke(nbt, "MMOITEMS_SOULBOUND"));
+            return soulbound != null && soulbound.contains(owner.getUniqueId().toString());
+        } catch (ReflectiveOperationException ignored) {
+            return false;
+        }
+    }
+
+    private static boolean keepSoulboundOnDeath() {
+        try {
+            var plugin = Bukkit.getPluginManager().getPlugin("MMOItems");
+            if (plugin == null) {
+                return false;
+            }
+            return plugin.getConfig().getBoolean("soulbound.keep-on-death", true);
+        } catch (Throwable ignored) {
+            return true;
+        }
+    }
+
+    private static boolean hasBooleanTag(Class<?> nbtClass, Object nbt, String tag) throws ReflectiveOperationException {
+        if (!(boolean) nbtClass.getMethod("hasTag", String.class).invoke(nbt, tag)) {
+            return false;
+        }
+        return (boolean) nbtClass.getMethod("getBoolean", String.class).invoke(nbt, tag);
+    }
+
     private static boolean isBlank(String value) {
         return value == null || value.isBlank() || "null".equals(value);
     }

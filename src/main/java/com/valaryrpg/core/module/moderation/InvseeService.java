@@ -3,6 +3,10 @@ package com.valaryrpg.core.module.moderation;
 import com.valaryrpg.core.ValaryCorePlugin;
 import com.valaryrpg.core.gui.PanelItems;
 import com.valaryrpg.core.gui.SlotSpec;
+import com.valaryrpg.core.module.players.PlayerDataRepository;
+import com.valaryrpg.core.module.players.PlayersModule;
+import com.valaryrpg.core.util.ItemStacks;
+import com.valaryrpg.core.util.Tasks;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -17,7 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Inventario altrui: layout (armor, offhand, filler, contents) da moderation.yml.
+ * Inventario altrui (online + offline da snapshot SQL).
  */
 public final class InvseeService {
 
@@ -28,26 +32,51 @@ public final class InvseeService {
     }
 
     public void open(Player viewer, Player target) {
-        Holder holder = new Holder(target.getUniqueId());
+        Holder holder = new Holder(target.getUniqueId(), target.getName(), false);
+        openGui(viewer, holder, target.getName());
+        fill(holder.inventory, target);
+    }
+
+    public void openOffline(Player viewer, UUID uuid, String name, ItemStack[] packed) {
+        Holder holder = new Holder(uuid, name, true);
+        openGui(viewer, holder, name);
+        fillPacked(holder.inventory, packed);
+        this.plugin.messages().send(viewer, "invsee.offline", Map.of("player", name));
+    }
+
+    private void openGui(Player viewer, Holder holder, String name) {
         ConfigurationSection gui = gui();
         int rows = gui == null ? 6 : Math.min(6, Math.max(1, gui.getInt("rows", 6)));
         String titleRaw = gui == null ? "" : gui.getString("title", "");
         Component title = titleRaw == null || titleRaw.isBlank()
-                ? this.plugin.messages().component("invsee.title", Map.of("player", target.getName()))
-                : this.plugin.messages().deserialize(titleRaw.replace("{player}", target.getName()));
+                ? this.plugin.messages().component("invsee.title", Map.of("player", name))
+                : this.plugin.messages().deserialize(titleRaw.replace("{player}", name));
         Inventory inventory = Bukkit.createInventory(holder, rows * 9, title);
         holder.inventory = inventory;
-        fill(inventory, target);
         viewer.openInventory(inventory);
     }
 
     public void fill(Inventory inventory, Player target) {
         PlayerInventory playerInventory = target.getInventory();
-        inventory.setItem(slot("helmet", 0), copy(playerInventory.getHelmet()));
-        inventory.setItem(slot("chestplate", 1), copy(playerInventory.getChestplate()));
-        inventory.setItem(slot("leggings", 2), copy(playerInventory.getLeggings()));
-        inventory.setItem(slot("boots", 3), copy(playerInventory.getBoots()));
-        inventory.setItem(slot("offhand", 4), copy(playerInventory.getItemInOffHand()));
+        ItemStack[] packed = new ItemStack[41];
+        for (int i = 0; i < 36; i++) {
+            packed[i] = playerInventory.getItem(i);
+        }
+        packed[36] = playerInventory.getHelmet();
+        packed[37] = playerInventory.getChestplate();
+        packed[38] = playerInventory.getLeggings();
+        packed[39] = playerInventory.getBoots();
+        packed[40] = playerInventory.getItemInOffHand();
+        fillPacked(inventory, packed);
+    }
+
+    public void fillPacked(Inventory inventory, ItemStack[] packed) {
+        ItemStack[] items = packed == null ? new ItemStack[0] : packed;
+        inventory.setItem(slot("helmet", 0), copyAt(items, 36));
+        inventory.setItem(slot("chestplate", 1), copyAt(items, 37));
+        inventory.setItem(slot("leggings", 2), copyAt(items, 38));
+        inventory.setItem(slot("boots", 3), copyAt(items, 39));
+        inventory.setItem(slot("offhand", 4), copyAt(items, 40));
         ItemStack filler = PanelItems.from(this.plugin, fillerSection(), null);
         if (filler.getType().isAir()) {
             filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
@@ -62,31 +91,65 @@ public final class InvseeService {
         for (int index = 0; index < 36; index++) {
             int guiSlot = start + index;
             if (guiSlot >= 0 && guiSlot < inventory.getSize()) {
-                inventory.setItem(guiSlot, copy(playerInventory.getItem(index)));
+                inventory.setItem(guiSlot, copyAt(items, index));
             }
         }
     }
 
     public void syncFromGui(Holder holder) {
-        Player target = Bukkit.getPlayer(holder.target);
-        if (target == null || holder.inventory == null) {
+        if (holder.inventory == null) {
             return;
         }
-        Inventory gui = holder.inventory;
-        PlayerInventory playerInventory = target.getInventory();
-        playerInventory.setHelmet(airToNull(gui.getItem(slot("helmet", 0))));
-        playerInventory.setChestplate(airToNull(gui.getItem(slot("chestplate", 1))));
-        playerInventory.setLeggings(airToNull(gui.getItem(slot("leggings", 2))));
-        playerInventory.setBoots(airToNull(gui.getItem(slot("boots", 3))));
-        playerInventory.setItemInOffHand(airToNull(gui.getItem(slot("offhand", 4))));
+        ItemStack[] packed = packFromGui(holder.inventory);
+        if (holder.offline) {
+            String encoded = ItemStacks.encode(packed);
+            PlayerDataRepository repository = repository();
+            if (repository != null) {
+                Tasks.async(this.plugin, () -> repository.saveInventory(holder.target, encoded, true));
+            }
+            return;
+        }
+        Player target = Bukkit.getPlayer(holder.target);
+        if (target == null) {
+            String encoded = ItemStacks.encode(packed);
+            PlayerDataRepository repository = repository();
+            if (repository != null) {
+                Tasks.async(this.plugin, () -> repository.saveInventory(holder.target, encoded, true));
+            }
+            return;
+        }
+        ItemStacks.restorePlayer(target.getInventory(), packed);
+        String encoded = ItemStacks.encode(packed);
+        PlayerDataRepository repository = repository();
+        if (repository != null) {
+            Tasks.async(this.plugin, () -> repository.saveInventory(holder.target, encoded, false));
+        }
+    }
+
+    private ItemStack[] packFromGui(Inventory gui) {
+        ItemStack[] packed = new ItemStack[41];
         int start = slot("contents-start", 9);
         for (int index = 0; index < 36; index++) {
-            playerInventory.setItem(index, airToNull(gui.getItem(start + index)));
+            packed[index] = airToNull(gui.getItem(start + index));
         }
+        packed[36] = airToNull(gui.getItem(slot("helmet", 0)));
+        packed[37] = airToNull(gui.getItem(slot("chestplate", 1)));
+        packed[38] = airToNull(gui.getItem(slot("leggings", 2)));
+        packed[39] = airToNull(gui.getItem(slot("boots", 3)));
+        packed[40] = airToNull(gui.getItem(slot("offhand", 4)));
+        return packed;
     }
 
     public boolean filler(int slot) {
         return SlotSpec.contains(fillerSlots(), slot);
+    }
+
+    private PlayerDataRepository repository() {
+        if (this.plugin.modules() == null || !this.plugin.modules().isEnabled("players")) {
+            return null;
+        }
+        PlayersModule module = this.plugin.modules().get("players");
+        return module == null ? null : module.repository();
     }
 
     private int slot(String name, int fallback) {
@@ -107,8 +170,11 @@ public final class InvseeService {
         return this.plugin.configs().moderation().getConfigurationSection("invsee.gui");
     }
 
-    private static ItemStack copy(ItemStack item) {
-        return item == null ? new ItemStack(Material.AIR) : item.clone();
+    private static ItemStack copyAt(ItemStack[] items, int index) {
+        if (items == null || index < 0 || index >= items.length || items[index] == null || items[index].getType().isAir()) {
+            return new ItemStack(Material.AIR);
+        }
+        return items[index].clone();
     }
 
     private static ItemStack airToNull(ItemStack item) {
@@ -117,10 +183,26 @@ public final class InvseeService {
 
     public static final class Holder implements InventoryHolder {
         private final UUID target;
+        private final String name;
+        private final boolean offline;
         private Inventory inventory;
 
-        Holder(UUID target) {
+        Holder(UUID target, String name, boolean offline) {
             this.target = target;
+            this.name = name;
+            this.offline = offline;
+        }
+
+        public UUID target() {
+            return this.target;
+        }
+
+        public String name() {
+            return this.name;
+        }
+
+        public boolean offline() {
+            return this.offline;
         }
 
         @Override

@@ -1,7 +1,9 @@
 package com.valaryrpg.core.module.players;
 
 import com.valaryrpg.core.ValaryCorePlugin;
+import com.valaryrpg.core.module.chat.ChatModule;
 import com.valaryrpg.core.module.moderation.ModerationModule;
+import com.valaryrpg.core.util.ItemStacks;
 import com.valaryrpg.core.util.Tasks;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
@@ -20,6 +22,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -38,6 +41,7 @@ public final class PlayersListener implements Listener {
     private final GodService god;
     private final GameModeService gamemodes;
     private final PrivateMessageService messages;
+    private final PlaytimeService playtime;
 
     public PlayersListener(
             ValaryCorePlugin plugin,
@@ -46,7 +50,8 @@ public final class PlayersListener implements Listener {
             FlyService fly,
             GodService god,
             GameModeService gamemodes,
-            PrivateMessageService messages
+            PrivateMessageService messages,
+            PlaytimeService playtime
     ) {
         this.plugin = plugin;
         this.repository = repository;
@@ -55,6 +60,7 @@ public final class PlayersListener implements Listener {
         this.god = god;
         this.gamemodes = gamemodes;
         this.messages = messages;
+        this.playtime = playtime;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -77,8 +83,12 @@ public final class PlayersListener implements Listener {
             }
             Optional<PlayerProfile> loaded = profile;
             boolean restoreGod = godMode;
-            Tasks.later(this.plugin, 2L, () -> restore(player, loaded, restoreGod));
+            Tasks.later(this.plugin, 2L, () -> {
+                restore(player, loaded, restoreGod);
+                applyOfflineInventory(player);
+            });
         });
+        this.playtime.startSession(uuid);
         restoreDeathBack(player);
     }
 
@@ -100,19 +110,64 @@ public final class PlayersListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
         if (!bannedHold(player)) {
             this.gamemodes.remember(player);
         }
-        this.messages.unload(player.getUniqueId());
-        this.god.unload(player.getUniqueId());
-        this.fly.unload(player.getUniqueId());
-        this.nicks.unload(player.getUniqueId());
-        this.gamemodes.unload(player.getUniqueId());
-        this.plugin.lastLocations().clear(player.getUniqueId());
+        long session = this.playtime.endSession(uuid);
+        long now = System.currentTimeMillis();
+        String inventory = ItemStacks.encodePlayer(player.getInventory());
+        Tasks.async(this.plugin, () -> {
+            try {
+                this.repository.addPlaytime(uuid, session, now);
+                this.repository.saveInventory(uuid, inventory, false);
+            } catch (Exception exception) {
+                this.plugin.getLogger().warning("Quit SQL fallito per " + player.getName() + ": " + exception.getMessage());
+            }
+        });
+        ChatModule chat = this.plugin.modules() == null ? null : this.plugin.modules().get("chat");
+        if (chat != null && chat.chat() != null) {
+            chat.chat().clearFlood(uuid);
+        }
+        this.messages.unload(uuid);
+        this.god.unload(uuid);
+        this.fly.unload(uuid);
+        this.nicks.unload(uuid);
+        this.gamemodes.unload(uuid);
+        this.plugin.lastLocations().clear(uuid);
         event.quitMessage(null);
         if (!bannedHold(player)) {
             announce(player, "join-quit.quit");
         }
+    }
+
+    private void applyOfflineInventory(Player player) {
+        if (!player.isOnline()) {
+            return;
+        }
+        UUID uuid = player.getUniqueId();
+        Tasks.async(this.plugin, () -> {
+            try {
+                if (!this.repository.inventoryDirty(uuid)) {
+                    return;
+                }
+                Optional<String> raw = this.repository.inventory(uuid);
+                if (raw.isEmpty()) {
+                    this.repository.clearInventoryDirty(uuid);
+                    return;
+                }
+                ItemStack[] packed = ItemStacks.decode(raw.get());
+                Tasks.sync(this.plugin, () -> {
+                    if (!player.isOnline()) {
+                        return;
+                    }
+                    ItemStacks.restorePlayer(player.getInventory(), packed);
+                    Tasks.async(this.plugin, () -> this.repository.clearInventoryDirty(uuid));
+                });
+            } catch (Exception exception) {
+                this.plugin.getLogger().warning("Restore inventario offline fallito per " + player.getName() + ": " + exception.getMessage());
+            }
+        });
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

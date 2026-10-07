@@ -14,6 +14,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -22,7 +23,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class ChatService {
 
     private final ValaryCorePlugin plugin;
-    private ChatFilter filter = ChatFilter.compile(List.of(), List.of(), false, false, List.of());
+    private final ChatFloodGuard flood = new ChatFloodGuard();
+    private ChatFilter filter = ChatFilter.compile(List.of(), List.of(), false, false, List.of(), true, 0, 0);
     private BukkitTask announceTask;
     private int announceIndex;
 
@@ -38,13 +40,27 @@ public final class ChatService {
                 yaml.getStringList("filter.regex"),
                 yaml.getBoolean("filter.block-ips", true),
                 yaml.getBoolean("filter.block-links", true),
-                yaml.getStringList("filter.link-patterns")
+                yaml.getStringList("filter.link-patterns"),
+                yaml.getBoolean("filter.block-exploits", true),
+                yaml.getInt("filter.caps.min-length", 8),
+                yaml.getDouble("filter.caps.ratio", 0.7D)
+        );
+        this.flood.reload(
+                yaml.getInt("filter.flood.max-messages", 5),
+                yaml.getLong("filter.flood.window-millis", 5000L),
+                yaml.getLong("filter.flood.min-delay-millis", 750L),
+                yaml.getInt("filter.flood.max-repeats", 3),
+                yaml.getInt("filter.flood.max-same-char", 8)
         );
         startAnnouncements();
     }
 
     public void shutdown() {
         stopAnnouncements();
+    }
+
+    public void clearFlood(UUID uuid) {
+        this.flood.clear(uuid);
     }
 
     public void clear(CommandSender staff) {
@@ -81,27 +97,39 @@ public final class ChatService {
             logChat(player, text, priv);
             return false;
         }
+        Optional<ChatFilter.Hit> floodHit = this.flood.check(player.getUniqueId(), text);
+        if (floodHit.isPresent()) {
+            return reject(player, text, floodHit.get(), yaml);
+        }
         Optional<ChatFilter.Hit> hit = this.filter.match(text);
         if (hit.isEmpty()) {
             logChat(player, text, priv);
             return false;
         }
-        String key = switch (hit.get()) {
+        return reject(player, text, hit.get(), yaml);
+    }
+
+    private boolean reject(Player player, String text, ChatFilter.Hit hit, FileConfiguration yaml) {
+        String key = switch (hit) {
             case WORD -> "chat.filtered-word";
             case REGEX -> "chat.filtered-regex";
             case IP -> "chat.filtered-ip";
             case LINK -> "chat.filtered-link";
+            case EXPLOIT -> "chat.filtered-exploit";
+            case CAPS -> "chat.filtered-caps";
+            case FLOOD -> "chat.filtered-flood";
+            case REPEAT -> "chat.filtered-repeat";
         };
         this.plugin.messages().send(player, key);
         Tasks.sync(this.plugin, () -> Sounds.play(this.plugin, player, "chat-filtered"));
         if (yaml.getBoolean("filter.notify-staff", true)) {
-            notifyStaff(player, text, hit.get().name().toLowerCase());
+            notifyStaff(player, text, hit.name().toLowerCase());
         }
         if (this.plugin.webhooks() != null) {
             this.plugin.webhooks().log(
                     "chat-filter",
                     "Filtro chat",
-                    player.getName() + " [" + hit.get().name() + "]\n" + text
+                    player.getName() + " [" + hit.name() + "]\n" + text
             );
         }
         return true;

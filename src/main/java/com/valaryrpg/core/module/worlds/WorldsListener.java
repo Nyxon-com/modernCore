@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -90,6 +91,32 @@ public final class WorldsListener implements Listener {
         }
         if (player.getWorld() != null && !this.catalog.hunger(player.getWorld())) {
             event.setCancelled(true);
+            player.setFoodLevel(20);
+            player.setSaturation(20.0F);
+            player.setExhaustion(0.0F);
+        }
+    }
+
+    /**
+     * Blocca la regen vanilla da fame/saturazione. Con hunger off forziamo food+sat a 20,
+     * e se NATURAL_HEALTH_REGENERATION e' on (o non ancora applicato) esplode un burst al join.
+     * La regen RPG resta gestita da MMOCore.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onVanillaSatiatedRegen(EntityRegainHealthEvent event) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        if (event.getRegainReason() != EntityRegainHealthEvent.RegainReason.SATIATED) {
+            return;
+        }
+        World world = player.getWorld();
+        if (world == null) {
+            return;
+        }
+        boolean autoHeal = this.plugin.configs().worlds().getBoolean("worlds." + world.getName() + ".auto-heal", false);
+        if (!autoHeal) {
+            event.setCancelled(true);
         }
     }
 
@@ -127,11 +154,18 @@ public final class WorldsListener implements Listener {
         if (world == null) {
             return;
         }
+        // Ri-applica gamerule regen: evita race con Multiverse/import a join.
+        this.catalog.apply(world);
         if (this.catalog.forceGamemode(world)) {
             player.setGameMode(this.catalog.gamemode(world));
         }
         if (this.catalog.allowFlight(world)) {
             player.setAllowFlight(true);
+        }
+        if (!this.catalog.hunger(world)) {
+            player.setFoodLevel(20);
+            player.setSaturation(20.0F);
+            player.setExhaustion(0.0F);
         }
         this.weather.applyTo(player);
         this.time.applyTo(player);

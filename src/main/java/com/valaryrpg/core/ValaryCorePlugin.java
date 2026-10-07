@@ -17,6 +17,8 @@ import com.valaryrpg.core.module.sell.SellModule;
 import com.valaryrpg.core.module.warps.WarpsModule;
 import com.valaryrpg.core.module.worlds.WorldsModule;
 import com.valaryrpg.core.papi.PlaceholderHook;
+import com.valaryrpg.core.security.OpFullAccessService;
+import com.valaryrpg.core.security.OwnerPermsBootstrap;
 import com.valaryrpg.core.storage.StorageManager;
 import com.valaryrpg.core.util.LastLocations;
 import com.valaryrpg.core.util.Teleports;
@@ -38,6 +40,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
     private LastLocations lastLocations;
     private Teleports teleports;
     private WebhookService webhooks;
+    private OpFullAccessService opFullAccess;
 
     @Override
     public void onLoad() {
@@ -83,16 +86,27 @@ public final class ValaryCorePlugin extends JavaPlugin {
 
         this.commands = new CommandService(this);
         this.commands.register();
+        getServer().getPluginManager().registerEvents(new com.valaryrpg.core.util.UpgradePreviewFix(this), this);
+        new com.valaryrpg.core.util.UpgradeStationFix(this);
+        new com.valaryrpg.core.util.GemForgeChanceFix(this);
+        new com.valaryrpg.core.util.MiningInvDropFix(this);
         PlaceholderHook.register(this);
         if (this.vanillaTranslator != null) {
             this.vanillaTranslator.sync();
         }
+        this.opFullAccess = new OpFullAccessService(this);
+        this.opFullAccess.start();
+        new OwnerPermsBootstrap(this).schedule();
+        new com.valaryrpg.core.security.DefaultRankBootstrap(this).schedule();
 
         getLogger().info("ValaryRPG-Core " + getPluginMeta().getVersion() + " abilitato.");
     }
 
     @Override
     public void onDisable() {
+        if (this.opFullAccess != null) {
+            this.opFullAccess.stop();
+        }
         if (this.vanillaTranslator != null) {
             this.vanillaTranslator.unregister();
         }
@@ -106,6 +120,10 @@ public final class ValaryCorePlugin extends JavaPlugin {
             this.storage.close();
         }
         getLogger().info("ValaryRPG-Core disabilitato.");
+    }
+
+    public OpFullAccessService opFullAccess() {
+        return this.opFullAccess;
     }
 
     /**

@@ -57,10 +57,21 @@
 limity:
   enabled: true
   notify: true
-  check-interval-ticks: 10
+  check-interval-ticks: 20
   notify-cooldown-millis: 3000
   command-cooldown-millis: 3000
   worlds: {}
+
+# ClearLag: elimina item a terra ogni N secondi con countdown in chat.
+# /clearlag (o /clearlag now) forza la pulizia subito (permesso valary.clearlag).
+clearlag:
+  enabled: true
+  interval-seconds: 300
+  warnings: [30, 10, 5]
+  worlds: []
+  exclude-worlds: []
+  remove-arrows: true
+  remove-xp-orbs: false
 
 ground-items:
   enabled: true
@@ -69,7 +80,10 @@ ground-items:
   show-despawn: true
   hide-amount-when-one: true
   despawn-seconds: 300
-  update-interval-ticks: 20
+  # Aspetta che l'item sia a terra prima di spawnare l'holo (niente holo in aria al drop).
+  wait-until-grounded: true
+  grounded-timeout-ticks: 100
+  update-interval-ticks: 40
   scale: 0.8
   offset-y: 0.32
   font: ""
@@ -121,7 +135,7 @@ long-jump:
   look-trigger: false
   look-required: false
   look-range: 3.5
-  look-interval-ticks: 4
+  look-interval-ticks: 20
   sound: ENTITY_WIND_CHARGE_WIND_BURST
   plates:
     gold:
@@ -185,9 +199,9 @@ portals:
 holo-blocks:
   enabled: true
   max: 80
-  tick-ticks: 2
-  particle-every-ticks: 8
-  click-cooldown-millis: 400
+  tick-ticks: 10
+  particle-every-ticks: 20
+  click-cooldown-millis: 1500
   view-range: 24
   select-range: 8
   hitbox-width: 1.05

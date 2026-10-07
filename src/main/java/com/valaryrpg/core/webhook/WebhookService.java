@@ -35,7 +35,7 @@ public final class WebhookService {
     private final ScheduledExecutorService executor;
     private final HttpClient http;
     private final Map<String, Long> errorCooldown = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedQueue<Pending> activity = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<WebhookPending> activity = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean sending = new AtomicBoolean();
     private Handler consoleHandler;
     private WebhookActivityListener listener;
@@ -75,20 +75,24 @@ public final class WebhookService {
     }
 
     public void log(String category, String title, String body) {
-        FileConfiguration yaml = yaml();
-        if (!active(yaml) || !yaml.getBoolean("logs.enabled", true)) {
-            return;
-        }
-        if (!yaml.getBoolean("logs.categories." + category, false)) {
-            return;
-        }
-        String url = firstUrl(yaml.getString("logs.url"), yaml.getString("url"));
-        if (url.isBlank()) {
-            return;
-        }
-        this.activity.add(new Pending(title, body, yaml.getInt("logs.color", 5793266), url));
-        if (this.activity.size() >= 20) {
-            this.executor.execute(this::flushActivity);
+        try {
+            FileConfiguration yaml = yaml();
+            if (!active(yaml) || !yaml.getBoolean("logs.enabled", true)) {
+                return;
+            }
+            if (!yaml.getBoolean("logs.categories." + category, false)) {
+                return;
+            }
+            String url = firstUrl(yaml.getString("logs.url"), yaml.getString("url"));
+            if (url.isBlank()) {
+                return;
+            }
+            this.activity.add(new WebhookPending(title, body, yaml.getInt("logs.color", 5793266), url));
+            if (this.activity.size() >= 20) {
+                this.executor.execute(this::flushActivity);
+            }
+        } catch (Throwable ignored) {
+            // mai bloccare comandi / eventi per un fallimento webhook
         }
     }
 
@@ -143,28 +147,31 @@ public final class WebhookService {
     }
 
     private void flushActivity() {
-        if (this.activity.isEmpty()) {
-            return;
-        }
-        List<Pending> batch = new ArrayList<>(24);
-        Pending next;
-        while (batch.size() < 20 && (next = this.activity.poll()) != null) {
-            batch.add(next);
-        }
-        if (batch.isEmpty()) {
-            return;
-        }
-        String url = batch.get(0).url();
-        int color = batch.get(0).color();
-        StringBuilder description = new StringBuilder();
-        String title = batch.size() == 1 ? batch.get(0).title() : "Attività (" + batch.size() + ")";
-        for (Pending pending : batch) {
-            if (!description.isEmpty()) {
-                description.append("\n");
+        try {
+            if (this.activity.isEmpty()) {
+                return;
             }
-            description.append("**").append(pending.title()).append("**\n").append(pending.body());
+            List<WebhookPending> batch = new ArrayList<>(24);
+            WebhookPending next;
+            while (batch.size() < 20 && (next = this.activity.poll()) != null) {
+                batch.add(next);
+            }
+            if (batch.isEmpty()) {
+                return;
+            }
+            String url = batch.get(0).url();
+            int color = batch.get(0).color();
+            StringBuilder description = new StringBuilder();
+            String title = batch.size() == 1 ? batch.get(0).title() : "Attività (" + batch.size() + ")";
+            for (WebhookPending pending : batch) {
+                if (!description.isEmpty()) {
+                    description.append("\n");
+                }
+                description.append("**").append(pending.title()).append("**\n").append(pending.body());
+            }
+            post(url, title, description.toString(), color);
+        } catch (Throwable ignored) {
         }
-        post(url, title, description.toString(), color);
     }
 
     private void attachConsole() {
@@ -316,6 +323,4 @@ public final class WebhookService {
         return builder.toString();
     }
 
-    private record Pending(String title, String body, int color, String url) {
-    }
 }

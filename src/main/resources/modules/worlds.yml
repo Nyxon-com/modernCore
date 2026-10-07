@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # Mondi: spawn globale (/setspawn + /spawn), lock meteo/ora, catalogo Multiverse.
 # All'avvio (e su WorldLoad) i mondi Bukkit/MV vengono scritti in `worlds:`.
 # Con Multiverse-Core le config del mondo (pvp, difficulty, gamemode, hunger, fly)
@@ -7,7 +7,7 @@
 
 settings:
   default-world: world
-  # true = join/respawn usano lo spawn del mondo in cui sei. /spawn è SEMPRE globale.
+  # true = join/respawn usano lo spawn del mondo in cui sei. /spawn ÃƒÂ¨ SEMPRE globale.
   use-current-world-spawn: false
   # true = ogni login parte dallo spawn globale (/setspawn), anche dopo un quit altrove.
   spawn-on-join: true
@@ -20,7 +20,7 @@ settings:
   ignore-prefixes:
   - arena_
   - dungeon_
-  # Se Multiverse-Core è presente: non riscrivere pvp/difficulty/gamemode/hunger/fly.
+  # Se Multiverse-Core ÃƒÂ¨ presente: non riscrivere pvp/difficulty/gamemode/hunger/fly.
   # Le config restano quelle di MV, worlds.yml viene allineato da solo.
   use-multiverse-world-config: true
   sync-worlds-from-multiverse: true
@@ -74,6 +74,7 @@ weather: {}
 #   spawn-monsters / spawn-animals / hunger / allow-flight
 #   fall-damage         false = niente danno da caduta in quel mondo (/falldamage false <mondo>)
 #   keep-spawn-in-memory / hidden / auto-heal / portal-forming
-#   weather             UNSET | CLEAR | RAIN | THUNDER  (solo se weather.<mondo>.lock è assente)
+#   weather             UNSET | CLEAR | RAIN | THUNDER  (solo se weather.<mondo>.lock ÃƒÂ¨ assente)
 #   generator / seed
 worlds: {}
+

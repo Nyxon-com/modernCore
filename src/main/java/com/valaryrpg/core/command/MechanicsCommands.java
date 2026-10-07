@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Checkdeath, copycoord e long-jump; LimitY, portali e holo-block stanno in classi dedicate.
@@ -35,6 +36,63 @@ final class MechanicsCommands {
         new PortalCommands(this.plugin).register(registrar);
         new HoloBlockCommands(this.plugin).register(registrar);
         registrar.register(pressureJumpCommand(), "Long jump su pressure plate", aliases("commands.pressureplayerjump-aliases"));
+        registrar.register(tombCommand(), "Tombe virtuali Valary", aliases("commands.tomb-aliases"));
+        registrar.register(clearLagCommand(), "ClearLag Valary", aliases("commands.clearlag-aliases"));
+    }
+
+    private LiteralCommandNode<CommandSourceStack> clearLagCommand() {
+        String name = string("commands.clearlag", "clearlag");
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "clearlag"))
+                .executes(ctx -> {
+                    MechanicsModule module = module();
+                    if (module == null || module.clearLag() == null || !module.clearLag().enabled()) {
+                        this.plugin.messages().send(ctx.getSource().getSender(), "clearlag.disabled");
+                        return 0;
+                    }
+                    int removed = module.clearLag().clearNow();
+                    this.plugin.messages().send(ctx.getSource().getSender(), "clearlag.forced", Map.of(
+                            "count", String.valueOf(removed),
+                            "next", String.valueOf(module.clearLag().secondsLeft())
+                    ));
+                    return Command.SINGLE_SUCCESS;
+                })
+                .then(Commands.literal("now")
+                        .executes(ctx -> {
+                            MechanicsModule module = module();
+                            if (module == null || module.clearLag() == null || !module.clearLag().enabled()) {
+                                this.plugin.messages().send(ctx.getSource().getSender(), "clearlag.disabled");
+                                return 0;
+                            }
+                            int removed = module.clearLag().clearNow();
+                            this.plugin.messages().send(ctx.getSource().getSender(), "clearlag.forced", Map.of(
+                                    "count", String.valueOf(removed),
+                                    "next", String.valueOf(module.clearLag().secondsLeft())
+                            ));
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .build();
+    }
+
+    private LiteralCommandNode<CommandSourceStack> tombCommand() {
+        String name = string("commands.tomb", "tomba");
+        return Commands.literal(name)
+                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "tomb"))
+                .executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!(sender instanceof Player player)) {
+                        this.plugin.messages().send(sender, "general.player-only");
+                        return 0;
+                    }
+                    MechanicsModule module = module();
+                    if (module == null || module.tombs() == null || !module.tombs().enabled()) {
+                        this.plugin.messages().send(sender, "tomb.disabled");
+                        return 0;
+                    }
+                    module.tombs().openList(player, 1);
+                    return Command.SINGLE_SUCCESS;
+                })
+                .build();
     }
 
     private LiteralCommandNode<CommandSourceStack> checkDeathCommand() {

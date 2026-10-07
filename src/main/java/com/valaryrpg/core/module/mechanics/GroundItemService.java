@@ -7,6 +7,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
+import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.TextDisplay;
@@ -15,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
+import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -27,12 +29,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Hologram MiniMessage sugli item a terra (non sui give in inventario).
+ * Non spawnare in aria: aspetta che l'item sia a terra, poi segue se riparte.
  */
 public final class GroundItemService {
 
     private final ValaryCorePlugin plugin;
     private final Map<UUID, Tracked> tracked = new ConcurrentHashMap<>();
-    private BukkitTask task;
+    private BukkitTask followTask;
+    private BukkitTask textTask;
 
     public GroundItemService(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -43,14 +47,20 @@ public final class GroundItemService {
         if (!this.plugin.configs().mechanics().getBoolean("ground-items.enabled", true)) {
             return;
         }
+        // Ogni tick: spawn quando grounded + teleport sync mentre cade/si muove.
+        this.followTask = Bukkit.getScheduler().runTaskTimer(this.plugin, this::followTick, 1L, 1L);
         int interval = Math.max(5, this.plugin.configs().mechanics().getInt("ground-items.update-interval-ticks", 20));
-        this.task = Bukkit.getScheduler().runTaskTimer(this.plugin, this::tick, interval, interval);
+        this.textTask = Bukkit.getScheduler().runTaskTimer(this.plugin, this::textTick, interval, interval);
     }
 
     public void stop() {
-        if (this.task != null) {
-            this.task.cancel();
-            this.task = null;
+        if (this.followTask != null) {
+            this.followTask.cancel();
+            this.followTask = null;
+        }
+        if (this.textTask != null) {
+            this.textTask.cancel();
+            this.textTask = null;
         }
     }
 
@@ -70,12 +80,19 @@ public final class GroundItemService {
             item.setUnlimitedLifetime(true);
         }
         remove(item.getUniqueId());
-        Component text = label(item.getItemStack(), despawnSeconds);
-        if (text.equals(Component.empty())) {
-            this.tracked.put(item.getUniqueId(), new Tracked(null, System.currentTimeMillis(), despawnSeconds));
+        long now = System.currentTimeMillis();
+        boolean wait = this.plugin.configs().mechanics().getBoolean("ground-items.wait-until-grounded", true);
+        if (!wait || isSettled(item)) {
+            Component text = label(item.getItemStack(), despawnSeconds);
+            if (text.equals(Component.empty())) {
+                this.tracked.put(item.getUniqueId(), new Tracked(null, now, despawnSeconds, 0));
+                return;
+            }
+            spawnDisplay(item, text, now, despawnSeconds);
             return;
         }
-        spawnDisplay(item, text, System.currentTimeMillis(), despawnSeconds);
+        // Pending: niente hologram finché non tocca terra (evita holo nel punto di drop in aria).
+        this.tracked.put(item.getUniqueId(), new Tracked(null, now, despawnSeconds, 0));
     }
 
     public void scanChunk(org.bukkit.Chunk chunk) {
@@ -125,10 +142,10 @@ public final class GroundItemService {
             spawned.text(text);
             style(spawned, scale);
         });
-        this.tracked.put(item.getUniqueId(), new Tracked(display.getUniqueId(), spawnedAt, despawnSeconds));
+        this.tracked.put(item.getUniqueId(), new Tracked(display.getUniqueId(), spawnedAt, despawnSeconds, 0));
     }
 
-    private org.bukkit.Location labelLocation(Item item) {
+    private Location labelLocation(Item item) {
         double offsetY = this.plugin.configs().mechanics().getDouble("ground-items.offset-y", 0.32D);
         return item.getLocation().clone().add(0.0D, offsetY, 0.0D);
     }
@@ -161,7 +178,47 @@ public final class GroundItemService {
         this.tracked.clear();
     }
 
-    private void tick() {
+    private void followTick() {
+        boolean wait = this.plugin.configs().mechanics().getBoolean("ground-items.wait-until-grounded", true);
+        int timeout = Math.max(1, this.plugin.configs().mechanics().getInt("ground-items.grounded-timeout-ticks", 100));
+        for (Map.Entry<UUID, Tracked> entry : List.copyOf(this.tracked.entrySet())) {
+            var entity = this.plugin.getServer().getEntity(entry.getKey());
+            if (!(entity instanceof Item item) || !item.isValid()) {
+                remove(entry.getKey());
+                continue;
+            }
+            Tracked data = entry.getValue();
+            int age = data.ticksAlive + 1;
+            this.tracked.put(entry.getKey(), data.withTicks(age));
+
+            if (data.displayId == null) {
+                if (!wait || isSettled(item) || age >= timeout) {
+                    int remaining = remainingSeconds(data);
+                    if (data.despawnSeconds > 0 && remaining <= 0) {
+                        remove(entry.getKey());
+                        item.remove();
+                        continue;
+                    }
+                    Component text = label(item.getItemStack(), Math.max(0, remaining));
+                    if (!text.equals(Component.empty())) {
+                        spawnDisplay(item, text, data.spawnedAt, data.despawnSeconds);
+                    }
+                }
+                continue;
+            }
+
+            var display = this.plugin.getServer().getEntity(data.displayId);
+            if (!(display instanceof TextDisplay textDisplay)) {
+                continue;
+            }
+            // Sync teleport: teleportAsync lagga e lascia l'holo in aria.
+            if (!isSettled(item) || age % 5 == 0) {
+                textDisplay.teleport(labelLocation(item));
+            }
+        }
+    }
+
+    private void textTick() {
         long now = System.currentTimeMillis();
         for (Map.Entry<UUID, Tracked> entry : List.copyOf(this.tracked.entrySet())) {
             var entity = this.plugin.getServer().getEntity(entry.getKey());
@@ -179,16 +236,12 @@ public final class GroundItemService {
                 continue;
             }
             if (data.displayId == null) {
-                Component text = label(item.getItemStack(), Math.max(0, remaining));
-                if (!text.equals(Component.empty())) {
-                    spawnDisplay(item, text, data.spawnedAt, data.despawnSeconds);
-                }
                 continue;
             }
             var display = this.plugin.getServer().getEntity(data.displayId);
             if (display instanceof TextDisplay textDisplay) {
                 textDisplay.text(label(item.getItemStack(), Math.max(0, remaining)));
-                textDisplay.teleportAsync(labelLocation(item));
+                textDisplay.teleport(labelLocation(item));
             } else {
                 remove(entry.getKey());
                 Component text = label(item.getItemStack(), Math.max(0, remaining));
@@ -197,6 +250,26 @@ public final class GroundItemService {
                 }
             }
         }
+    }
+
+    private int remainingSeconds(Tracked data) {
+        if (data.despawnSeconds <= 0) {
+            return -1;
+        }
+        return data.despawnSeconds - (int) ((System.currentTimeMillis() - data.spawnedAt) / 1000L);
+    }
+
+    private static boolean isSettled(Item item) {
+        if (item.isOnGround()) {
+            return true;
+        }
+        Vector velocity = item.getVelocity();
+        double speedSq = velocity.lengthSquared();
+        if (item.isInWater() || item.isInLava()) {
+            return speedSq < 0.04D;
+        }
+        // Apex di un bounce: velocità bassa ma ancora in aria → non settled.
+        return false;
     }
 
     private void style(TextDisplay display, float scale) {
@@ -295,6 +368,9 @@ public final class GroundItemService {
         }
     }
 
-    private record Tracked(UUID displayId, long spawnedAt, int despawnSeconds) {
+    private record Tracked(UUID displayId, long spawnedAt, int despawnSeconds, int ticksAlive) {
+        Tracked withTicks(int ticks) {
+            return new Tracked(this.displayId, this.spawnedAt, this.despawnSeconds, ticks);
+        }
     }
 }

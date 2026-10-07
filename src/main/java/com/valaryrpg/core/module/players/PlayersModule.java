@@ -21,6 +21,7 @@ public final class PlayersModule implements Module {
     private VitalService vitals;
     private BackService back;
     private PrivateMessageService messages;
+    private PlaytimeService playtime;
     private PlayersListener listener;
 
     public PlayersModule(ValaryCorePlugin plugin) {
@@ -44,10 +45,21 @@ public final class PlayersModule implements Module {
         this.vitals = new VitalService(this.plugin);
         this.back = new BackService(this.plugin);
         this.messages = new PrivateMessageService(this.plugin, this.repository, this.nicks);
-        this.listener = new PlayersListener(this.plugin, this.repository, this.nicks, this.fly, this.god, this.gamemodes, this.messages);
+        this.playtime = new PlaytimeService(this.plugin, this.repository);
+        this.listener = new PlayersListener(
+                this.plugin,
+                this.repository,
+                this.nicks,
+                this.fly,
+                this.god,
+                this.gamemodes,
+                this.messages,
+                this.playtime
+        );
         this.plugin.getServer().getPluginManager().registerEvents(this.listener, this.plugin);
         for (Player player : Bukkit.getOnlinePlayers()) {
             refresh(player);
+            this.playtime.startSession(player.getUniqueId());
         }
     }
 
@@ -120,5 +132,13 @@ public final class PlayersModule implements Module {
 
     public GameModeService gamemodes() {
         return this.gamemodes;
+    }
+
+    public PlaytimeService playtime() {
+        return this.playtime;
+    }
+
+    public PlayerDataRepository repository() {
+        return this.repository;
     }
 }

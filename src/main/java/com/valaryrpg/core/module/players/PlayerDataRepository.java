@@ -21,7 +21,8 @@ public final class PlayerDataRepository {
     }
 
     public Optional<PlayerProfile> find(UUID uuid) {
-        String sql = "SELECT name, nick, fly, social_spy, gamemode, first_join, last_join, last_ip FROM " + table() + " WHERE uuid = ?";
+        String sql = "SELECT name, nick, fly, social_spy, gamemode, first_join, last_join, last_quit, playtime_ms, last_ip FROM "
+                + table() + " WHERE uuid = ?";
         try (Connection connection = this.plugin.storage().connection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, uuid.toString());
@@ -29,21 +30,158 @@ public final class PlayerDataRepository {
                 if (!result.next()) {
                     return Optional.empty();
                 }
-                return Optional.of(new PlayerProfile(
-                        uuid,
-                        result.getString("name"),
-                        result.getString("nick"),
-                        result.getInt("fly") == 1,
-                        result.getInt("social_spy") == 1,
-                        result.getString("gamemode"),
-                        result.getLong("first_join"),
-                        result.getLong("last_join"),
-                        result.getString("last_ip")
-                ));
+                return Optional.of(mapProfile(uuid, result));
             }
         } catch (SQLException exception) {
             throw new StorageException("Lettura profilo fallita.", exception);
         }
+    }
+
+    public Optional<PlayerProfile> findByName(String name) {
+        if (name == null || name.isBlank()) {
+            return Optional.empty();
+        }
+        String sql = "SELECT uuid, name, nick, fly, social_spy, gamemode, first_join, last_join, last_quit, playtime_ms, last_ip FROM "
+                + table() + " WHERE LOWER(name) = LOWER(?) LIMIT 1";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, name.trim());
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) {
+                    return Optional.empty();
+                }
+                return Optional.of(mapProfile(UUID.fromString(result.getString("uuid")), result));
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Lettura profilo per nome fallita.", exception);
+        }
+    }
+
+    public List<PlayerProfile> listAll(int limit, int offset) {
+        String sql = "SELECT uuid, name, nick, fly, social_spy, gamemode, first_join, last_join, last_quit, playtime_ms, last_ip FROM "
+                + table() + " ORDER BY LOWER(name) ASC LIMIT ? OFFSET ?";
+        List<PlayerProfile> profiles = new ArrayList<>();
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, Math.max(1, limit));
+            statement.setInt(2, Math.max(0, offset));
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    profiles.add(mapProfile(UUID.fromString(result.getString("uuid")), result));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Lettura playerlist fallita.", exception);
+        }
+        return profiles;
+    }
+
+    public int countPlayers() {
+        String sql = "SELECT COUNT(*) FROM " + table();
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet result = statement.executeQuery()) {
+            return result.next() ? result.getInt(1) : 0;
+        } catch (SQLException exception) {
+            throw new StorageException("Conteggio player fallito.", exception);
+        }
+    }
+
+    public List<String> suggestNames(String prefix, int limit) {
+        String sql = "SELECT name FROM " + table() + " WHERE LOWER(name) LIKE LOWER(?) ORDER BY LOWER(name) ASC LIMIT ?";
+        List<String> names = new ArrayList<>();
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, (prefix == null ? "" : prefix) + "%");
+            statement.setInt(2, Math.max(1, limit));
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    names.add(result.getString("name"));
+                }
+            }
+        } catch (SQLException exception) {
+            return List.of();
+        }
+        return names;
+    }
+
+    public void addPlaytime(UUID uuid, long millis, long quitAt) {
+        if (millis <= 0L && quitAt <= 0L) {
+            return;
+        }
+        String sql = "UPDATE " + table() + " SET playtime_ms = playtime_ms + ?, last_quit = ? WHERE uuid = ?";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, Math.max(0L, millis));
+            statement.setLong(2, quitAt);
+            statement.setString(3, uuid.toString());
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Aggiornamento playtime fallito.", exception);
+        }
+    }
+
+    public void saveInventory(UUID uuid, String encoded, boolean dirty) {
+        String sql = "UPDATE " + table() + " SET inventory = ?, inventory_dirty = ? WHERE uuid = ?";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, encoded == null ? "" : encoded);
+            statement.setInt(2, dirty ? 1 : 0);
+            statement.setString(3, uuid.toString());
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Salvataggio inventario fallito.", exception);
+        }
+    }
+
+    public Optional<String> inventory(UUID uuid) {
+        String sql = "SELECT inventory FROM " + table() + " WHERE uuid = ?";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) {
+                    return Optional.empty();
+                }
+                String raw = result.getString("inventory");
+                return raw == null || raw.isBlank() ? Optional.empty() : Optional.of(raw);
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Lettura inventario fallita.", exception);
+        }
+    }
+
+    public boolean inventoryDirty(UUID uuid) {
+        String sql = "SELECT inventory_dirty FROM " + table() + " WHERE uuid = ?";
+        try (Connection connection = this.plugin.storage().connection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next() && result.getInt("inventory_dirty") == 1;
+            }
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    public void clearInventoryDirty(UUID uuid) {
+        updateFlag(uuid, "inventory_dirty", false);
+    }
+
+    private static PlayerProfile mapProfile(UUID uuid, ResultSet result) throws SQLException {
+        return new PlayerProfile(
+                uuid,
+                result.getString("name"),
+                result.getString("nick"),
+                result.getInt("fly") == 1,
+                result.getInt("social_spy") == 1,
+                result.getString("gamemode"),
+                result.getLong("first_join"),
+                result.getLong("last_join"),
+                result.getLong("last_quit"),
+                result.getLong("playtime_ms"),
+                result.getString("last_ip")
+        );
     }
 
     public void touchJoin(UUID uuid, String name, String ip, long now) {

@@ -9,6 +9,9 @@
 join-quit:
   enabled: true
 
+playerlist:
+  page-size: 15
+
 nick:
   max-length: 32
   change-tablist: true

@@ -13,7 +13,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Whitelist default + comandi extra per gruppo VIP LuckPerms (group.<rank>).
@@ -22,10 +25,16 @@ final class CommandFilter {
 
     private final ValaryCorePlugin plugin;
     private boolean enabled = true;
+    private long cooldownMillis = 800L;
+    private long panelCooldownMillis = 1500L;
     private final Set<String> visible = new HashSet<>();
     private final Set<String> disabled = new HashSet<>();
     private final Set<String> disabledPrefixes = new HashSet<>();
+    private final Set<String> cooldownExempt = new HashSet<>();
+    private final Set<String> panelCommands = new HashSet<>();
     private final List<Unlock> unlocks = new ArrayList<>();
+    private final Map<UUID, Long> nextCommandAt = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> nextPanelAt = new ConcurrentHashMap<>();
 
     CommandFilter(ValaryCorePlugin plugin) {
         this.plugin = plugin;
@@ -37,10 +46,14 @@ final class CommandFilter {
         file.load();
         FileConfiguration yaml = file.config();
         this.enabled = yaml.getBoolean("enabled", true);
+        this.cooldownMillis = Math.max(0L, yaml.getLong("cooldown-millis", 800L));
+        this.panelCooldownMillis = Math.max(0L, yaml.getLong("panel-cooldown-millis", 1500L));
         this.visible.clear();
         this.unlocks.clear();
         this.disabled.clear();
         this.disabledPrefixes.clear();
+        this.cooldownExempt.clear();
+        this.panelCommands.clear();
         for (String name : yaml.getStringList("visible")) {
             this.visible.add(normalize(name));
         }
@@ -62,11 +75,54 @@ final class CommandFilter {
                 this.disabledPrefixes.add(value);
             }
         }
+        List<String> exempt = yaml.getStringList("cooldown-exempt");
+        if (exempt.isEmpty()) {
+            this.cooldownExempt.addAll(List.of("login", "l", "log", "register", "reg", "email", "captcha", "2fa", "totp", "changepassword"));
+        } else {
+            for (String name : exempt) {
+                this.cooldownExempt.add(normalize(name));
+            }
+        }
+        List<String> panels = yaml.getStringList("panel-commands");
+        if (panels.isEmpty()) {
+            this.panelCommands.addAll(List.of("cp", "commandpanel", "commandpanels", "panel"));
+        } else {
+            for (String name : panels) {
+                this.panelCommands.add(normalize(name));
+            }
+        }
         loadRanks(yaml.getConfigurationSection("vip"), "group.");
         loadRanks(yaml.getConfigurationSection("staff"), "group.");
         this.visible.removeAll(this.disabled);
         this.plugin.getLogger().info("Command filter: " + this.visible.size() + " visibili, "
-                + this.disabled.size() + " disabilitati, " + this.unlocks.size() + " rank VIP.");
+                + this.disabled.size() + " disabilitati, " + this.unlocks.size() + " rank VIP, cooldown "
+                + this.cooldownMillis + "ms / panel " + this.panelCooldownMillis + "ms.");
+    }
+
+    /**
+     * @return secondi rimanenti di cooldown, 0 se ok
+     */
+    double tryCommand(org.bukkit.entity.Player player, String label) {
+        if (player == null || seeAll(player) || Perms.has(this.plugin, player, "command-cooldown-bypass")) {
+            return 0.0D;
+        }
+        String name = normalize(label);
+        if (name.isEmpty() || this.cooldownExempt.contains(name)) {
+            return 0.0D;
+        }
+        long now = System.currentTimeMillis();
+        boolean panel = this.panelCommands.contains(name);
+        Map<UUID, Long> map = panel ? this.nextPanelAt : this.nextCommandAt;
+        long wait = panel ? this.panelCooldownMillis : this.cooldownMillis;
+        if (wait <= 0L) {
+            return 0.0D;
+        }
+        Long until = map.get(player.getUniqueId());
+        if (until != null && until > now) {
+            return (until - now) / 1000.0D;
+        }
+        map.put(player.getUniqueId(), now + wait);
+        return 0.0D;
     }
 
     private void loadRanks(ConfigurationSection section, String permissionPrefix) {
@@ -118,6 +174,10 @@ final class CommandFilter {
             return false;
         }
         if (rawName != null && rawName.indexOf(':') >= 0) {
+            return false;
+        }
+        // WorldEdit registra //help come chiave "/help" → non deve collidere con /help.
+        if (isWorldEditSlashCommand(rawName)) {
             return false;
         }
         if (blocked(name, rawName, command)) {
@@ -186,6 +246,18 @@ final class CommandFilter {
             return true;
         }
         return command.testPermissionSilent(sender);
+    }
+
+    static boolean isWorldEditSlashCommand(String rawName) {
+        if (rawName == null || rawName.isBlank()) {
+            return false;
+        }
+        String raw = rawName.trim();
+        int colon = raw.indexOf(':');
+        if (colon >= 0) {
+            raw = raw.substring(colon + 1);
+        }
+        return raw.startsWith("/");
     }
 
     static String normalize(String raw) {

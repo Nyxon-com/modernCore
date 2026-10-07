@@ -114,7 +114,9 @@ public final class WorldCatalog {
         changed |= write(yaml, base + ".fall-damage", true, false);
         changed |= write(yaml, base + ".keep-spawn-in-memory", bool(mv, world.getKeepSpawnInMemory(), "isKeepSpawnInMemory", "getKeepSpawnInMemory"), overwrite);
         changed |= write(yaml, base + ".hidden", bool(mv, false, "isHidden"), mvSync);
-        changed |= write(yaml, base + ".auto-heal", bool(mv, true, "getAutoHeal", "isAutoHeal"), mvSync);
+        // auto-heal = NATURAL_HEALTH_REGENERATION (MMOCore gestisce la regen).
+        // Non sincronizzare da Multiverse: MV "auto-heal" e' solo peaceful e riattiverebbe il burst vanilla.
+        changed |= write(yaml, base + ".auto-heal", false, false);
         changed |= write(yaml, base + ".portal-forming", portalForming(mv), mvSync);
         changed |= write(yaml, base + ".weather", weather(mv), mvSync);
         changed |= write(
@@ -136,15 +138,19 @@ public final class WorldCatalog {
     }
 
     public void apply(World world) {
-        if (multiverseOwns(world)) {
-            return;
-        }
         FileConfiguration yaml = this.plugin.configs().worlds();
         String base = "worlds." + world.getName();
         if (!yaml.contains(base)) {
             return;
         }
-        world.setPVP(yaml.getBoolean(base + ".pvp", world.getPVP()));
+        // Sempre applica la regen vanilla da YAML (anche su mondi Multiverse).
+        // Default false: con fame bloccata a 20/20 la regen vanilla esplode al join.
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, yaml.getBoolean(base + ".auto-heal", false));
+        // PVP da YAML anche con Multiverse: evita drift/sync che riattiva il PVP.
+        world.setPVP(yaml.getBoolean(base + ".pvp", false));
+        if (multiverseOwns(world)) {
+            return;
+        }
         try {
             world.setDifficulty(Difficulty.valueOf(yaml.getString(base + ".difficulty", world.getDifficulty().name()).toUpperCase(Locale.ROOT)));
         } catch (IllegalArgumentException ignored) {
@@ -155,7 +161,6 @@ public final class WorldCatalog {
                 yaml.getBoolean(base + ".spawn-animals", world.getAllowAnimals())
         );
         world.setKeepSpawnInMemory(yaml.getBoolean(base + ".keep-spawn-in-memory", world.getKeepSpawnInMemory()));
-        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, yaml.getBoolean(base + ".auto-heal", true));
     }
 
     public boolean hunger(World world) {

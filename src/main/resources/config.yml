@@ -24,6 +24,11 @@ modules:
   chat: true
   webhooks: true
 
+# OP full access gestito da OpFullAccessService. /valary fixperms solo se serve.
+security:
+  apply-owner-perms: false
+  apply-owner-perms-delay-ticks: 60
+
 commands:
   root: valary
   root-aliases:
@@ -120,6 +125,8 @@ commands:
   trash: cestino
   trash-aliases:
     - trash
+  reciclatore: reciclatore
+  reciclatore-aliases: []
   back: back
   back-aliases: []
   god: god
@@ -149,6 +156,23 @@ commands:
   clearchat-aliases:
     - cc
     - clearchatall
+  tomb: tomba
+  tomb-aliases:
+  - tombe
+  - grave
+  - graves
+  clearlag: clearlag
+  clearlag-aliases:
+  - clag
+  - lagclear
+  playtime: playtime
+  playtime-aliases:
+    - pt
+    - tempo
+  playerlist: playerlist
+  playerlist-aliases:
+    - players
+    - neverjoined
   command: command
   command-aliases: []
 
@@ -205,6 +229,7 @@ permissions:
   sell: valary.sell
   sellall: valary.sellall
   trash: valary.trash
+  reciclatore: valary.reciclatore
   back: valary.back
   god: valary.god
   god-others: valary.god.others
@@ -220,8 +245,16 @@ permissions:
   clearchat: valary.clearchat
   chat-filter-bypass: valary.chat.filter.bypass
   chat-notify: valary.chat.notify
+  tomb: valary.tomb
+  tomb-free: valary.tomb.free
+  tomb-others: valary.tomb.others
+  clearlag: valary.clearlag
+  playtime: valary.playtime
+  playtime-others: valary.playtime.others
+  playerlist: valary.playerlist
   command-list: valary.command.list
   command-see-all: valary.command.see-all
+  command-cooldown-bypass: valary.command.cooldown-bypass
   teleport-cooldown-bypass: valary.teleport.cooldown.bypass
 
 # Countdown a schermo per warmup/cooldown di /home /warp /spawn
