@@ -89,6 +89,7 @@ permissions:
       valary.copycoord.others: true
       valary.kit.others: true
       valary.kit.bypass: true
+      valary.expeditions.admin: true
       valary.god.others: true
       valary.heal.others: true
       valary.feed.others: true
@@ -276,6 +277,12 @@ permissions:
   valary.kit.daily:
     description: Kit daily
     default: false
+  valary.expeditions:
+    description: Usa /spedizioni (partenza solo per i rank in modules/expeditions.yml)
+    default: true
+  valary.expeditions.admin:
+    description: /spedizioni completa <player>
+    default: op
   valary.sell:
     description: Usa /sell
     default: true

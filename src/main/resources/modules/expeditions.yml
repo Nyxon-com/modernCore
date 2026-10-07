@@ -1,0 +1,210 @@
+# =============================================================================
+# Spedizioni VIP — /spedizioni
+# Solo i rank elencati in "ranks" possono partire. Il timer è un timestamp
+# salvato nel DB: la spedizione avanza anche da offline o a server spento.
+# Una spedizione alla volta per player. Riscatto dalla GUI quando è pronta.
+#
+# Comandi ricompensa: come i kit ([console], [player], [message], [sound]).
+# Senza prefisso = console. Placeholder: {player} {rand:MIN-MAX}
+# =============================================================================
+
+settings:
+  # ogni quanti tick aggiornare la GUI aperta (timer live)
+  refresh-ticks: 20
+  # avvisa al join se una spedizione è pronta
+  notify-on-join: true
+
+# rank -> durata (ore). Se il player ha più rank vince la durata più corta.
+# permission: nodo controllato (default group.<rank>)
+# extra-rolls: tiri bonus sulla tabella "rolls" (vince il valore più alto)
+ranks:
+  quirith:
+    hours: 48
+  eldryn:
+    hours: 40
+  volnaire:
+    hours: 32
+  iskara:
+    hours: 24
+    extra-rolls: 1
+
+expeditions:
+  terra:
+    name: '<b><gradient:#00FF79:#00FF07>ꜱᴘᴇᴅɪᴢɪᴏɴᴇ ᴛᴇʀʀᴀ</gradient></b>'
+    slot: 11
+    material: MOSS_BLOCK
+    locked-material: GRAY_DYE
+    # sblocco: prima kill di Terratron (milestone arena)
+    required-permission: valary.unlock.terra
+    locked-hint: '<red>Sconfiggi <white>Terratron</white> per sbloccarla'
+    description:
+      - '<gray>Esplora la superficie di <green>Terra</green>'
+      - '<gray>e torna con materiali e key.'
+      - ''
+      - '<white>Garantito:'
+      - '<dark_gray>• <gray>3-5 Perla Terrestre'
+      - '<dark_gray>• <gray>2-3 Cuore Terrestre'
+      - '<dark_gray>• <gray>2-4 Frammento Dungeon'
+      - '<dark_gray>• <gray>300 XP classe'
+      - '<white>1 tiro bonus:'
+      - '<dark_gray>• <gray>Key Terratron / Geocron / Sylvaron / Traghion'
+      - '<dark_gray>• <gray>Gemma Sylvaron'
+    guaranteed:
+      - '[console] mmoitems give MATERIAL PERLA_TERRESTRE {player} {rand:3-5}'
+      - '[console] mmoitems give MATERIAL CUORE_TERRESTRE {player} {rand:2-3}'
+      - '[console] mmoitems give MATERIAL FRAMMENTO_DUNGEON {player} {rand:2-4}'
+      - '[console] mmocore admin exp give {player} main 300'
+    rolls: 1
+    pool:
+      - name: '<green>1 key Terratron'
+        weight: 40
+        commands:
+          - '[console] crate give {player} terratron 1'
+      - name: '<green>1 key Geocron'
+        weight: 25
+        commands:
+          - '[console] crate give {player} geocron 1'
+      - name: '<aqua>1 key Sylvaron'
+        weight: 15
+        commands:
+          - '[console] crate give {player} sylvaron 1'
+      - name: '<light_purple>1 key Traghion'
+        weight: 10
+        commands:
+          - '[console] crate give {player} traghion 1'
+      - name: '<gold>1 gemma Sylvaron'
+        weight: 10
+        random-commands:
+          - '[console] mmoitems give GEM_STONE SCARLATTITE0 {player} 1'
+          - '[console] mmoitems give GEM_STONE MAGMITE0 {player} 1'
+          - '[console] mmoitems give GEM_STONE SOLARITE0 {player} 1'
+          - '[console] mmoitems give GEM_STONE TENEBRITE0 {player} 1'
+
+  marte:
+    name: '<b><gradient:#FF2A2A:#FF7A3C>ꜱᴘᴇᴅɪᴢɪᴏɴᴇ ᴍᴀʀᴛᴇ</gradient></b>'
+    slot: 15
+    material: RED_SAND
+    locked-material: GRAY_DYE
+    # sblocco: prima kill di Larycan (milestone arena)
+    required-permission: valary.unlock.marte
+    locked-hint: '<red>Sconfiggi <white>Larycan</white> per sbloccarla'
+    description:
+      - '<gray>Spingiti tra le dune di <red>Marte</red>'
+      - '<gray>e recupera risorse marziane.'
+      - ''
+      - '<white>Garantito:'
+      - '<dark_gray>• <gray>3-5 Perla Marziana'
+      - '<dark_gray>• <gray>2-3 Cuore Marziano'
+      - '<dark_gray>• <gray>2-4 Frammento Marziano'
+      - '<dark_gray>• <gray>500 XP classe'
+      - '<white>1 tiro bonus:'
+      - '<dark_gray>• <gray>Key Larycan / Putran / Vulcan / Nekrath'
+      - '<dark_gray>• <gray>Gemma Vulcan'
+    guaranteed:
+      - '[console] mmoitems give MATERIAL PERLA_MARZIANA {player} {rand:3-5}'
+      - '[console] mmoitems give MATERIAL CUORE_MARZIANO {player} {rand:2-3}'
+      - '[console] mmoitems give MATERIAL FRAMMENTO_MARZIANO {player} {rand:2-4}'
+      - '[console] mmocore admin exp give {player} main 500'
+    rolls: 1
+    pool:
+      - name: '<green>1 key Larycan'
+        weight: 40
+        commands:
+          - '[console] crate give {player} larycan 1'
+      - name: '<green>1 key Putran'
+        weight: 30
+        commands:
+          - '[console] crate give {player} putran 1'
+      - name: '<aqua>1 key Vulcan'
+        weight: 15
+        commands:
+          - '[console] crate give {player} vulcan 1'
+      - name: '<light_purple>1 key Nekrath'
+        weight: 5
+        commands:
+          - '[console] crate give {player} nekrath 1'
+      - name: '<gold>1 gemma Vulcan'
+        weight: 10
+        random-commands:
+          - '[console] mmoitems give GEM_STONE SCARLATTITE_MARZIANA0 {player} 1'
+          - '[console] mmoitems give GEM_STONE MAGMITE_MARZIANA0 {player} 1'
+          - '[console] mmoitems give GEM_STONE SOLARITE_MARZIANA0 {player} 1'
+          - '[console] mmoitems give GEM_STONE TENEBRITE_MARZIANA0 {player} 1'
+
+gui:
+  title: '<b><gradient:#E5A2C1:#9711EA>ꜱᴘᴇᴅɪᴢɪᴏɴɪ</gradient></b>'
+  rows: 3
+  filler: BLACK_STAINED_GLASS_PANE
+  status-slot: 13
+  close-slot: 22
+  close:
+    material: BARRIER
+    name: '<red><b>Chiudi</b>'
+  # righe aggiunte sotto la descrizione di ogni spedizione, in base allo stato
+  # placeholder: {duration} {remaining} {bar} {percent}
+  states:
+    no-rank:
+      - ''
+      - '<red>Solo VIP <b><gradient:#7AF2FF:#2BB8FF>ǫᴜɪʀɪᴛʜ</gradient></b> <red>o superiore'
+      - '<dark_gray>store.valaryrpg.net'
+    locked:
+      - ''
+      - '{hint}'
+    available:
+      - ''
+      - '<gray>Durata: <white>{duration}'
+      - '<green>▸ Click per partire'
+    busy:
+      - ''
+      - '<dark_gray>Hai già una spedizione in corso'
+    running:
+      - ''
+      - '<yellow>In corso… <white>{remaining}'
+      - '{bar} <gray>{percent}%'
+    ready:
+      - ''
+      - '<green><b>Spedizione completata!'
+      - '<green>▸ Click per riscattare'
+  status:
+    idle:
+      material: CLOCK
+      name: '<gold><b>Nessuna spedizione</b>'
+      lore:
+        - '<gray>Scegli una destinazione.'
+        - '<gray>Durata col tuo rank: <white>{duration}'
+        - '<dark_gray>Avanza anche da offline.'
+    no-rank:
+      material: CLOCK
+      name: '<gold><b>Spedizioni VIP</b>'
+      lore:
+        - '<gray>Durata per rank:'
+        - '<dark_gray>• <b><gradient:#7AF2FF:#2BB8FF>ǫᴜɪʀɪᴛʜ</gradient></b> <white>48h'
+        - '<dark_gray>• <b><gradient:#FFFFFF:#C5C5D0>ᴇʟᴅʀʏɴ</gradient></b> <white>40h'
+        - '<dark_gray>• <b><gradient:#F5D76E:#C98A15>ᴠᴏʟɴᴀɪʀᴇ</gradient></b> <white>32h'
+        - '<dark_gray>• <b><gradient:#FFF6C2:#E8A317>ɪꜱᴋᴀʀᴀ</gradient></b> <white>24h <gray>+1 tiro'
+    running:
+      material: CLOCK
+      name: '<yellow><b>{name}</b>'
+      lore:
+        - '<gray>Ritorno tra <white>{remaining}'
+        - '{bar} <gray>{percent}%'
+    ready:
+      material: CHEST
+      name: '<green><b>Spedizione pronta!</b>'
+      lore:
+        - '<gray>{name}'
+        - '<green>▸ Click per riscattare'
+
+messages:
+  started: '{prefix} <gray>Spedizione partita: {name}<gray>. Ritorno tra <white>{duration}</white>.'
+  claimed: '{prefix} <green>Spedizione completata! <gray>Ricompense ricevute.'
+  roll: '{prefix} <gray>Tiro bonus: {reward}'
+  not-ready: '{prefix} <gray>La spedizione torna tra <white>{remaining}</white>.'
+  no-rank: '{prefix} <red>Le spedizioni sono per VIP Quirith o superiore. <gray>store.valaryrpg.net'
+  locked: '{prefix} {hint}'
+  already-running: '{prefix} <red>Hai già una spedizione in corso.'
+  loading: '{prefix} <gray>Caricamento dati, riprova tra un attimo.'
+  error: '{prefix} <red>Errore spedizioni, avvisa lo staff.'
+  ready-join: '{prefix} <green>La tua spedizione è tornata! <gray>Riscattala con <white>/spedizioni</white>.'
+  admin-done: '{prefix} <green>Spedizione di <white>{player}</white> completata subito.'
+  admin-none: '{prefix} <gray><white>{player}</white> non ha spedizioni in corso.'

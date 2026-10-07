@@ -71,6 +71,9 @@ public final class CommandService {
             if (enabled("chat")) {
                 new ChatCommands(this.plugin).register(registrar);
             }
+            if (enabled("expeditions")) {
+                new ExpeditionsCommands(this.plugin).register(registrar);
+            }
             new CommandListCommands(this.plugin, this.filter).register(registrar);
         });
     }

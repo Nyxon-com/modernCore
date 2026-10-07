@@ -23,6 +23,8 @@ modules:
   sell: true
   chat: true
   webhooks: true
+  # spedizioni VIP (/spedizioni) — modules/expeditions.yml
+  expeditions: true
   # bonus XP classe VIP — modules/vip.yml
   vip: true
 
@@ -120,6 +122,9 @@ commands:
   kit-aliases: []
   kits: kits
   kits-aliases: []
+  expeditions: spedizioni
+  expeditions-aliases:
+    - spedizione
   sell: sell
   sell-aliases: []
   sellall: sellall
@@ -228,6 +233,8 @@ permissions:
   kit: valary.kit
   kit-others: valary.kit.others
   kit-bypass: valary.kit.bypass
+  expeditions: valary.expeditions
+  expeditions-admin: valary.expeditions.admin
   sell: valary.sell
   sellall: valary.sellall
   trash: valary.trash
