@@ -20,6 +20,8 @@ settings:
   ignore-prefixes:
   - arena_
   - dungeon_
+  # true = fame spenta in tutti i mondi (anche istanze e mondi MV con hunger: true).
+  disable-hunger-everywhere: true
   # Se Multiverse-Core ÃƒÂ¨ presente: non riscrivere pvp/difficulty/gamemode/hunger/fly.
   # Le config restano quelle di MV, worlds.yml viene allineato da solo.
   use-multiverse-world-config: true

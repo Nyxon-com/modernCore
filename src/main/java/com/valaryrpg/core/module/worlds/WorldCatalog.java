@@ -164,6 +164,10 @@ public final class WorldCatalog {
     }
 
     public boolean hunger(World world) {
+        // Fame spenta ovunque: anche istanze arena_/dungeon_ e mondi che MV ha importato con hunger: true.
+        if (this.plugin.configs().worlds().getBoolean("settings.disable-hunger-everywhere", true)) {
+            return false;
+        }
         boolean fallback = defaultHunger();
         Object mv = liveMultiverse(world);
         if (mv != null) {
