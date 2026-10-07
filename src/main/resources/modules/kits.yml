@@ -1,5 +1,7 @@
 # =============================================================================
-# Kit — solo starter (equip iniziale). Sinistro ritira, destro anteprima.
+# Kit — starter (equip iniziale) + kit giornalieri VIP. Sinistro ritira, destro anteprima.
+# Kit VIP: permesso group.<rank>; i rank superiori ereditano i precedenti
+# e possono ritirare tutti i kit dei rank sotto (cumulativo).
 # =============================================================================
 
 settings:
@@ -20,7 +22,7 @@ settings:
 
 gui:
   title: <b><gradient:#E5A2C1:#9711EA>ᴋɪᴛ</gradient></b> <gray>{player}
-  rows: 3
+  rows: 5
   open-sound: BLOCK_CHEST_OPEN
   fill:
     enabled: true
@@ -67,7 +69,114 @@ gui:
       glow: true
       click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
       commands: []
+    '19':
+      action: kit
+      kit: vip_kryndel
+      material: LIGHT_GRAY_SHULKER_BOX
+      locked-material: GRAY_SHULKER_BOX
+      name: <b><gradient:#C9D1DC:#8B8B9A>ᴋʀʏɴᴅᴇʟ</gradient></b> <gray>ᴋɪᴛ
+      lore:
+      - <gray>Kit giornaliero VIP <b><gradient:#C9D1DC:#8B8B9A>ᴋʀʏɴᴅᴇʟ</gradient></b>
+      - <dark_gray>• <gold>1.000$</gold>
+      - <dark_gray>• <white>1 Rimuovi Skin
+      - <white>1 volta al giorno
+      hide-flags: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
+    '20':
+      action: kit
+      kit: vip_vaelorn
+      material: LIGHT_BLUE_SHULKER_BOX
+      locked-material: GRAY_SHULKER_BOX
+      name: <b><gradient:#D7E8F5:#7EB6E8>ᴠᴀᴇʟᴏʀɴ</gradient></b> <gray>ᴋɪᴛ
+      lore:
+      - <gray>Kit giornaliero VIP <b><gradient:#D7E8F5:#7EB6E8>ᴠᴀᴇʟᴏʀɴ</gradient></b>
+      - <dark_gray>• <gold>1.000$</gold>
+      - <white>1 volta al giorno
+      hide-flags: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
+    '21':
+      action: kit
+      kit: vip_orynth
+      material: LIME_SHULKER_BOX
+      locked-material: GRAY_SHULKER_BOX
+      name: <b><gradient:#B6FF4A:#3D9B14>ᴏʀʏɴᴛʜ</gradient></b> <gray>ᴋɪᴛ
+      lore:
+      - <gray>Kit giornaliero VIP <b><gradient:#B6FF4A:#3D9B14>ᴏʀʏɴᴛʜ</gradient></b>
+      - <dark_gray>• <gold>1.500$</gold>
+      - <white>1 volta al giorno
+      hide-flags: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
     '22':
+      action: kit
+      kit: vip_nymira
+      material: PINK_SHULKER_BOX
+      locked-material: GRAY_SHULKER_BOX
+      name: <b><gradient:#FF8AD8:#E11D8A>ɴʏᴍɪʀᴀ</gradient></b> <gray>ᴋɪᴛ
+      lore:
+      - <gray>Kit giornaliero VIP <b><gradient:#FF8AD8:#E11D8A>ɴʏᴍɪʀᴀ</gradient></b>
+      - <dark_gray>• <gold>1.500$</gold>
+      - <white>1 volta al giorno
+      hide-flags: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
+    '23':
+      action: kit
+      kit: vip_quirith
+      material: CYAN_SHULKER_BOX
+      locked-material: GRAY_SHULKER_BOX
+      name: <b><gradient:#7AF2FF:#2BB8FF>ǫᴜɪʀɪᴛʜ</gradient></b> <gray>ᴋɪᴛ
+      lore:
+      - <gray>Kit giornaliero VIP <b><gradient:#7AF2FF:#2BB8FF>ǫᴜɪʀɪᴛʜ</gradient></b>
+      - <dark_gray>• <gold>2.000$</gold>
+      - <dark_gray>• <white>1 Rimuovi Skin
+      - <white>1 volta al giorno
+      hide-flags: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
+    '24':
+      action: kit
+      kit: vip_eldryn
+      material: WHITE_SHULKER_BOX
+      locked-material: GRAY_SHULKER_BOX
+      name: <b><gradient:#FFFFFF:#C5C5D0>ᴇʟᴅʀʏɴ</gradient></b> <gray>ᴋɪᴛ
+      lore:
+      - <gray>Kit giornaliero VIP <b><gradient:#FFFFFF:#C5C5D0>ᴇʟᴅʀʏɴ</gradient></b>
+      - <dark_gray>• <gold>2.500$</gold>
+      - <white>1 volta al giorno
+      hide-flags: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
+    '25':
+      action: kit
+      kit: vip_volnaire
+      material: ORANGE_SHULKER_BOX
+      locked-material: GRAY_SHULKER_BOX
+      name: <b><gradient:#F5D76E:#C98A15>ᴠᴏʟɴᴀɪʀᴇ</gradient></b> <gray>ᴋɪᴛ
+      lore:
+      - <gray>Kit giornaliero VIP <b><gradient:#F5D76E:#C98A15>ᴠᴏʟɴᴀɪʀᴇ</gradient></b>
+      - <dark_gray>• <gold>3.000$</gold>
+      - <white>1 volta al giorno
+      hide-flags: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
+    '31':
+      action: kit
+      kit: vip_iskara
+      material: YELLOW_SHULKER_BOX
+      locked-material: GRAY_SHULKER_BOX
+      name: <b><gradient:#FFF6C2:#E8A317>ɪꜱᴋᴀʀᴀ</gradient></b> <gray>ᴋɪᴛ
+      lore:
+      - <gray>Kit giornaliero VIP <b><gradient:#FFF6C2:#E8A317>ɪꜱᴋᴀʀᴀ</gradient></b>
+      - <dark_gray>• <gold>4.000$</gold>
+      - <dark_gray>• <white>1 Rimuovi Skin
+      - <white>1 volta al giorno
+      hide-flags: true
+      click-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+      commands: []
+    '40':
       action: close
       material: BARRIER
       name: <red><bold>Chiudi</bold>
@@ -138,3 +247,84 @@ kits:
       mmoitem-id: PICCONE_INIZIALE
       amount: 1
     commands: []
+  # VIP kryndel: 1.000$ + 1 Rimuovi Skin (i rank superiori ereditano e possono ritirare anche questo)
+  vip_kryndel:
+    cooldown-seconds: 86400
+    permission: group.kryndel
+    first-join: false
+    one-time: false
+    items:
+    - mmoitem-type: CONSUMABLE
+      mmoitem-id: RIMUOVI_SKIN
+      amount: 1
+    commands:
+    - '[console] money give {player} 1000'
+  # VIP vaelorn: 1.000$ (i rank superiori ereditano e possono ritirare anche questo)
+  vip_vaelorn:
+    cooldown-seconds: 86400
+    permission: group.vaelorn
+    first-join: false
+    one-time: false
+    items: []
+    commands:
+    - '[console] money give {player} 1000'
+  # VIP orynth: 1.500$ (i rank superiori ereditano e possono ritirare anche questo)
+  vip_orynth:
+    cooldown-seconds: 86400
+    permission: group.orynth
+    first-join: false
+    one-time: false
+    items: []
+    commands:
+    - '[console] money give {player} 1500'
+  # VIP nymira: 1.500$ (i rank superiori ereditano e possono ritirare anche questo)
+  vip_nymira:
+    cooldown-seconds: 86400
+    permission: group.nymira
+    first-join: false
+    one-time: false
+    items: []
+    commands:
+    - '[console] money give {player} 1500'
+  # VIP quirith: 2.000$ + 1 Rimuovi Skin (i rank superiori ereditano e possono ritirare anche questo)
+  vip_quirith:
+    cooldown-seconds: 86400
+    permission: group.quirith
+    first-join: false
+    one-time: false
+    items:
+    - mmoitem-type: CONSUMABLE
+      mmoitem-id: RIMUOVI_SKIN
+      amount: 1
+    commands:
+    - '[console] money give {player} 2000'
+  # VIP eldryn: 2.500$ (i rank superiori ereditano e possono ritirare anche questo)
+  vip_eldryn:
+    cooldown-seconds: 86400
+    permission: group.eldryn
+    first-join: false
+    one-time: false
+    items: []
+    commands:
+    - '[console] money give {player} 2500'
+  # VIP volnaire: 3.000$ (i rank superiori ereditano e possono ritirare anche questo)
+  vip_volnaire:
+    cooldown-seconds: 86400
+    permission: group.volnaire
+    first-join: false
+    one-time: false
+    items: []
+    commands:
+    - '[console] money give {player} 3000'
+  # VIP iskara: 4.000$ + 1 Rimuovi Skin (i rank superiori ereditano e possono ritirare anche questo)
+  vip_iskara:
+    cooldown-seconds: 86400
+    permission: group.iskara
+    first-join: false
+    one-time: false
+    items:
+    - mmoitem-type: CONSUMABLE
+      mmoitem-id: RIMUOVI_SKIN
+      amount: 1
+    commands:
+    - '[console] money give {player} 4000'

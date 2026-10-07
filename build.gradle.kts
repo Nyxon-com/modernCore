@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.valaryrpg"
-version = "1.0.1"
+version = "1.0.2"
 description = "Modular Paper 1.21.11 core plugin"
 
 java {

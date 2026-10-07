@@ -46,7 +46,11 @@ public final class DefaultRankBootstrap {
             // /leveling (MMOCore attributes)
             "mmocore.attributes",
             // /changepassword <vecchia> <nuova> (AuthMe) — serve perche' default ha * false
-            "authme.player.changepassword"
+            "authme.player.changepassword",
+            // /spedizioni (la GUI controlla il rank: solo quirith+ possono partire)
+            "valary.expeditions",
+            // /vault buy e /diamantishop (NyxonVaults shop a diamanti)
+            "nyxonvaults.buy"
     );
 
     private final ValaryCorePlugin plugin;
