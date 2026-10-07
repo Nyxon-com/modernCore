@@ -23,6 +23,8 @@ modules:
   sell: true
   chat: true
   webhooks: true
+  # bonus XP classe VIP — modules/vip.yml
+  vip: true
 
 # OP full access gestito da OpFullAccessService. /valary fixperms solo se serve.
 security:

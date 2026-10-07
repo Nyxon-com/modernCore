@@ -14,6 +14,7 @@ import com.valaryrpg.core.module.mechanics.MechanicsModule;
 import com.valaryrpg.core.module.moderation.ModerationModule;
 import com.valaryrpg.core.module.players.PlayersModule;
 import com.valaryrpg.core.module.sell.SellModule;
+import com.valaryrpg.core.module.vip.VipModule;
 import com.valaryrpg.core.module.warps.WarpsModule;
 import com.valaryrpg.core.module.worlds.WorldsModule;
 import com.valaryrpg.core.papi.PlaceholderHook;
@@ -82,6 +83,7 @@ public final class ValaryCorePlugin extends JavaPlugin {
         this.modules.register(new KitsModule(this));
         this.modules.register(new SellModule(this));
         this.modules.register(new ChatModule(this));
+        this.modules.register(new VipModule(this));
         this.modules.enableAll();
 
         this.commands = new CommandService(this);

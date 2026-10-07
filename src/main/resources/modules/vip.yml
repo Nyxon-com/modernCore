@@ -1,0 +1,18 @@
+# =============================================================================
+# Bonus VIP
+# xp-bonus: percentuale extra sull'XP della classe principale MMOCore
+# (non sulle professioni). Se il player ha più rank vince il valore più alto.
+# Il nodo controllato è group.<rank> (ereditato da LuckPerms).
+# =============================================================================
+
+xp-bonus:
+  enabled: true
+  ranks:
+    kryndel: 5
+    vaelorn: 10
+    orynth: 15
+    nymira: 20
+    quirith: 25
+    eldryn: 30
+    volnaire: 40
+    iskara: 50
