@@ -25,6 +25,7 @@ final class CommandFilter {
 
     private final ModernCorePlugin plugin;
     private boolean enabled = true;
+    private boolean opsSeeAll = true;
     private long cooldownMillis = 800L;
     private long panelCooldownMillis = 1500L;
     private final Set<String> visible = new HashSet<>();
@@ -46,6 +47,7 @@ final class CommandFilter {
         file.load();
         FileConfiguration yaml = file.config();
         this.enabled = yaml.getBoolean("enabled", true);
+        this.opsSeeAll = yaml.getBoolean("ops-see-all", true);
         this.cooldownMillis = Math.max(0L, yaml.getLong("cooldown-millis", 800L));
         this.panelCooldownMillis = Math.max(0L, yaml.getLong("panel-cooldown-millis", 1500L));
         this.visible.clear();
@@ -155,6 +157,9 @@ final class CommandFilter {
     }
 
     boolean seeAll(CommandSender sender) {
+        if (!this.opsSeeAll) {
+            return false;
+        }
         return sender.isOp() || Perms.has(this.plugin, sender, "command-see-all");
     }
 
