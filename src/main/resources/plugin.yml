@@ -4,7 +4,7 @@ main: com.modern.core.ModernCorePlugin
 api-version: '1.21'
 description: '${description}'
 authors:
-  - ValaryRPG
+  - Modern
 website: https://github.com/Nyxon-com/modernCore
 folia-supported: false
 load: POSTWORLD

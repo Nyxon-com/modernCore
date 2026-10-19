@@ -1,9 +1,9 @@
 ---
-description: Standard ValaryRPG-Core — Paper 1.21.11, data-driven, leggero per 100+ player
+description: Standard modernCore — Paper 1.21.11, data-driven, leggero per 100+ player
 alwaysApply: true
 ---
 
-# ValaryRPG-Core
+# modernCore
 
 Plugin Paper **1.21.11**, Java 21, Gradle. Sostituisce CMI/Essentials: nativo (`/kick` non `/cmi kick`), MiniMessage, YAML ovunque.
 

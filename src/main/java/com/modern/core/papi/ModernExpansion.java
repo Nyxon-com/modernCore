@@ -29,7 +29,7 @@ public final class ModernExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return "ValaryRPG";
+        return "Modern";
     }
 
     @Override
