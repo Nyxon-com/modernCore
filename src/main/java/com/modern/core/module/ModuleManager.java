@@ -98,7 +98,8 @@ public final class ModuleManager {
     }
 
     public boolean isEnabled(String id) {
-        return this.plugin.configs().root().getBoolean("modules." + id, true);
+        boolean fallback = !"smp".equals(id);
+        return this.plugin.configs().root().getBoolean("modules." + id, fallback);
     }
 
     @SuppressWarnings("unchecked")

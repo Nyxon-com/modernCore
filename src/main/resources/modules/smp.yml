@@ -1,0 +1,60 @@
+combat-seconds: 15
+combat-blocked-commands:
+  - home
+  - sethome
+  - delhome
+  - homes
+  - spawn
+  - warp
+  - warps
+  - back
+  - fly
+  - play
+  - team home
+
+team-max-members: 8
+team-pvp: false
+start-money: 100
+
+auction:
+  tax-percent: 5
+  max-listings: 8
+  hours: 48
+  min-price: 10
+  max-price: 1000000
+
+menus:
+  auction:
+    title: "<b><gradient:#1A6EFF:#6EEBFF>Asta</gradient></b> <dark_gray>{page}/{pages}"
+    rows: 6
+    item-slots: "10-16,19-25,28-34,37-43"
+    filler:
+      material: BLUE_STAINED_GLASS_PANE
+      name: " "
+      lore: []
+    prev:
+      slot: 45
+      material: ARROW
+      name: "&bPagina precedente"
+      lore: []
+    next:
+      slot: 53
+      material: ARROW
+      name: "&bPagina successiva"
+      lore: []
+    filter:
+      slot: 49
+      material: CHEST
+      name-all: "&bLe mie aste"
+      name-mine: "&bTutte le aste"
+      lore-all:
+        - "&7Clicca per vedere solo le tue"
+      lore-mine:
+        - "&7Clicca per vedere tutte"
+    lore:
+      - "&7Venditore: &f{seller}"
+      - "&7Prezzo: &b{price}"
+      - "&7Scade: &f{time}"
+      - "{action}"
+    own-line: "&cClicca per ritirare"
+    buy-line: "&bClicca per comprare"

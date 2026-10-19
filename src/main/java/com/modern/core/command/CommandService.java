@@ -74,6 +74,9 @@ public final class CommandService {
             if (enabled("expeditions")) {
                 new ExpeditionsCommands(this.plugin).register(registrar);
             }
+            if (enabled("smp")) {
+                new SmpCommands(this.plugin).register(registrar);
+            }
             new CommandListCommands(this.plugin, this.filter).register(registrar);
         });
     }

@@ -367,3 +367,12 @@ permissions:
   valary.command.see-all:
     description: Vede tutti i comandi (tab, /command list all)
     default: op
+  modernsmp.play:
+    description: Vai nel mondo di gioco
+    default: true
+  modernsmp.ah:
+    description: Usa l'asta
+    default: true
+  modernsmp.team:
+    description: Usa i team
+    default: true

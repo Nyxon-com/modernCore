@@ -15,6 +15,7 @@ import com.modern.core.module.mechanics.MechanicsModule;
 import com.modern.core.module.moderation.ModerationModule;
 import com.modern.core.module.players.PlayersModule;
 import com.modern.core.module.sell.SellModule;
+import com.modern.core.module.smp.SmpModule;
 import com.modern.core.module.vip.VipModule;
 import com.modern.core.module.warps.WarpsModule;
 import com.modern.core.module.worlds.WorldsModule;
@@ -89,6 +90,7 @@ public final class ModernCorePlugin extends JavaPlugin {
         this.modules.register(new ChatModule(this));
         this.modules.register(new ExpeditionsModule(this));
         this.modules.register(new VipModule(this));
+        this.modules.register(new SmpModule(this));
         this.modules.enableAll();
 
         this.commands = new CommandService(this);
