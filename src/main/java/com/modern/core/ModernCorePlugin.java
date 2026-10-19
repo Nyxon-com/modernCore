@@ -44,6 +44,7 @@ public final class ModernCorePlugin extends JavaPlugin {
     private Teleports teleports;
     private WebhookService webhooks;
     private OpFullAccessService opFullAccess;
+    private com.modern.core.pack.PackJoinSender packJoinSender;
 
     @Override
     public void onLoad() {
@@ -105,7 +106,8 @@ public final class ModernCorePlugin extends JavaPlugin {
         }
         this.opFullAccess = new OpFullAccessService(this);
         this.opFullAccess.start();
-        new com.modern.core.pack.PackJoinSender(this).start();
+        this.packJoinSender = new com.modern.core.pack.PackJoinSender(this);
+        this.packJoinSender.start();
         new OwnerPermsBootstrap(this).schedule();
         new com.modern.core.security.DefaultRankBootstrap(this).schedule();
 
@@ -114,6 +116,9 @@ public final class ModernCorePlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (this.packJoinSender != null) {
+            this.packJoinSender.stop();
+        }
         if (this.opFullAccess != null) {
             this.opFullAccess.stop();
         }
