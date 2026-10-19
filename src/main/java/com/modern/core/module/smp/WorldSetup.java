@@ -80,7 +80,7 @@ public final class WorldSetup implements Listener {
     SmpText.send(player, "&aSei nel mondo. Il bordo e a &f22500 &ablocchi dal centro.");
   }
 
-  public void rtp(Player player) {
+  public void rtp(Player player, String requestedWorld) {
     if (plugin.combat().isTagged(player)) {
       SmpText.send(player, "&cNon puoi farlo in combattimento.");
       return;
@@ -92,13 +92,13 @@ public final class WorldSetup implements Listener {
       SmpText.send(player, "&cAspetta ancora &f" + ((until - now + 999) / 1000) + "s&c.");
       return;
     }
-    String worldName = plugin.getConfig().getString("rtp.world", OVERWORLD);
-    World world = Bukkit.getWorld(worldName == null ? OVERWORLD : worldName);
-    if (world == null || world.getEnvironment() != World.Environment.NORMAL) {
-      SmpText.send(player, "&cIl mondo non e caricato.");
+    String fallback = plugin.getConfig().getString("rtp.world", OVERWORLD);
+    World world = resolveRtpWorld(requestedWorld == null || requestedWorld.isBlank() ? fallback : requestedWorld);
+    if (world == null) {
+      SmpText.send(player, "&cQuel mondo non e disponibile.");
       return;
     }
-    int attempts = Math.max(1, plugin.getConfig().getInt("rtp.attempts", 12));
+    int attempts = Math.max(1, plugin.getConfig().getInt("rtp.attempts", 16));
     WorldBorder border = world.getWorldBorder();
     double half = Math.max(64D, (border.getSize() / 2D) - 48D);
     Location center = border.getCenter();
@@ -106,23 +106,54 @@ public final class WorldSetup implements Listener {
     for (int attempt = 0; attempt < attempts; attempt++) {
       int x = (int) Math.floor(center.getX() + (random.nextDouble() * 2D - 1D) * half);
       int z = (int) Math.floor(center.getZ() + (random.nextDouble() * 2D - 1D) * half);
-      int y = world.getHighestBlockYAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES);
-      if (y <= world.getMinHeight() + 4) {
+      Location destination = findSafe(world, x, z);
+      if (destination == null) {
         continue;
       }
-      Block ground = world.getBlockAt(x, y, z);
-      if (!ground.getType().isSolid() || ground.isLiquid() || UNSAFE.contains(ground.getType())) {
-        continue;
-      }
-      if (!world.getBlockAt(x, y + 1, z).isPassable() || !world.getBlockAt(x, y + 2, z).isPassable()) {
-        continue;
-      }
-      player.teleport(new Location(world, x + 0.5, y + 1.0, z + 0.5));
+      player.teleport(destination);
       this.rtpCooldown.put(player.getUniqueId(), now + cooldown);
-      SmpText.send(player, "&aTeletrasporto casuale: &f" + x + " " + (y + 1) + " " + z);
+      SmpText.send(player, "&aTeletrasporto casuale: &f" + destination.getBlockX() + " " + destination.getBlockY() + " " + destination.getBlockZ());
       return;
     }
     SmpText.send(player, "&cNessun punto sicuro. Riprova.");
+  }
+
+  private World resolveRtpWorld(String name) {
+    String key = name.toLowerCase(java.util.Locale.ROOT);
+    String resolved = switch (key) {
+      case "world", "overworld" -> OVERWORLD;
+      case "nether", "world_nether" -> "world_nether";
+      case "end", "the_end", "world_the_end" -> "world_the_end";
+      default -> null;
+    };
+    if (resolved == null || SPAWN.equals(resolved)) {
+      return null;
+    }
+    return Bukkit.getWorld(resolved);
+  }
+
+  private Location findSafe(World world, int x, int z) {
+    if (world.getEnvironment() == World.Environment.NETHER) {
+      for (int y = 110; y >= 32; y--) {
+        if (isStandable(world, x, y, z)) {
+          return new Location(world, x + 0.5, y + 1.0, z + 0.5);
+        }
+      }
+      return null;
+    }
+    int y = world.getHighestBlockYAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES);
+    if (y <= world.getMinHeight() + 4 || !isStandable(world, x, y, z)) {
+      return null;
+    }
+    return new Location(world, x + 0.5, y + 1.0, z + 0.5);
+  }
+
+  private boolean isStandable(World world, int x, int y, int z) {
+    Block ground = world.getBlockAt(x, y, z);
+    if (!ground.getType().isSolid() || ground.isLiquid() || UNSAFE.contains(ground.getType())) {
+      return false;
+    }
+    return world.getBlockAt(x, y + 1, z).isPassable() && world.getBlockAt(x, y + 2, z).isPassable();
   }
 
   private void applyBorder(World world) {

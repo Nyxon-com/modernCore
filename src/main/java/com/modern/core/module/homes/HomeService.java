@@ -44,6 +44,17 @@ public final class HomeService {
 
         int limit = limitOf(player);
         Location location = player.getLocation().clone();
+        if (location.getWorld() != null) {
+            for (String blocked : this.plugin.configs().homes().getStringList("settings.blocked-worlds")) {
+                if (blocked.equalsIgnoreCase(location.getWorld().getName())) {
+                    this.plugin.messages().send(player, "homes.blocked-world", Map.of(
+                            "world", location.getWorld().getName()
+                    ));
+                    Sounds.play(this.plugin, player, "command-denied");
+                    return;
+                }
+            }
+        }
         async(() -> {
             Optional<StoredLocation> existing = this.repository.find(player.getUniqueId(), name);
             int count = this.repository.count(player.getUniqueId());

@@ -56,6 +56,7 @@ homes:
   not-found: "{prefix} <red>Non hai una home chiamata <white>{home}</white>."
   invalid-name: "{prefix} <red>Nome home non valido. Usa lettere, numeri e underscore."
   limit-reached: "{prefix} <red>Hai raggiunto il limite di <white>{limit}</white> home."
+  blocked-world: "{prefix} <red>Non puoi settare una home in <white>{world}</white>."
   list: "{prefix} <gray>Home ({count}): <white>{homes}</white>"
   list-empty: "{prefix} <gray>Non hai ancora nessuna home. Usa <white>/sethome</white>."
 

@@ -37,9 +37,19 @@ final class SmpCommands {
             SmpText.send(ctx.getSource().getSender(), "&cSolo in gioco.");
             return 0;
           }
-          module().context().worlds().rtp(player);
+          module().context().worlds().rtp(player, null);
           return Command.SINGLE_SUCCESS;
-        }).build(), "Teletrasporto casuale nel mondo", List.of());
+        })
+        .then(Commands.argument("mondo", StringArgumentType.word())
+            .executes(ctx -> {
+              if (!(ctx.getSource().getSender() instanceof Player player)) {
+                SmpText.send(ctx.getSource().getSender(), "&cSolo in gioco.");
+                return 0;
+              }
+              module().context().worlds().rtp(player, StringArgumentType.getString(ctx, "mondo"));
+              return Command.SINGLE_SUCCESS;
+            }))
+        .build(), "Teletrasporto casuale nel mondo", List.of());
     registrar.register(Commands.literal("ah")
         .requires(stack -> stack.getSender().hasPermission("modernsmp.ah"))
         .then(Commands.literal("sell")
