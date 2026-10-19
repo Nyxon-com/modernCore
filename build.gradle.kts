@@ -4,12 +4,12 @@ plugins {
 }
 
 group = "com.modern"
-version = "1.0.4"
-description = "Modular Paper 1.21.11 core plugin"
+version = "1.0.5"
+description = "Modular Paper 26.2 core plugin"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.134-stable")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("me.clip:placeholderapi:2.11.6")
 
@@ -29,7 +29,7 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.47.2.0")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.3")
 
-    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    testImplementation("io.papermc.paper:paper-api:26.2.build.134-stable")
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -48,7 +48,7 @@ tasks {
 
     compileJava {
         options.encoding = "UTF-8"
-        options.release.set(21)
+        options.release.set(25)
         options.compilerArgs.add("-Xlint:deprecation")
     }
 

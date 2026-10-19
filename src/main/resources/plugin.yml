@@ -1,7 +1,7 @@
 name: modernCore
 version: '${version}'
 main: com.modern.core.ModernCorePlugin
-api-version: '1.21'
+api-version: '26.2'
 description: '${description}'
 authors:
   - Modern
