@@ -24,9 +24,9 @@ public final class WorldSetup implements Listener {
   public static final String OVERWORLD = "world";
 
   private static final Map<String, Double> BORDERS = Map.of(
-      OVERWORLD, 45_000D,
-      "world_nether", 11_400D,
-      "world_the_end", 35_000D,
+      OVERWORLD, 20_000D,
+      "world_nether", 2_500D,
+      "world_the_end", 20_000D,
       SPAWN, 2_200D
   );
 
