@@ -127,11 +127,13 @@ public final class PackJoinSender implements Listener {
 
     private byte[] addPackFormat(byte[] content) {
         String json = new String(content, StandardCharsets.UTF_8);
-        if (json.contains("\"pack_format\"")) {
-            return content;
+        String root = "\"pack\":{\"description\":\"Nexo's ResourcePack\",\"min_format\":88,\"max_format\":199}";
+        String compatible = "\"pack\":{\"description\":\"Nexo's ResourcePack\",\"pack_format\":" + CLIENT_PACK_FORMAT
+            + ",\"supported_formats\":{\"min_inclusive\":46,\"max_inclusive\":199},\"min_format\":46,\"max_format\":199}";
+        if (json.contains(root)) {
+            json = json.replace(root, compatible);
+            this.plugin.getLogger().info("Pack compatibile da 1.21.4 a 26.2");
         }
-        json = json.replace("\"pack\":{", "\"pack\":{\"pack_format\":" + CLIENT_PACK_FORMAT + ",");
-        this.plugin.getLogger().info("Aggiunto pack_format " + CLIENT_PACK_FORMAT + " per il client 1.21.4");
         return json.getBytes(StandardCharsets.UTF_8);
     }
 }
