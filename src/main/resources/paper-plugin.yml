@@ -370,6 +370,9 @@ permissions:
   modernsmp.play:
     description: Vai nel mondo di gioco
     default: true
+  modernsmp.rtp:
+    description: Teletrasporto casuale nel mondo
+    default: true
   modernsmp.ah:
     description: Usa l'asta
     default: true

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.modern"
-version = "1.1.0"
+version = "1.1.1"
 description = "Modular Paper 26.2 core plugin"
 
 java {

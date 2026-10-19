@@ -42,7 +42,6 @@ public final class SmpModule implements Module {
     listen(new AuctionListener(auctions));
     listen(new JoinKit(this.context));
     listen(worlds);
-    listen(new AdventureGuard());
     worlds.start();
     this.combatTask = this.plugin.getServer().getScheduler().runTaskTimer(this.plugin, combat::tick, 20L, 20L);
     this.auctionTask = this.plugin.getServer().getScheduler().runTaskTimer(this.plugin, auctions::tickExpired, 20L * 60, 20L * 60);

@@ -10,11 +10,17 @@ combat-blocked-commands:
   - back
   - fly
   - play
+  - rtp
   - team home
 
 team-max-members: 8
 team-pvp: false
 start-money: 100
+
+rtp:
+  world: world
+  cooldown-seconds: 45
+  attempts: 12
 
 auction:
   tax-percent: 5
