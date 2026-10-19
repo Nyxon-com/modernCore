@@ -1,5 +1,5 @@
 # =============================================================================
-# ValaryRPG-Core — config principale (moduli, comandi, permessi, HUD teleport)
+# modernCore — config principale (moduli, comandi, permessi, HUD teleport)
 # Testi: lang/messages.yml, lang/vanilla.yml   Suoni: sounds/sounds.yml   Moduli: modules/<nome>.yml
 # Disattiva un modulo con false: non registra comandi/eventi.
 # Permessi: cambia il nodo qui, non nel Java. Alias comandi: liste sotto commands.*

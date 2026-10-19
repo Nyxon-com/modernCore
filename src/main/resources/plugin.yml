@@ -1,11 +1,11 @@
-name: ValaryRPG-Core
+name: modernCore
 version: '${version}'
-main: com.valaryrpg.core.ValaryCorePlugin
+main: com.modern.core.ModernCorePlugin
 api-version: '1.21'
 description: '${description}'
 authors:
   - ValaryRPG
-website: https://github.com/Nyxon-com/ValaryRPGcore
+website: https://github.com/Nyxon-com/modernCore
 folia-supported: false
 load: POSTWORLD
 softdepend:

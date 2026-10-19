@@ -1,12 +1,12 @@
-name: ValaryRPG-Core
+name: modernCore
 version: '${version}'
-main: com.valaryrpg.core.ValaryCorePlugin
-bootstrapper: com.valaryrpg.core.ValaryBootstrap
+main: com.modern.core.ModernCorePlugin
+bootstrapper: com.modern.core.ModernBootstrap
 api-version: '1.21'
 description: '${description}'
 authors:
   - ValaryRPG
-website: https://github.com/Nyxon-com/ValaryRPGcore
+website: https://github.com/Nyxon-com/modernCore
 folia-supported: false
 dependencies:
   server:

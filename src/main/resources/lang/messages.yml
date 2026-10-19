@@ -148,7 +148,7 @@ moderation:
   kick-usage: "{prefix} <gray>Uso: <white>/{label} <player> [motivo]</white>"
   kick-staff: "{prefix} <yellow>{player} è stato kickato. <gray>({reason})"
   # =============================================================================
-  # Schermate kick/ban — plugin/ValaryRPG-Core/lang/messages.yml
+  # Schermate kick/ban — plugin/modernCore/lang/messages.yml
   # MiniMessage. Riga vuota = spazio. Placeholder: {reason} {staff} {player} {duration} {ip} {line}
   # *-screen = Connection Lost (kick, ban permanente, o bottone Esci).
   # ban-dialog-* = countdown live (modules/moderation.yml screen.live-countdown).

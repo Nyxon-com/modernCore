@@ -3,7 +3,7 @@ plugins {
     id("com.gradleup.shadow") version "9.1.0"
 }
 
-group = "com.valaryrpg"
+group = "com.modern"
 version = "1.0.4"
 description = "Modular Paper 1.21.11 core plugin"
 
@@ -54,8 +54,8 @@ tasks {
 
     shadowJar {
         archiveClassifier.set("")
-        archiveBaseName.set("ValaryRPG-Core")
-        relocate("com.zaxxer.hikari", "com.valaryrpg.core.libs.hikari")
+        archiveBaseName.set("modernCore")
+        relocate("com.zaxxer.hikari", "com.modern.core.libs.hikari")
         mergeServiceFiles()
         minimize {
             exclude(dependency("org.xerial:sqlite-jdbc:.*"))

@@ -1,18 +1,18 @@
-# Guida ValaryRPG-Core
+# Guida modernCore
 
 Plugin Paper **1.21.11** (Java 21). Comandi nativi: `/kick`, `/ban`, `/vanish`, `/invsee` — **mai** `/cmi`.
 
-Repository: https://github.com/Nyxon-com/ValaryRPGcore
+Repository: https://github.com/Nyxon-com/modernCore
 
 ---
 
 ## Installazione
 
 1. JDK 21+, Paper 1.21.11
-2. `./gradlew.bat build` → `build/libs/ValaryRPG-Core-1.0.1.jar`
+2. `./gradlew.bat build` → `build/libs/modernCore-1.0.1.jar`
 3. Metti il JAR in `plugins/`
 4. Soft-depend opzionali: Vault, CoinsEngine, MMOItems, MythicLib, Multiverse-Core, PlaceholderAPI
-5. Avvia, poi edita i YAML in `plugins/ValaryRPG-Core/`
+5. Avvia, poi edita i YAML in `plugins/modernCore/`
 6. `/valary reload` (o `/vcore reload`) dopo le modifiche. Lo **storage SQL non si riconnette**: cambia `storage.yml` e riavvia.
 
 Al primo avvio i file vengono creati. Se un YAML è corrotto viene rinominato `*.broken.<timestamp>.yml` e rigenerato. Chiavi nuove si aggiungono da sole senza toccare i tuoi valori.
@@ -195,7 +195,7 @@ Due sistemi diversi:
 
 Wiki completa delle chiavi YAML: [wiki/Holograms.md](wiki/Holograms.md) e [wiki/Triggerblocks.md](wiki/Triggerblocks.md).
 
-Edita sempre `plugins/ValaryRPG-Core/`, non i YAML del repo. `/vholo delete` non cancella i triggerblock.
+Edita sempre `plugins/modernCore/`, non i YAML del repo. `/vholo delete` non cancella i triggerblock.
 
 ---
 
@@ -236,6 +236,6 @@ Wiki: [wiki/Chat.md](wiki/Chat.md) e [wiki/Webhooks.md](wiki/Webhooks.md).
 
 ## Storage
 
-Default SQLite `plugins/ValaryRPG-Core/data.db`. Per MySQL/MariaDB imposta `storage.type` e le credenziali, poi **riavvia**.
+Default SQLite `plugins/modernCore/data.db`. Per MySQL/MariaDB imposta `storage.type` e le credenziali, poi **riavvia**.
 
 Tabelle (prefisso `valary_`): `homes`, `players` (nick, fly, vanish, god, ultima morte, IP), `punishments`, `kit_claims`.

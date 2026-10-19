@@ -1,5 +1,5 @@
 # =============================================================================
-# Hologram TextDisplay. Ogni hologram è un file in plugins/ValaryRPG-Core/holo/<nome>.yml
+# Hologram TextDisplay. Ogni hologram è un file in plugins/modernCore/holo/<nome>.yml
 # /valary reload e /vholo reload rileggono i file e respawnano le entity.
 #
 # /vholo create <nome>          crea qui, scrive holo/<nome>.yml

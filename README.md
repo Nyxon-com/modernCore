@@ -2,7 +2,7 @@
 
 Plugin Core modulare per **Paper 1.21.11**. Sostituisce CMI/Essentials con comandi nativi (`/kick`, `/ban`, `/vanish` — **non** `/cmi`), YAML data-driven e hook **MMOItems**, **Vault**, **CoinsEngine**, **Multiverse-Core**, **PlaceholderAPI**.
 
-Build: **Gradle** (JDK 21). Repository: https://github.com/Nyxon-com/ValaryRPGcore
+Build: **Gradle** (JDK 21). Repository: https://github.com/Nyxon-com/modernCore
 
 **Guida completa:** [GUIDE.md](GUIDE.md)  
 **Wiki:** [Holograms](wiki/Holograms.md) · [Triggerblocks](wiki/Triggerblocks.md) · [Chat](wiki/Chat.md) · [Webhooks](wiki/Webhooks.md)
@@ -36,4 +36,4 @@ Feature complete rispetto alla spec, con perfezionamento (step 2):
 ./gradlew.bat build
 ```
 
-JAR: `build/libs/ValaryRPG-Core-1.0.1.jar`
+JAR: `build/libs/modernCore-1.0.1.jar`
