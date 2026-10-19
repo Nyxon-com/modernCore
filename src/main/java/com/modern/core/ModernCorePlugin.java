@@ -105,6 +105,7 @@ public final class ModernCorePlugin extends JavaPlugin {
         }
         this.opFullAccess = new OpFullAccessService(this);
         this.opFullAccess.start();
+        new com.modern.core.pack.PackJoinSender(this).start();
         new OwnerPermsBootstrap(this).schedule();
         new com.modern.core.security.DefaultRankBootstrap(this).schedule();
 
