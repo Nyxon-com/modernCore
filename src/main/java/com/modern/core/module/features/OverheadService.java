@@ -5,6 +5,7 @@ package com.modern.core.module.features;
 import com.modern.core.ModernCorePlugin;
 import com.modern.core.module.moderation.ModerationModule;
 import com.modern.core.module.moderation.VanishService;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -26,14 +27,19 @@ import org.bukkit.scheduler.BukkitTask;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class OverheadService implements Listener {
 
   private static final long WINDOW_MS = 3000L;
   private static final MiniMessage MINI = MiniMessage.miniMessage();
+  private static final Pattern BRACES = Pattern.compile("\\{([A-Za-z0-9_-]+)}");
+  private static final String SHEET = "(({mmoitems_stat_attack_damage}*{mmoitems_stat_attack_speed}) * (1-{mmoitems_stat_critical-strike-chance}/100) + (({mmoitems_stat_attack_damage}*{mmoitems_stat_attack_speed})*({mmoitems_stat_critical_strike_power}/100)*({mmoitems_stat_critical-strike-chance}/100))) * (1 + {mmoitems_stat_weapon-damage} / 100) * (1 + {mythiclib_stat_physical_damage} / 100)";
 
   private final ModernCorePlugin plugin;
   private final Map<UUID, TextDisplay> labels = new ConcurrentHashMap<>();
@@ -104,10 +110,10 @@ public final class OverheadService implements Listener {
         continue;
       }
       display.text(MINI.deserialize(lines(player, now)));
+      player.hideEntity(this.plugin, display);
       Location location = player.getLocation().clone();
-      location.setYaw(0);
       location.setPitch(0);
-      location.add(0, player.getHeight() + 0.55D, 0);
+      location.add(0, player.getHeight() + 0.45D, 0);
       display.teleport(location);
     }
   }
@@ -120,23 +126,26 @@ public final class OverheadService implements Listener {
     if (current != null) {
       current.remove();
     }
-    Location location = player.getLocation().clone().add(0, player.getHeight() + 0.55D, 0);
+    Location location = player.getLocation().clone();
+    location.setPitch(0);
+    location.add(0, player.getHeight() + 0.45D, 0);
     TextDisplay display = player.getWorld().spawn(location, TextDisplay.class, entity -> {
       entity.text(MINI.deserialize(lines(player, System.currentTimeMillis())));
-      entity.setBillboard(Display.Billboard.CENTER);
+      entity.setBillboard(Display.Billboard.FIXED);
       entity.setAlignment(TextDisplay.TextAlignment.CENTER);
       entity.setSeeThrough(false);
       entity.setShadowed(true);
       entity.setDefaultBackground(false);
-      entity.setBackgroundColor(Color.fromARGB(90, 0, 0, 0));
-      entity.setLineWidth(180);
+      entity.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+      entity.setLineWidth(420);
       entity.setPersistent(false);
       entity.setTeleportDuration(3);
       entity.setViewRange(1.5F);
       org.bukkit.util.Transformation transformation = entity.getTransformation();
-      transformation.getScale().set(0.75F, 0.75F, 0.75F);
+      transformation.getScale().set(1.0F, 1.0F, 1.0F);
       entity.setTransformation(transformation);
     });
+    player.hideEntity(this.plugin, display);
     this.labels.put(player.getUniqueId(), display);
     return display;
   }
@@ -146,10 +155,43 @@ public final class OverheadService implements Listener {
     AttributeInstance maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
     double cap = maxHealth == null ? 20 : maxHealth.getValue();
     double[] mana = this.mana.read(player);
-    double dps = dps(player.getUniqueId(), now);
-    return "<red>Vita <white>" + Math.round(health) + "</white><dark_gray>/</dark_gray><white>" + Math.round(cap) + "</white></red>\n"
-        + "<aqua>Mana <white>" + Math.round(mana[0]) + "</white><dark_gray>/</dark_gray><white>" + Math.round(mana[1]) + "</white></aqua>\n"
-        + "<gold>DPS <white>" + Math.round(dps) + "</white></gold>";
+    return "\uA415 <red>" + one(health) + "</red><dark_gray>/</dark_gray><gray>" + one(cap) + "</gray>  "
+        + "\uA41C <aqua>" + one(mana[0]) + "</aqua><dark_gray>/</dark_gray><dark_aqua>" + one(mana[1]) + "</dark_aqua>  "
+        + "\uA41E <yellow>" + sheet(player, now) + "</yellow> <gray>\u1D05\u1D18\uA731</gray>";
+  }
+
+  private static String one(double value) {
+    return String.format(Locale.US, "%.1f", value);
+  }
+
+  private String sheet(Player player, long now) {
+    String parsed = sheetValue(player);
+    if (parsed != null) {
+      try {
+        return String.format(Locale.US, "%.2f", Double.parseDouble(parsed.replace(',', '.')));
+      } catch (NumberFormatException ignored) {
+      }
+    }
+    return String.format(Locale.US, "%.2f", dps(player.getUniqueId(), now));
+  }
+
+  private String sheetValue(Player player) {
+    if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
+      return null;
+    }
+    Matcher matcher = BRACES.matcher(SHEET);
+    String numbers = matcher.replaceAll(match -> {
+      String got = PlaceholderAPI.setPlaceholders(player, "%" + match.group(1) + "%");
+      if (got == null || !got.matches("-?\\d+(?:\\.\\d+)?")) {
+        return "0";
+      }
+      return got;
+    });
+    String parsed = PlaceholderAPI.setPlaceholders(player, "%math_2:1_" + numbers + "%");
+    if (parsed == null || parsed.indexOf('%') >= 0) {
+      return null;
+    }
+    return parsed.trim();
   }
 
   private double dps(UUID id, long now) {
