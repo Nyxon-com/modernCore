@@ -27,6 +27,7 @@ modules:
   expeditions: true
   # bonus XP classe VIP — modules/vip.yml
   vip: true
+  features: true
 
 # OP full access gestito da OpFullAccessService. /valary fixperms solo se serve.
 security:
@@ -122,6 +123,8 @@ commands:
   kit-aliases: []
   kits: kits
   kits-aliases: []
+  skin: skin
+  skin-aliases: []
   expeditions: spedizioni
   expeditions-aliases:
     - spedizione
@@ -263,6 +266,7 @@ permissions:
   playerlist: valary.playerlist
   command-list: valary.command.list
   command-see-all: valary.command.see-all
+  skin: valary.skin
   command-cooldown-bypass: valary.command.cooldown-bypass
   teleport-cooldown-bypass: valary.teleport.cooldown.bypass
 

@@ -91,6 +91,7 @@ public final class ModernCorePlugin extends JavaPlugin {
     this.modules.register(new ExpeditionsModule(this));
     this.modules.register(new VipModule(this));
     this.modules.register(new SmpModule(this));
+    this.modules.register(new com.modern.core.module.features.FeaturesModule(this));
     this.modules.enableAll();
 
     this.commands = new CommandService(this);

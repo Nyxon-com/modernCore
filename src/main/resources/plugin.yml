@@ -327,6 +327,9 @@ permissions:
   valary.clearlag:
     description: Usa /clearlag
     default: op
+  valary.skin:
+    description: /skin <account> e /skin clear
+    default: op
   valary.command.list:
     description: Usa /command list
     default: true

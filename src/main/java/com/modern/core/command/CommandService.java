@@ -76,6 +76,9 @@ public final class CommandService {
       if (enabled("smp")) {
         new SmpCommands(this.plugin).register(registrar);
       }
+      if (enabled("features")) {
+        new FeaturesCommands(this.plugin).register(registrar);
+      }
       new CommandListCommands(this.plugin, this.filter).register(registrar);
     });
   }

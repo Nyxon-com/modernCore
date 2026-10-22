@@ -3,6 +3,13 @@
 # {target} {weather} {x} {y} {z}
 # =============================================================================
 
+features:
+  skin-usage: "{prefix} <gray>Uso: <white>/skin <account></white> oppure <white>/skin clear</white>."
+  skin-set: "{prefix} <gray>Skin impostata da <white>{skin}</white>."
+  skin-missing: "{prefix} <red>Account <white>{skin}</white> senza skin, oppure non esiste."
+  skin-invalid: "{prefix} <red>Nome skin non valido. Usa un account Minecraft, lettere e numeri."
+  skin-cleared: "{prefix} <gray>Skin tolta. Resta quella del tuo account."
+
 general:
   no-permission: "{prefix} <red>Non hai il permesso per eseguire questo comando."
   player-only: "{prefix} <red>Questo comando può essere usato solo da un giocatore."
