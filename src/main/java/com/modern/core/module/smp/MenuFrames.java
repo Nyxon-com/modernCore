@@ -1,7 +1,8 @@
+//made with love by nyxon
+
 package com.modern.core.module.smp;
 
 import net.kyori.adventure.text.Component;
-
 
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;

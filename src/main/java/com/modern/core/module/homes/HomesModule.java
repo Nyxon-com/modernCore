@@ -1,3 +1,5 @@
+//made with love by nyxon
+
 package com.modern.core.module.homes;
 
 import com.modern.core.ModernCorePlugin;
@@ -9,41 +11,41 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public final class HomesModule implements Module, Listener {
 
-    private final ModernCorePlugin plugin;
-    private HomeService homes;
+  private final ModernCorePlugin plugin;
+  private HomeService homes;
 
-    public HomesModule(ModernCorePlugin plugin) {
-        this.plugin = plugin;
-    }
+  public HomesModule(ModernCorePlugin plugin) {
+    this.plugin = plugin;
+  }
 
-    @Override
-    public String id() {
-        return "homes";
-    }
+  @Override
+  public String id() {
+    return "homes";
+  }
 
-    @Override
-    public void enable() {
-        this.homes = new HomeService(this.plugin, this.plugin.teleports());
-        this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
-    }
+  @Override
+  public void enable() {
+    this.homes = new HomeService(this.plugin, this.plugin.teleports());
+    this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
+  }
 
-    @Override
-    public void disable() {
-        HandlerList.unregisterAll(this);
-    }
+  @Override
+  public void disable() {
+    HandlerList.unregisterAll(this);
+  }
 
-    @Override
-    public void reload() {
-        disable();
-        enable();
-    }
+  @Override
+  public void reload() {
+    disable();
+    enable();
+  }
 
-    public HomeService homes() {
-        return this.homes;
-    }
+  public HomeService homes() {
+    return this.homes;
+  }
 
-    @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        this.plugin.teleports().cancel(event.getPlayer().getUniqueId());
-    }
+  @EventHandler
+  public void onQuit(PlayerQuitEvent event) {
+    this.plugin.teleports().cancel(event.getPlayer().getUniqueId());
+  }
 }

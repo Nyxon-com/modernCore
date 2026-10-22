@@ -1,3 +1,5 @@
+//made with love by nyxon
+
 package com.modern.core.command;
 
 import com.mojang.brigadier.Command;
@@ -16,73 +18,70 @@ import org.bukkit.entity.Player;
 
 import java.util.Map;
 
-/**
- * /spedizioni: GUI spedizioni VIP. Staff: /spedizioni completa <player>.
- */
 final class ExpeditionsCommands {
 
-    private final ModernCorePlugin plugin;
-    private final CommandSettings settings;
+  private final ModernCorePlugin plugin;
+  private final CommandSettings settings;
 
-    ExpeditionsCommands(ModernCorePlugin plugin) {
-        this.plugin = plugin;
-        this.settings = new CommandSettings(plugin);
-    }
+  ExpeditionsCommands(ModernCorePlugin plugin) {
+    this.plugin = plugin;
+    this.settings = new CommandSettings(plugin);
+  }
 
-    void register(Commands registrar) {
-        registrar.register(command(), "Spedizioni VIP", this.settings.aliases("commands.expeditions-aliases"));
-    }
+  void register(Commands registrar) {
+    registrar.register(command(), "Spedizioni VIP", this.settings.aliases("commands.expeditions-aliases"));
+  }
 
-    private LiteralCommandNode<CommandSourceStack> command() {
-        String name = this.settings.name("commands.expeditions", "spedizioni");
-        return Commands.literal(name)
-                .requires(stack -> Perms.has(this.plugin, stack.getSender(), "expeditions"))
-                .executes(ctx -> {
-                    CommandSender sender = ctx.getSource().getSender();
-                    if (!(sender instanceof Player player)) {
-                        this.plugin.messages().send(sender, "general.player-only");
-                        return 0;
-                    }
-                    ExpeditionsModule module = module();
-                    if (module == null) {
-                        this.plugin.messages().send(sender, "general.module-disabled", Map.of("module", "expeditions"));
-                        return 0;
-                    }
-                    module.open(player);
-                    return Command.SINGLE_SUCCESS;
+  private LiteralCommandNode<CommandSourceStack> command() {
+    String name = this.settings.name("commands.expeditions", "spedizioni");
+    return Commands.literal(name)
+        .requires(stack -> Perms.has(this.plugin, stack.getSender(), "expeditions"))
+        .executes(ctx -> {
+          CommandSender sender = ctx.getSource().getSender();
+          if (!(sender instanceof Player player)) {
+            this.plugin.messages().send(sender, "general.player-only");
+            return 0;
+          }
+          ExpeditionsModule module = module();
+          if (module == null) {
+            this.plugin.messages().send(sender, "general.module-disabled", Map.of("module", "expeditions"));
+            return 0;
+          }
+          module.open(player);
+          return Command.SINGLE_SUCCESS;
+        })
+        .then(Commands.literal("completa")
+            .requires(stack -> Perms.has(this.plugin, stack.getSender(), "expeditions-admin"))
+            .then(Commands.argument("player", StringArgumentType.word())
+                .suggests((ctx, builder) -> {
+                  OnlinePlayers.suggest(builder);
+                  return builder.buildFuture();
                 })
-                .then(Commands.literal("completa")
-                        .requires(stack -> Perms.has(this.plugin, stack.getSender(), "expeditions-admin"))
-                        .then(Commands.argument("player", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
-                                    OnlinePlayers.suggest(builder);
-                                    return builder.buildFuture();
-                                })
-                                .executes(ctx -> {
-                                    CommandSender sender = ctx.getSource().getSender();
-                                    String targetName = StringArgumentType.getString(ctx, "player");
-                                    ExpeditionsModule module = module();
-                                    if (module == null) {
-                                        this.plugin.messages().send(sender, "general.module-disabled", Map.of("module", "expeditions"));
-                                        return 0;
-                                    }
-                                    OfflinePlayer target = Bukkit.getPlayerExact(targetName);
-                                    if (target == null) {
-                                        target = Bukkit.getOfflinePlayerIfCached(targetName);
-                                    }
-                                    if (target == null) {
-                                        this.plugin.messages().send(sender, "general.player-not-found", Map.of("target", targetName));
-                                        return 0;
-                                    }
-                                    module.finishNow(sender, target);
-                                    return Command.SINGLE_SUCCESS;
-                                })))
-                .build();
-    }
+                .executes(ctx -> {
+                  CommandSender sender = ctx.getSource().getSender();
+                  String targetName = StringArgumentType.getString(ctx, "player");
+                  ExpeditionsModule module = module();
+                  if (module == null) {
+                    this.plugin.messages().send(sender, "general.module-disabled", Map.of("module", "expeditions"));
+                    return 0;
+                  }
+                  OfflinePlayer target = Bukkit.getPlayerExact(targetName);
+                  if (target == null) {
+                    target = Bukkit.getOfflinePlayerIfCached(targetName);
+                  }
+                  if (target == null) {
+                    this.plugin.messages().send(sender, "general.player-not-found", Map.of("target", targetName));
+                    return 0;
+                  }
+                  module.finishNow(sender, target);
+                  return Command.SINGLE_SUCCESS;
+                })))
+        .build();
+  }
 
-    private ExpeditionsModule module() {
-        return this.plugin.modules() == null || !this.plugin.modules().activeIds().contains("expeditions")
-                ? null
-                : this.plugin.modules().get("expeditions");
-    }
+  private ExpeditionsModule module() {
+    return this.plugin.modules() == null || !this.plugin.modules().activeIds().contains("expeditions")
+        ? null
+        : this.plugin.modules().get("expeditions");
+  }
 }

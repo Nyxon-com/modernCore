@@ -1,16 +1,14 @@
+//made with love by nyxon
+
 package com.modern.core.module;
 
-/**
- * Contratto di un modulo funzionale (worlds, homes, kits, ...).
- * Ogni modulo è attivabile da config.yml e può essere ricaricato a caldo.
- */
 public interface Module {
 
-    String id();
+  String id();
 
-    void enable();
+  void enable();
 
-    void disable();
+  void disable();
 
-    void reload();
+  void reload();
 }

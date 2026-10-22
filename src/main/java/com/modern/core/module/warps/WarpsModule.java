@@ -1,3 +1,5 @@
+//made with love by nyxon
+
 package com.modern.core.module.warps;
 
 import com.modern.core.ModernCorePlugin;
@@ -9,41 +11,41 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public final class WarpsModule implements Module, Listener {
 
-    private final ModernCorePlugin plugin;
-    private WarpService warps;
+  private final ModernCorePlugin plugin;
+  private WarpService warps;
 
-    public WarpsModule(ModernCorePlugin plugin) {
-        this.plugin = plugin;
-    }
+  public WarpsModule(ModernCorePlugin plugin) {
+    this.plugin = plugin;
+  }
 
-    @Override
-    public String id() {
-        return "warps";
-    }
+  @Override
+  public String id() {
+    return "warps";
+  }
 
-    @Override
-    public void enable() {
-        this.warps = new WarpService(this.plugin, this.plugin.teleports());
-        this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
-    }
+  @Override
+  public void enable() {
+    this.warps = new WarpService(this.plugin, this.plugin.teleports());
+    this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
+  }
 
-    @Override
-    public void disable() {
-        HandlerList.unregisterAll(this);
-    }
+  @Override
+  public void disable() {
+    HandlerList.unregisterAll(this);
+  }
 
-    @Override
-    public void reload() {
-        disable();
-        enable();
-    }
+  @Override
+  public void reload() {
+    disable();
+    enable();
+  }
 
-    public WarpService warps() {
-        return this.warps;
-    }
+  public WarpService warps() {
+    return this.warps;
+  }
 
-    @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        this.plugin.teleports().cancel(event.getPlayer().getUniqueId());
-    }
+  @EventHandler
+  public void onQuit(PlayerQuitEvent event) {
+    this.plugin.teleports().cancel(event.getPlayer().getUniqueId());
+  }
 }

@@ -1,3 +1,5 @@
+//made with love by nyxon
+
 package com.modern.core.gui;
 
 import com.modern.core.ModernCorePlugin;
@@ -6,25 +8,22 @@ import com.modern.core.util.Sounds;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-/**
- * Esegue click CommandPanels-like: [close] [console] [player] [sound] [message].
- */
 public final class PanelClicks {
 
-    private PanelClicks() {
-    }
+  private PanelClicks() {
+  }
 
-    public static boolean run(ModernCorePlugin plugin, Player player, ConfigurationSection button) {
-        if (button == null) {
-            return false;
-        }
-        Sounds.playRaw(plugin, player, button.getString("click-sound", ""), "gui.click-sound");
-        return ActionCommands.run(plugin, player, button.getStringList("commands"));
+  public static boolean run(ModernCorePlugin plugin, Player player, ConfigurationSection button) {
+    if (button == null) {
+      return false;
     }
+    Sounds.playRaw(plugin, player, button.getString("click-sound", ""), "gui.click-sound");
+    return ActionCommands.run(plugin, player, button.getStringList("commands"));
+  }
 
-    public static void openSound(ModernCorePlugin plugin, Player player, ConfigurationSection gui) {
-        if (gui != null) {
-            Sounds.playRaw(plugin, player, gui.getString("open-sound", ""), "gui.open-sound");
-        }
+  public static void openSound(ModernCorePlugin plugin, Player player, ConfigurationSection gui) {
+    if (gui != null) {
+      Sounds.playRaw(plugin, player, gui.getString("open-sound", ""), "gui.open-sound");
     }
+  }
 }
