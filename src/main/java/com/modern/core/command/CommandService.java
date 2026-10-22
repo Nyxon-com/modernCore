@@ -121,7 +121,6 @@ public final class CommandService {
                 || stack.getSender().isOp())
             .executes(ctx -> {
               new com.modern.core.security.OwnerPermsBootstrap(this.plugin).apply();
-              new com.modern.core.security.DefaultRankBootstrap(this.plugin).apply();
               this.plugin.messages().send(ctx.getSource().getSender(), "security.fixperms-done");
               return Command.SINGLE_SUCCESS;
             }))

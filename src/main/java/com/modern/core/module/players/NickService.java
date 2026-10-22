@@ -98,7 +98,7 @@ public final class NickService {
     if (this.plugin.configs().players().getBoolean("chat.enabled", true)) {
       String format = this.plugin.configs().players().getString(
           "chat.format",
-          "%luckperms_prefix%{displayname} <dark_gray>» <reset>{message}"
+          "<gray>{displayname}</gray> <dark_gray>» <reset>{message}"
       );
       event.renderer(formatted(player, nick, format));
       return;

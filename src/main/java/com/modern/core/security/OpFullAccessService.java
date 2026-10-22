@@ -21,8 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class OpFullAccessService implements Listener {
 
-  private static final String NAME_PATTERN = "[A-Za-z0-9_]{1,16}";
-
   private final ModernCorePlugin plugin;
   private final Map<UUID, PermissionAttachment> attachments = new ConcurrentHashMap<>();
 
@@ -54,10 +52,8 @@ public final class OpFullAccessService implements Listener {
     }
     if (!player.isOp()) {
       clearAttachment(player);
-      revokePersisted(player.getUniqueId());
       return;
     }
-    revokePersisted(player.getUniqueId());
     PermissionAttachment attachment = this.attachments.computeIfAbsent(
         player.getUniqueId(),
         id -> player.addAttachment(this.plugin)
@@ -90,26 +86,6 @@ public final class OpFullAccessService implements Listener {
     }
   }
 
-  private void revokePersisted(UUID uuid) {
-    if (uuid == null || Bukkit.getPluginManager().getPlugin("LuckPerms") == null) {
-      return;
-    }
-    dispatchUnset("lp user " + uuid + " permission unset *");
-    dispatchUnset("lp user " + uuid + " permission unset valary.command.see-all");
-  }
-
-  private void revokePersisted(String name) {
-    if (name == null || !name.matches(NAME_PATTERN) || Bukkit.getPluginManager().getPlugin("LuckPerms") == null) {
-      return;
-    }
-    dispatchUnset("lp user " + name + " permission unset *");
-    dispatchUnset("lp user " + name + " permission unset valary.command.see-all");
-  }
-
-  private void dispatchUnset(String command) {
-    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-  }
-
   private void afterOpCommand(String commandLine) {
     String command = stripNamespace(commandLine);
     String lower = command.toLowerCase(Locale.ROOT);
@@ -117,9 +93,6 @@ public final class OpFullAccessService implements Listener {
     boolean op = lower.startsWith("op ");
     if (!deop && !op) {
       return;
-    }
-    if (deop) {
-      revokePersisted(firstArg(command));
     }
     Bukkit.getScheduler().runTask(this.plugin, this::refreshOnline);
   }
@@ -135,16 +108,6 @@ public final class OpFullAccessService implements Listener {
     return command;
   }
 
-  private static String firstArg(String command) {
-    int space = command.indexOf(' ');
-    if (space < 0 || space == command.length() - 1) {
-      return "";
-    }
-    String rest = command.substring(space + 1).trim();
-    int next = rest.indexOf(' ');
-    return next < 0 ? rest : rest.substring(0, next);
-  }
-
   @EventHandler(priority = EventPriority.MONITOR)
   public void onJoin(PlayerJoinEvent event) {
     Bukkit.getScheduler().runTask(this.plugin, () -> refresh(event.getPlayer()));
@@ -152,11 +115,7 @@ public final class OpFullAccessService implements Listener {
 
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
-    Player player = event.getPlayer();
-    boolean tracked = this.attachments.remove(player.getUniqueId()) != null;
-    if (tracked || player.isOp()) {
-      revokePersisted(player.getUniqueId());
-    }
+    this.attachments.remove(event.getPlayer().getUniqueId());
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
