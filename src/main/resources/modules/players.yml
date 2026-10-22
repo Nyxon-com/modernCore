@@ -33,7 +33,7 @@ fly:
   persist: true
   persist-death: true
   start-flying: true
-  # Il volo da permesso (anche VIP) vale solo in questi mondi.
+  # Il volo da permesso (anche VIP) vale solo in questi mondi. Gli OP no: volano ovunque.
   allowed-worlds:
     - spawn
 

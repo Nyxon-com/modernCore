@@ -136,7 +136,7 @@ public final class FlyService implements Listener {
     if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
       return;
     }
-    boolean effective = enabled && !this.flightBlocked(player.getWorld());
+    boolean effective = enabled && !this.flightBlocked(player);
     player.setAllowFlight(effective);
     if (!effective) {
       player.setFlying(false);
@@ -149,7 +149,9 @@ public final class FlyService implements Listener {
   }
 
   private boolean flightBlocked(Player player) {
-    if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+    if (player.isOp()
+        || player.getGameMode() == GameMode.CREATIVE
+        || player.getGameMode() == GameMode.SPECTATOR) {
       return false;
     }
     return this.flightBlocked(player.getWorld());
