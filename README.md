@@ -1,10 +1,12 @@
 # modernCore
 
-Plugin per Paper 1.21.11. Copre i comandi base del server: spawn, home, warp, chat, moderazione, kit, sell, portali, hologram. I comandi usano i nomi vanilla (`/kick`, `/ban`, `/vanish`), senza un prefisso tipo `/cmi`.
+Core modulare per Paper 26.2 (`paper-api` 26.2.build.134, Java 25, versione 1.1.3). Copre i comandi base del server: spawn, home, warp, chat, moderazione, kit, sell, portali, hologram. I comandi usano i nomi vanilla (`/kick`, `/ban`, `/vanish`), senza un prefisso tipo `/cmi`.
 
-Hook: MMOItems, Vault, CoinsEngine, Multiverse-Core, PlaceholderAPI.
+Hook: MMOItems, MythicLib, Vault, CoinsEngine, ExcellentEconomy, Multiverse-Core, PlaceholderAPI, TAB, VoidGen. Tutti soft-depend.
 
-Build con Gradle, JDK 21. Repository: https://github.com/Nyxon-com/modernCore
+Build con Gradle. Repository: https://github.com/Nyxon-com/modernCore
+
+I permessi nel codice usano il namespace `valary`, perché il plugin gira sul server ValaryRPG.
 
 Guide: [GUIDE.md](GUIDE.md), [Holograms](wiki/Holograms.md), [Triggerblocks](wiki/Triggerblocks.md), [Chat](wiki/Chat.md), [Webhooks](wiki/Webhooks.md).
 
@@ -21,8 +23,17 @@ Guide: [GUIDE.md](GUIDE.md), [Holograms](wiki/Holograms.md), [Triggerblocks](wik
 - Long jump e `/pressureplayerjump`
 - Portali con wand, click sui blocchi e comandi all'ingresso
 - Chat: `/clearchat`, annunci ciclici, filtro parole/link/IP
-- Webhook Discord in async per il log staff e gli errori SEVERE in console
+- Webhook Discord in async per il log staff e gli errori SEVERE in console. L'URL sta solo in `plugins/modernCore/` sul server, non nel repository
+- Spedizioni con menu e timer
+- Bonus XP VIP per rank, agganciato a MMOCore solo se quel plugin è acceso
+- SMP: combat tag, team, asta, kit all'ingresso
 - Reload dei YAML con merge delle chiavi nuove e rigenerazione dei file rotti
+
+## Moduli
+
+Registrati da `ModernCorePlugin`: `worlds`, `homes`, `warps`, `moderation`, `players`, `mechanics`, `holograms`, `kits`, `sell`, `chat`, `expeditions`, `vip`, `smp`, `features`.
+
+Si spengono da `config.yml` con `modules.<id>: false`. Le tombe (morte, inventario, menu) stanno dentro `mechanics`.
 
 ## Build
 
@@ -30,4 +41,4 @@ Guide: [GUIDE.md](GUIDE.md), [Holograms](wiki/Holograms.md), [Triggerblocks](wik
 ./gradlew.bat build
 ```
 
-JAR: `build/libs/modernCore-1.0.1.jar`
+JAR: `build/libs/modernCore-1.1.3.jar`

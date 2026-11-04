@@ -1,5 +1,3 @@
-//made with love by nyxon
-
 package com.modern.core.message;
 
 import com.modern.core.ModernCorePlugin;

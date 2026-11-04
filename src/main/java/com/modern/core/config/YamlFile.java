@@ -1,5 +1,3 @@
-//made with love by nyxon
-
 package com.modern.core.config;
 
 import org.bukkit.configuration.file.FileConfiguration;

@@ -1,5 +1,3 @@
-//made with love by nyxon
-
 package com.modern.core.util;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;

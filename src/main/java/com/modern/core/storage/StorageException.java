@@ -1,5 +1,3 @@
-//made with love by nyxon
-
 package com.modern.core.storage;
 
 public final class StorageException extends RuntimeException {

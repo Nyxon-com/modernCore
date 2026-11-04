@@ -1,5 +1,3 @@
-//made with love by nyxon
-
 package com.modern.core.module.worlds;
 
 import com.modern.core.ModernCorePlugin;

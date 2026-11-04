@@ -1,5 +1,3 @@
-//made with love by nyxon
-
 package com.modern.core.gui;
 
 import java.util.ArrayList;

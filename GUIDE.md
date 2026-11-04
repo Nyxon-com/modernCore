@@ -1,6 +1,6 @@
 # Guida modernCore
 
-Plugin Paper **1.21.11** (Java 21). Comandi nativi: `/kick`, `/ban`, `/vanish`, `/invsee` — **mai** `/cmi`.
+Plugin Paper **26.2** (Java 25, versione 1.1.3). Comandi nativi: `/kick`, `/ban`, `/vanish`, `/invsee` — **mai** `/cmi`.
 
 Repository: https://github.com/Nyxon-com/modernCore
 
@@ -8,8 +8,8 @@ Repository: https://github.com/Nyxon-com/modernCore
 
 ## Installazione
 
-1. JDK 21+, Paper 1.21.11
-2. `./gradlew.bat build` → `build/libs/modernCore-1.0.1.jar`
+1. JDK 25, Paper 26.2
+2. `./gradlew.bat build` → `build/libs/modernCore-1.1.3.jar`
 3. Metti il JAR in `plugins/`
 4. Soft-depend opzionali: Vault, CoinsEngine, MMOItems, MythicLib, Multiverse-Core, PlaceholderAPI
 5. Avvia, poi edita i YAML in `plugins/modernCore/`
