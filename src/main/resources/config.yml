@@ -24,9 +24,8 @@ modules:
   chat: true
   webhooks: true
   features: true
-  # Spedizioni, bonus XP VIP, SMP, roll eco, piccone adventure,
-  # multihit e i fix MMOItems/MMOCore stanno in modernValary.
-  # I flag qui sotto li legge quel plugin, non modernCore.
+  # Spedizioni, bonus XP VIP e SMP non partono da modernCore.
+  # I flag qui sotto restano per il server e non li legge questo plugin.
   expeditions: true
   vip: true
   smp: false

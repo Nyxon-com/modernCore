@@ -26,7 +26,7 @@ Guide: [GUIDE.md](GUIDE.md), [Holograms](wiki/Holograms.md), [Triggerblocks](wik
 - Webhook Discord in async per il log staff e gli errori SEVERE in console. L'URL sta solo in `plugins/modernCore/` sul server, non nel repository
 - Reload dei YAML con merge delle chiavi nuove e rigenerazione dei file rotti
 
-Spedizioni, bonus XP VIP, SMP, roll degli eco, piccone adventure, multihit, la barra sopra la testa e i fix di MMOItems/MMOCore non stanno qui. Sono in [modernValary](https://github.com/Nyxon-com/modernValary). Senza quel jar, `/spedizioni`, il bonus VIP e la barra sopra la testa non partono: i flag restano in questo `config.yml`, ma li legge l'altro plugin.
+Spedizioni, bonus XP VIP, SMP, roll degli eco, piccone adventure, multihit, la barra sopra la testa e i fix di MMOItems/MMOCore non fanno parte di questo repository.
 
 ## Moduli
 
