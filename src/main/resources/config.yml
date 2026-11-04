@@ -23,11 +23,13 @@ modules:
   sell: true
   chat: true
   webhooks: true
-  # spedizioni VIP (/spedizioni) — modules/expeditions.yml
-  expeditions: true
-  # bonus XP classe VIP — modules/vip.yml
-  vip: true
   features: true
+  # Spedizioni, bonus XP VIP, SMP, roll eco, piccone adventure,
+  # multihit e i fix MMOItems/MMOCore stanno in modernValary.
+  # I flag qui sotto li legge quel plugin, non modernCore.
+  expeditions: true
+  vip: true
+  smp: false
 
 # OP full access gestito da OpFullAccessService. /valary fixperms solo se serve.
 security:

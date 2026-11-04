@@ -7,7 +7,6 @@ import com.modern.core.message.MessageService;
 import com.modern.core.message.VanillaTranslator;
 import com.modern.core.module.ModuleManager;
 import com.modern.core.module.chat.ChatModule;
-import com.modern.core.module.expeditions.ExpeditionsModule;
 import com.modern.core.module.holograms.HologramsModule;
 import com.modern.core.module.homes.HomesModule;
 import com.modern.core.module.kits.KitsModule;
@@ -15,8 +14,6 @@ import com.modern.core.module.mechanics.MechanicsModule;
 import com.modern.core.module.moderation.ModerationModule;
 import com.modern.core.module.players.PlayersModule;
 import com.modern.core.module.sell.SellModule;
-import com.modern.core.module.smp.SmpModule;
-import com.modern.core.module.vip.VipModule;
 import com.modern.core.module.warps.WarpsModule;
 import com.modern.core.module.worlds.WorldsModule;
 import com.modern.core.papi.PlaceholderHook;
@@ -85,18 +82,11 @@ public final class ModernCorePlugin extends JavaPlugin {
     this.modules.register(new KitsModule(this));
     this.modules.register(new SellModule(this));
     this.modules.register(new ChatModule(this));
-    this.modules.register(new ExpeditionsModule(this));
-    this.modules.register(new VipModule(this));
-    this.modules.register(new SmpModule(this));
     this.modules.register(new com.modern.core.module.features.FeaturesModule(this));
     this.modules.enableAll();
 
     this.commands = new CommandService(this);
     this.commands.register();
-    getServer().getPluginManager().registerEvents(new com.modern.core.util.UpgradePreviewFix(this), this);
-    new com.modern.core.util.UpgradeStationFix(this);
-    new com.modern.core.util.GemForgeChanceFix(this);
-    new com.modern.core.util.MiningInvDropFix(this);
     PlaceholderHook.register(this);
     if (this.vanillaTranslator != null) {
       this.vanillaTranslator.sync();

@@ -4,20 +4,20 @@ import com.modern.core.ModernCorePlugin;
 
 import java.util.List;
 
-final class CommandSettings {
+public final class CommandSettings {
 
   private final ModernCorePlugin plugin;
 
-  CommandSettings(ModernCorePlugin plugin) {
+  public CommandSettings(ModernCorePlugin plugin) {
     this.plugin = plugin;
   }
 
-  String name(String path, String fallback) {
+  public String name(String path, String fallback) {
     String value = this.plugin.configs().root().getString(path, fallback);
     return value == null || value.isBlank() ? fallback : value;
   }
 
-  List<String> aliases(String path) {
+  public List<String> aliases(String path) {
     return this.plugin.configs().root().getStringList(path);
   }
 }
