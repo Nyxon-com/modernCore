@@ -1,29 +1,29 @@
-# Wiki triggerblock (`/triggerblock`)
+# Triggerblock wiki (`/triggerblock`)
 
-Hologram **su un blocco**: click destro (o click sul testo) esegue ActionCommands. Dati in `modules/mechanics.yml`, non in `holo/`.
+A hologram **on a block**: right-click (or a click on the text) runs ActionCommands. Data lives in `modules/mechanics.yml`, not in `holo/`.
 
-`/vholo delete` **non** cancella questi trigger. Per toglierli: `/triggerblock delete <nome>`.
+`/vholo delete` does **not** remove these triggers. Remove them with `/triggerblock delete <name>`.
 
-Hologram solo testo (Fancy-style): [Holograms](Holograms.md).
+Text-only holograms (Fancy style): [Holograms](Holograms.md).
 
 ---
 
-## Dove stanno i file
+## Where the files live
 
-Edita **sempre** `plugins/ValaryRPG-Core/`, non il repo Git.
+Always edit `plugins/modernCore/`, not the Git repository.
 
-| Path | Ruolo |
+| Path | Role |
 |---|---|
-| `plugins/ValaryRPG-Core/modules/mechanics.yml` | `holo-blocks.*` (globali + ogni trigger) |
-| `plugins/ValaryRPG-Core/config.yml` | comando `/triggerblock`, permesso |
-| `plugins/ValaryRPG-Core/lang/messages.yml` | testi `holos.*` |
-| `plugins/ValaryRPG-Core/sounds/sounds.yml` | suono click (`holo-click` di default) |
+| `plugins/modernCore/modules/mechanics.yml` | `holo-blocks.*` (globals and each trigger) |
+| `plugins/modernCore/config.yml` | `/triggerblock` command, permission |
+| `plugins/modernCore/lang/messages.yml` | `holos.*` text |
+| `plugins/modernCore/sounds/sounds.yml` | click sound (`holo-click` by default) |
 
-Dopo edit a mano di `mechanics.yml`: **`/valary reload`**. `/vholo reload` non rilegge i trigger.
+After a hand edit of `mechanics.yml`: **`/valary reload`**. `/vholo reload` does not reread triggers.
 
 ---
 
-## Impostazioni globali `holo-blocks`
+## Global `holo-blocks` settings
 
 ```yaml
 holo-blocks:
@@ -47,29 +47,29 @@ holo-blocks:
   default-sound: holo-click
   default-lines:
     - "<gradient:#A78BFA:#EC4899><bold>{name}</bold></gradient>"
-    - "<gray>Click per usare"
+    - "<gray>Click to use"
 ```
 
-| Chiave | Effetto |
+| Key | Effect |
 |---|---|
-| `enabled` | `false` = nessuno spawn / click |
-| `max` | Cap trigger creati in game |
-| `tick-ticks` | Tick animazione (bob/spin/pulse/wave) |
-| `particle-every-ticks` | Ogni quanti tick le particelle idle |
-| `click-cooldown-millis` | Anti-doppio click |
-| `view-range` | Distanza visibilità display |
-| `select-range` | Blocchi per `/triggerblock set` (raggio sguardo) |
-| `hitbox-width` / `hitbox-height` | Interaction cliccabile sull’hologram |
-| `default-*` | Valori copiati in un trigger nuovo |
-| `wand` | Item della wand (material, name, lore, glow) |
-| `animations` / `particles` / `click-particles` | Preset nominati (aggiungi i tuoi) |
-| `holos.<id>` | Un trigger |
+| `enabled` | `false` = no spawn and no clicks |
+| `max` | Cap on triggers created in game |
+| `tick-ticks` | Animation tick (bob/spin/pulse/wave) |
+| `particle-every-ticks` | How often idle particles play |
+| `click-cooldown-millis` | Double-click guard |
+| `view-range` | Display visibility distance |
+| `select-range` | Blocks for `/triggerblock set` (look radius) |
+| `hitbox-width` / `hitbox-height` | Clickable interaction on the hologram |
+| `default-*` | Values copied onto a new trigger |
+| `wand` | Wand item (material, name, lore, glow) |
+| `animations` / `particles` / `click-particles` | Named presets (add your own) |
+| `holos.<id>` | One trigger |
 
-`{name}` in `default-lines` diventa l’id del trigger alla create.
+`{name}` in `default-lines` becomes the trigger id at create time.
 
 ---
 
-## Un trigger `holo-blocks.holos.<id>`
+## One trigger `holo-blocks.holos.<id>`
 
 ```yaml
 holo-blocks:
@@ -90,13 +90,13 @@ holo-blocks:
         shadowed: true
         lines:
           - "<gradient:#A78BFA:#EC4899><bold>Crate</bold></gradient>"
-          - "<gray>Click per aprire"
+          - "<gray>Click to open"
       icon:
         material: CHEST
         scale: 0.55
         offset-y: -0.45
       animation: pulse
-      particle: happy_villager   # solo se esiste in holo-blocks.particles
+      particle: happy_villager   # only if it exists in holo-blocks.particles
       click-particle: spark
       glow: true
       permission: ""
@@ -105,29 +105,29 @@ holo-blocks:
         - "[console] cp crates_boss {player}"
 ```
 
-| Chiave | Note |
+| Key | Notes |
 |---|---|
-| `enabled` | `false` = niente entity, click morto |
-| `world` `x` `y` `z` | Blocco intero (non `.5`) |
-| `hologram.offset-y` | Altezza testo sul blocco |
-| `hologram.scale` | Scala testo |
+| `enabled` | `false` = no entity, clicks do nothing |
+| `world` `x` `y` `z` | Whole block (not `.5`) |
+| `hologram.offset-y` | Text height above the block |
+| `hologram.scale` | Text scale |
 | `hologram.billboard` | `CENTER` `FIXED` `HORIZONTAL` `VERTICAL` |
-| `hologram.see-through` | Testo dietro i blocchi |
-| `hologram.line-width` | Wrap in pixel |
-| `hologram.background` | ARGB intero. `0` = trasparente |
-| `hologram.shadowed` | Ombra lettere |
+| `hologram.see-through` | Text through blocks |
+| `hologram.line-width` | Wrap in pixels |
+| `hologram.background` | ARGB integer. `0` = transparent |
+| `hologram.shadowed` | Letter shadow |
 | `hologram.lines` | MiniMessage |
-| `icon.material` | ItemDisplay. Sezione assente / AIR = niente icona |
-| `icon.scale` / `icon.offset-y` | Scala e offset icona rispetto al testo |
-| `animation` | Nome in `holo-blocks.animations`, o `none` |
-| `particle` | Nome in `holo-blocks.particles`, o `none` |
-| `click-particle` | Nome in `holo-blocks.click-particles`, o `none` |
-| `glow` | Glow sul display |
-| `permission` | Vuoto = tutti. Altrimenti serve quel nodo per cliccare |
-| `sound` | Chiave in `sounds/sounds.yml` |
-| `commands` | ActionCommands al click |
+| `icon.material` | ItemDisplay. Missing section or AIR = no icon |
+| `icon.scale` / `icon.offset-y` | Icon scale and offset relative to the text |
+| `animation` | Name in `holo-blocks.animations`, or `none` |
+| `particle` | Name in `holo-blocks.particles`, or `none` |
+| `click-particle` | Name in `holo-blocks.click-particles`, or `none` |
+| `glow` | Glow on the display |
+| `permission` | Empty = everyone. Otherwise that node is required to click |
+| `sound` | Key in `sounds/sounds.yml` |
+| `commands` | ActionCommands on click |
 
-Particelle: il valore deve essere una **chiave YAML** (`enchant`, `flame`, …), non l’enum Bukkit (`HAPPY_VILLAGER`). Per `happy_villager` aggiungi un preset:
+Particles: the value must be a **YAML key** (`enchant`, `flame`, …), not the Bukkit enum (`HAPPY_VILLAGER`). For `happy_villager`, add a preset:
 
 ```yaml
 holo-blocks:
@@ -139,9 +139,9 @@ holo-blocks:
       extra: 0.0
 ```
 
-`type` = enum Paper `Particle`.
+`type` is the Paper `Particle` enum.
 
-### Animazioni built-in
+### Built-in animations
 
 | Preset | YAML |
 |---|---|
@@ -149,55 +149,55 @@ holo-blocks:
 | `spin` | `speed` |
 | `pulse` | `speed`, `min-scale`, `max-scale` |
 | `wave` | `speed`, `width`, `height` |
-| `none` | fermo |
+| `none` | still |
 
 ---
 
-## Comandi al click
+## Click commands
 
-Senza tag = eseguito **come il player**.
+No tag means the command runs **as the player**.
 
 ```yaml
 commands:
   - "warp pvp"
   - "[player] spawn"
   - "[console] cp crates_boss {player}"
-  - "[message] <green>Aperto"
+  - "[message] <green>Opened"
   - "[sound] UI_BUTTON_CLICK"
 ```
 
-Placeholder: `{player}`, `{player_name}`, `%player_name%`, `%player%`, poi PlaceholderAPI. Nel comando console per CratePlus di solito `{player}` (nick), non un selettore.
+Placeholders: `{player}`, `{player_name}`, `%player_name%`, `%player%`, then PlaceholderAPI. A console command for CratePlus usually wants `{player}` (the nick), not a selector.
 
-Shift+click sul blocco **ignora** il trigger (puoi piazzare / aprire chest).
+Shift-click on the block **ignores** the trigger, so you can still place blocks or open a chest.
 
 ---
 
-## Comandi `/triggerblock`
+## `/triggerblock` commands
 
-Alias: `/tblock`, `/triggerblocks`. Permesso: `valary.triggerblock`.
+Aliases: `/tblock`, `/triggerblocks`. Permission: `valary.triggerblock`.
 
-| Comando | Effetto |
+| Command | Effect |
 |---|---|
-| `/triggerblock wand` | Da la wand |
-| `/triggerblock set` | Marca il blocco mirato |
-| `/triggerblock create <nome>` | Crea sul blocco marcato |
-| `/triggerblock delete <nome>` | Toglie YAML + entity |
-| `/triggerblock list` / `info` / `enable` / `disable` | Gestione |
-| `/triggerblock command <nome> ...` | Aggiunge un ActionCommand |
-| `/triggerblock clearcommands <nome>` | Azzera i comandi |
-| `/triggerblock line add <nome> <testo>` | Riga hologram |
-| `/triggerblock line clear <nome>` | Azzera il testo |
-| `/triggerblock animation <nome> bob\|spin\|pulse\|wave\|none` | |
-| `/triggerblock particle <nome> <preset>` | Idle |
-| `/triggerblock clickparticle <nome> <preset>` | Al click |
-| `/triggerblock icon <nome>` | Item in mano (mano vuota = togli) |
-| `/triggerblock glow <nome> on\|off` | |
-| `/triggerblock sound <nome> <chiave>` | Chiave `sounds.yml` |
-| `/triggerblock permission <nome> [nodo]` | Vuoto = tutti |
-| `/triggerblock scale <nome> <n>` | |
-| `/triggerblock offset <nome> <n>` | Offset Y |
+| `/triggerblock wand` | Gives the wand |
+| `/triggerblock set` | Marks the block you are looking at |
+| `/triggerblock create <name>` | Creates on the marked block |
+| `/triggerblock delete <name>` | Removes YAML and entities |
+| `/triggerblock list` / `info` / `enable` / `disable` | Management |
+| `/triggerblock command <name> ...` | Appends an ActionCommand |
+| `/triggerblock clearcommands <name>` | Clears the commands |
+| `/triggerblock line add <name> <text>` | Hologram line |
+| `/triggerblock line clear <name>` | Clears the text |
+| `/triggerblock animation <name> bob\|spin\|pulse\|wave\|none` | |
+| `/triggerblock particle <name> <preset>` | Idle |
+| `/triggerblock clickparticle <name> <preset>` | On click |
+| `/triggerblock icon <name>` | Item in hand (empty hand removes it) |
+| `/triggerblock glow <name> on\|off` | |
+| `/triggerblock sound <name> <key>` | Key in `sounds.yml` |
+| `/triggerblock permission <name> [node]` | Empty = everyone |
+| `/triggerblock scale <name> <n>` | |
+| `/triggerblock offset <name> <n>` | Y offset |
 
-Wand: destro sul blocco = seleziona, poi `create`.
+Wand: right-click a block to select it, then `create`.
 
 ---
 
@@ -214,4 +214,4 @@ permissions:
   triggerblock: valary.triggerblock
 ```
 
-Modulo: `modules.mechanics` (i trigger stanno nel modulo mechanics, non in `modules.holograms`).
+Module: `modules.mechanics` (triggers live in mechanics, not in `modules.holograms`).

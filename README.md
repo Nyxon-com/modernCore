@@ -1,38 +1,38 @@
 # modernCore
 
-Core modulare per Paper 26.2 (`paper-api` 26.2.build.134, Java 25, versione 1.1.3). Copre i comandi base del server: spawn, home, warp, chat, moderazione, kit, sell, portali, hologram. I comandi usano i nomi vanilla (`/kick`, `/ban`, `/vanish`), senza un prefisso tipo `/cmi`.
+A modular core for Paper 26.2 (`paper-api` 26.2.build.134, Java 25, version 1.1.3). It covers the everyday server commands: spawn, homes, warps, chat, moderation, kits, sell, portals, and holograms. Commands keep the vanilla names (`/kick`, `/ban`, `/vanish`). There is no `/cmi`-style prefix.
 
-Hook: MMOItems, MythicLib, Vault, CoinsEngine, ExcellentEconomy, Multiverse-Core, PlaceholderAPI, TAB, VoidGen. Tutti soft-depend.
+Hooks, all soft-depends: MMOItems, MythicLib, Vault, CoinsEngine, ExcellentEconomy, Multiverse-Core, PlaceholderAPI, TAB, VoidGen.
 
-Build con Gradle. Repository: https://github.com/Nyxon-com/modernCore
+Built with Gradle. Repository: https://github.com/Nyxon-com/modernCore
 
-I permessi nel codice usano il namespace `valary`, perché il plugin gira sul server ValaryRPG.
+Permission nodes use the `valary` namespace, because the plugin runs on ValaryRPG.
 
-Guide: [GUIDE.md](GUIDE.md), [Holograms](wiki/Holograms.md), [Triggerblocks](wiki/Triggerblocks.md), [Chat](wiki/Chat.md), [Webhooks](wiki/Webhooks.md).
+Guides: [GUIDE.md](GUIDE.md), [Holograms](wiki/Holograms.md), [Triggerblocks](wiki/Triggerblocks.md), [Chat](wiki/Chat.md), [Webhooks](wiki/Webhooks.md).
 
-## Cosa fa
+## What it does
 
-- Spawn per mondo, lock meteo e lock ora (`/timelock`)
-- Home e warp. Da console: `/warp <nome> <player>`
-- Join/quit, nick MiniMessage (chat e tab), msg/tell/r, socialspy, fly, god, heal, feed, back, gamemode che resta tra i mondi
-- Moderazione: kick, ban con countdown, ipban, mute, warn, `/history`, dupeip, vanish, invsee
+- Per-world spawn, weather lock, and time lock (`/timelock`)
+- Homes and warps. From console: `/warp <name> <player>`
+- Join and quit messages, MiniMessage nick (chat and tab), msg/tell/r, social spy, fly, god, heal, feed, back, and a gamemode that survives world changes
+- Moderation: kick, ban with a countdown, ipban, mute, warn, `/history`, dupeip, vanish, invsee
 - `/unban`, `/unbanip`, `/pardon-ip`
-- Kit in GUI, kit al primo join, kit MMOItems
-- Sell in GUI, `prices.yml`, reward money/xp/comandi/item
-- LimitY, hologram sui drop, morti configurabili, `/checkdeath` con inventario, `/copycoord`
-- Long jump e `/pressureplayerjump`
-- Portali con wand, click sui blocchi e comandi all'ingresso
-- Chat: `/clearchat`, annunci ciclici, filtro parole/link/IP
-- Webhook Discord in async per il log staff e gli errori SEVERE in console. L'URL sta solo in `plugins/modernCore/` sul server, non nel repository
-- Reload dei YAML con merge delle chiavi nuove e rigenerazione dei file rotti
+- Kits in a GUI, a first-join kit, and MMOItems kits
+- Sell GUI, `prices.yml`, rewards as money, xp, commands, or items
+- LimitY, holograms on dropped items, configurable death messages, `/checkdeath` with the inventory, `/copycoord`
+- Long jump and `/pressureplayerjump`
+- Portals with a wand, block clicks, and commands on entry
+- Chat: `/clearchat`, rotating announcements, word/link/IP filter
+- Async Discord webhooks for staff logs and SEVERE console errors. The URL lives only in `plugins/modernCore/` on the server, not in the repository
+- YAML reload that merges new keys and regenerates broken files
 
-Spedizioni, bonus XP VIP, SMP, roll degli eco, piccone adventure, multihit, la barra sopra la testa e i fix di MMOItems/MMOCore non fanno parte di questo repository.
+Expeditions, the VIP XP bonus, SMP, eco rolls, the adventure pickaxe, multihit, the overhead bar, and the MMOItems/MMOCore fixes are not part of this repository.
 
-## Moduli
+## Modules
 
-Registrati da `ModernCorePlugin`: `worlds`, `homes`, `warps`, `moderation`, `players`, `mechanics`, `holograms`, `kits`, `sell`, `chat`, `features`.
+Registered by `ModernCorePlugin`: `worlds`, `homes`, `warps`, `moderation`, `players`, `mechanics`, `holograms`, `kits`, `sell`, `chat`, `features`.
 
-Si spengono da `config.yml` con `modules.<id>: false`. Le tombe (morte, inventario, menu) stanno dentro `mechanics`.
+Turn one off with `modules.<id>: false` in `config.yml`. Graves (death, inventory, menu) live inside `mechanics`.
 
 ## Build
 

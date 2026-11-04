@@ -1,31 +1,31 @@
-# Wiki chat (`/clearchat`, annunci, filtro)
+# Chat wiki (`/clearchat`, announcements, filter)
 
-Modulo `chat`. File sul server: `plugins/ValaryRPG-Core/modules/chat.yml`.
+Module `chat`. Server file: `plugins/modernCore/modules/chat.yml`.
 
-| Funzione | YAML | Permesso |
+| Feature | YAML | Permission |
 |---|---|---|
-| Pulisce la chat di **tutti** i player | `clearchat.blank-lines` | `valary.clearchat` (admin) |
-| Annunci che ciclano | `announcements.*` | nessuno |
-| Filtro parole / regex / IP / link | `filter.*` | bypass: `valary.chat.filter.bypass` |
+| Clears chat for **every** online player | `clearchat.blank-lines` | `valary.clearchat` (admin) |
+| Rotating announcements | `announcements.*` | none |
+| Word / regex / IP / link filter | `filter.*` | bypass: `valary.chat.filter.bypass` |
 
-Testi in `lang/messages.yml` → `chat.*`. Disattiva il modulo con `config.yml` → `modules.chat: false`.
+Text lives in `lang/messages.yml` → `chat.*`. Turn the module off with `config.yml` → `modules.chat: false`.
 
 ---
 
 ## Clear chat
 
-`/clearchat` (alias `/cc`) invia N righe vuote a ogni player online e un messaggio di avviso. Solo staff.
+`/clearchat` (alias `/cc`) sends N blank lines to every online player, then a notice. Staff only.
 
-## Annunci
+## Announcements
 
-`interval-seconds` è il ritardo tra un annuncio e il successivo. `random: false` li gira in ordine. MiniMessage, `{prefix}` dal `config.yml`.
+`interval-seconds` is the delay between one announcement and the next. `random: false` plays them in order. MiniMessage, `{prefix}` from `config.yml`.
 
-Il primo annuncio parte dopo il primo intervallo, non all'avvio.
+The first announcement waits for the first interval. It does not fire on startup.
 
-## Filtro
+## Filter
 
-Dopo il mute. `private-messages: true` applica le stesse regole a `/msg` e `/r`.
+Runs after mute. `private-messages: true` applies the same rules to `/msg` and `/r`.
 
-`notify-staff: true` avvisa chi ha `valary.chat.notify`.
+`notify-staff: true` tells players who have `valary.chat.notify`.
 
-Aggiungi parole in `filter.words` e regex Java in `filter.regex`. Link e IPv4 si accendono con `block-links` / `block-ips`.
+Add words under `filter.words` and Java regex under `filter.regex`. Links and IPv4 turn on with `block-links` / `block-ips`.

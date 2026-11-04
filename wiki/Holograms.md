@@ -1,41 +1,41 @@
-# Wiki hologram (`/vholo`)
+# Hologram wiki (`/vholo`)
 
-Hologram **solo testo** (TextDisplay). Un file YAML per hologram, stile FancyHolograms.
+**Text-only** holograms (TextDisplay). One YAML file per hologram, FancyHolograms style.
 
-Non sono i trigger cliccabili. Quelli stanno in `modules/mechanics.yml` e si gestiscono con `/triggerblock`. Vedi [Triggerblocks](Triggerblocks.md).
+These are not the clickable triggers. Those live in `modules/mechanics.yml` and are managed with `/triggerblock`. See [Triggerblocks](Triggerblocks.md).
 
 ---
 
-## Dove stanno i file
+## Where the files live
 
-Edita **sempre** la cartella del server, non `src/main/resources/` del repo Git.
+Always edit the server folder, not `src/main/resources/` in the Git repository.
 
-| Path sul server | Ruolo |
+| Path on the server | Role |
 |---|---|
-| `plugins/ValaryRPG-Core/modules/holograms.yml` | Impostazioni globali del modulo |
-| `plugins/ValaryRPG-Core/holo/<nome>.yml` | Un hologram |
-| `plugins/ValaryRPG-Core/config.yml` | `modules.holograms`, comando, permesso |
-| `plugins/ValaryRPG-Core/lang/messages.yml` | Testi `holograms.*` |
+| `plugins/modernCore/modules/holograms.yml` | Module settings |
+| `plugins/modernCore/holo/<name>.yml` | One hologram |
+| `plugins/modernCore/config.yml` | `modules.holograms`, command, permission |
+| `plugins/modernCore/lang/messages.yml` | `holograms.*` text |
 
-Il nome file è l’id: `holo/spawn.yml` → hologram `spawn`. Solo `a-z`, `0-9`, `_`, `-`. Maiuscole e caratteri strani vengono normalizzati (tolti).
+The file name is the id: `holo/spawn.yml` → hologram `spawn`. Only `a-z`, `0-9`, `_`, `-`. Capitals and odd characters are stripped.
 
-`holo/holograms.yml` non è un hologram: è il dump FancyHolograms da importare.
+`holo/holograms.yml` is not a hologram. It is the FancyHolograms dump to import.
 
-Al primo avvio, se `holo/` è vuota, viene copiato `example.yml` con `enabled: false`.
+On first start, if `holo/` is empty, `example.yml` is copied with `enabled: false`.
 
 ---
 
 ## Reload
 
-| Cosa hai cambiato | Comando |
+| What you changed | Command |
 |---|---|
-| File in `holo/*.yml` | `/vholo reload` **oppure** `/valary reload` |
-| `modules/holograms.yml`, messaggi, `config.yml` | `/valary reload` |
-| Nome comando `/vholo` o permesso | **Riavvio** del server |
+| Files in `holo/*.yml` | `/vholo reload` **or** `/valary reload` |
+| `modules/holograms.yml`, messages, `config.yml` | `/valary reload` |
+| The `/vholo` command name or its permission | **Restart** the server |
 
-`/vholo reload` rilegge `holo/` e respawna le entity. Non tocca i triggerblock.
+`/vholo reload` rereads `holo/` and respawns the entities. It does not touch triggerblocks.
 
-Se modifichi i YAML nel progetto Cursor e reloaddi in game, **non** vedi nulla: il plugin legge solo `plugins/ValaryRPG-Core/`.
+Editing the YAML inside the Cursor project and reloading in game shows nothing. The plugin only reads `plugins/modernCore/`.
 
 ---
 
@@ -53,25 +53,25 @@ max-personal-displays: 200
 line-width: 200
 ```
 
-| Chiave | Default | Effetto |
+| Key | Default | Effect |
 |---|---|---|
-| `enabled` | `true` | `false` = modulo spento (nessuno spawn) |
-| `folder` | `holo` | Sottocartella sotto `plugins/ValaryRPG-Core/` |
-| `max` | `200` | Cap hologram creati con `/vholo create` |
-| `tick-ticks` | `10` | Ogni quanti tick aggiorna testo personale / `update_text_interval` |
-| `near-range` | `16` | Raggio di `/vholo near` |
-| `default-visibility-distance` | `64` | Usato se il file hologram non ha `visibility_distance` |
-| `unlimited-view-blocks` | `128` | Distanza reale se `visibility_distance: -1` |
-| `max-personal-displays` | `200` | Cap copie per-player (testo con `%placeholder%`) |
-| `line-width` | `200` | Default `line_width` dei nuovi hologram (pixel, wrap riga) |
+| `enabled` | `true` | `false` turns the module off (nothing spawns) |
+| `folder` | `holo` | Subfolder under `plugins/modernCore/` |
+| `max` | `200` | Cap on holograms created with `/vholo create` |
+| `tick-ticks` | `10` | How often personal text / `update_text_interval` refreshes |
+| `near-range` | `16` | Radius of `/vholo near` |
+| `default-visibility-distance` | `64` | Used when a hologram file has no `visibility_distance` |
+| `unlimited-view-blocks` | `128` | Real distance when `visibility_distance: -1` |
+| `max-personal-displays` | `200` | Cap on per-player copies (text that contains `%placeholder%`) |
+| `line-width` | `200` | Default `line_width` for new holograms (pixels, line wrap) |
 
-Modulo on/off anche in `config.yml` → `modules.holograms`. Permesso default: `permissions.holo` → `valary.holo`. Comando: `commands.holo` → `vholo` (alias `vholos`).
+The module can also be toggled in `config.yml` → `modules.holograms`. Default permission: `permissions.holo` → `valary.holo`. Command: `commands.holo` → `vholo` (alias `vholos`).
 
 ---
 
-## File `holo/<nome>.yml`
+## File `holo/<name>.yml`
 
-Esempio minimo:
+Minimum example:
 
 ```yaml
 enabled: true
@@ -95,7 +95,7 @@ shadow_radius: 0.0
 shadow_strength: 1.0
 text:
   - "<gradient:#A78BFA:#EC4899><bold>Spawn</bold></gradient>"
-  - "&7Benvenuto"
+  - "&7Welcome"
 text_shadow: true
 see_through: false
 text_alignment: center
@@ -107,100 +107,100 @@ sky_brightness: -1
 line_width: 200
 ```
 
-### Chiavi
+### Keys
 
-| Chiave | Tipo | Default | Note |
+| Key | Type | Default | Notes |
 |---|---|---|---|
-| `enabled` | bool | `true` | `false` = file tenuto, niente entity |
-| `type` | string | `TEXT` | Compat Fancy. Valary spawna **solo** TextDisplay |
-| `location.world` | string | — | Nome mondo Paper. Mondo scaricato = niente spawn |
-| `location.x/y/z` | double | — | Centro del display (di solito `.5` sul blocco) |
-| `location.yaw` | float | `0` | Rotazione orizzontale. Utile con `billboard: fixed` |
-| `location.pitch` | float | `0` | Rotazione verticale |
-| `visibility_distance` | double | da modulo (`64`) | Blocchi di vista. Minimo effettivo **8**. `-1` usa `unlimited-view-blocks` |
-| `visibility` | string | `ALL` | Compat Fancy. **Non** filtrato (niente permission/team) |
-| `scale_x/y/z` | double | `1` | Scala. `/vholo scale nome 7` imposta i tre assi a 7 |
-| `translation_x/y/z` | double | `0` | Offset locale del testo (non sposta `location`) |
-| `shadow_radius` | float | `0` | Ombra a terra del display (`0` = spenta) |
-| `shadow_strength` | float | `1` | Intensità ombra a terra |
-| `text` | list | `[]` | Righe. MiniMessage **o** `&7` / `&#RRGGBB` / `&x&R&R&G&G&B&B` |
-| `text_shadow` | bool | `true` | Ombra delle lettere |
-| `see_through` | bool | `false` | Testo visibile dietro i blocchi |
+| `enabled` | bool | `true` | `false` keeps the file and spawns nothing |
+| `type` | string | `TEXT` | Fancy compatibility. Valary spawns **only** TextDisplay |
+| `location.world` | string | — | Paper world name. An unloaded world does not spawn |
+| `location.x/y/z` | double | — | Display center (usually `.5` on the block) |
+| `location.yaw` | float | `0` | Horizontal rotation. Useful with `billboard: fixed` |
+| `location.pitch` | float | `0` | Vertical rotation |
+| `visibility_distance` | double | from the module (`64`) | View distance in blocks. Effective minimum **8**. `-1` uses `unlimited-view-blocks` |
+| `visibility` | string | `ALL` | Fancy compatibility. **Not** filtered (no permission or team check) |
+| `scale_x/y/z` | double | `1` | Scale. `/vholo scale name 7` sets all three axes to 7 |
+| `translation_x/y/z` | double | `0` | Local text offset (does not move `location`) |
+| `shadow_radius` | float | `0` | Ground shadow of the display (`0` = off) |
+| `shadow_strength` | float | `1` | Ground-shadow strength |
+| `text` | list | `[]` | Lines. MiniMessage **or** `&7` / `&#RRGGBB` / `&x&R&R&G&G&B&B` |
+| `text_shadow` | bool | `true` | Letter shadow |
+| `see_through` | bool | `false` | Text visible through blocks |
 | `text_alignment` | string | `center` | `left` / `center` / `right` |
-| `update_text_interval` | int | `-1` | Tick tra refresh PAPI. `-1` = non rinfrescare. Contato su `tick-ticks` |
+| `update_text_interval` | int | `-1` | Ticks between PlaceholderAPI refreshes. `-1` = do not refresh. Counted in `tick-ticks` |
 | `background` | string | `transparent` | `transparent`, `#RRGGBB`, `#AARRGGBB` |
-| `billboard` | string | `center` | `center` (guarda il player), `fixed`, `horizontal`, `vertical` |
-| `block_brightness` | int | `-1` | Luce blocco 0–15. `-1` = luce del mondo |
-| `sky_brightness` | int | `-1` | Luce cielo 0–15. `-1` = luce del mondo |
-| `line_width` | int | da modulo (`200`) | Larghezza wrap in pixel |
+| `billboard` | string | `center` | `center` (faces the player), `fixed`, `horizontal`, `vertical` |
+| `block_brightness` | int | `-1` | Block light 0–15. `-1` = world light |
+| `sky_brightness` | int | `-1` | Sky light 0–15. `-1` = world light |
+| `line_width` | int | from the module (`200`) | Wrap width in pixels |
 
-### Testo
+### Text
 
-Ogni elemento di `text` è una riga. Si uniscono con newline.
+Each `text` entry is one line. Lines are joined with newlines.
 
-Formati accettati nella stessa riga:
+Formats accepted on the same hologram:
 
 ```yaml
 text:
   - "<gradient:#A78BFA:#EC4899>Shop</gradient>"
-  - "&7Click destro"
-  - "&#FFAA00Oro"
+  - "&7Right click"
+  - "&#FFAA00Gold"
   - "<white>%player_name%"
 ```
 
-Se **qualsiasi** riga contiene `%` (PlaceholderAPI / `%player_name%`), l’hologram diventa **personale**: una copia per ogni player nel raggio, fino a `max-personal-displays`. Senza `%` è un’unica entity condivisa.
+If **any** line contains `%` (PlaceholderAPI / `%player_name%`), the hologram becomes **personal**: one copy per player in range, up to `max-personal-displays`. Without `%` it is a single shared entity.
 
-PlaceholderAPI è opzionale. `%player_name%` funziona anche senza.
+PlaceholderAPI is optional. `%player_name%` works without it.
 
 ---
 
-## Comandi `/vholo`
+## `/vholo` commands
 
-Permesso: `valary.holo` (nodo in `config.yml` → `permissions.holo`).
+Permission: `valary.holo` (node in `config.yml` → `permissions.holo`).
 
-| Comando | Effetto | Scrive |
+| Command | Effect | Writes |
 |---|---|---|
-| `/vholo create <nome>` | Crea qui, file nuovo | `holo/<nome>.yml` |
-| `/vholo delete <nome>` | Toglie file + entity | elimina il YAML |
-| `/vholo list` | Elenco (off se disabilitato) | — |
-| `/vholo info <nome>` | Mondo, coords, scale, billboard, righe | — |
-| `/vholo near` | Hologram entro `near-range` | — |
-| `/vholo movehere <nome>` | Sposta dove sei | `location` |
-| `/vholo tp <nome>` | Ti porta sull’hologram | — |
-| `/vholo enable \| disable <nome>` | Accende / spegne | `enabled` |
-| `/vholo copy <nome> <nuovo>` | Duplica il YAML | nuovo file |
-| `/vholo reload` | Rilegge `holo/` e respawna | — |
-| `/vholo import [file]` | Spezza un dump Fancy | vedi sotto |
-| `/vholo line add <nome> <testo>` | Aggiunge riga in fondo | `text` |
-| `/vholo line set <nome> <i> <testo>` | Sostituisce riga (`i` parte da **0**) | `text` |
-| `/vholo line insert <nome> <i> <testo>` | Inserisce alla posizione `i` | `text` |
-| `/vholo line remove <nome> <i>` | Toglie la riga | `text` |
-| `/vholo line clear <nome>` | Svuota il testo | `text: []` |
-| `/vholo scale <nome> <n>` | Scala uguale su X Y Z | `scale_*` |
-| `/vholo scale <nome> <x> <y> [z]` | Scala per asse | `scale_*` |
-| `/vholo billboard <nome> <valore>` | `fixed` `center` `horizontal` `vertical` | `billboard` |
-| `/vholo shadow <nome> <raggio> [forza]` | Ombra a terra | `shadow_*` |
-| `/vholo background <nome> <valore>` | `transparent` o hex | `background` |
-| `/vholo seethrough <nome> on\|off` | Attraversa i blocchi | `see_through` |
-| `/vholo textshadow <nome> on\|off` | Ombra lettere | `text_shadow` |
-| `/vholo alignment <nome> left\|center\|right` | Allineamento | `text_alignment` |
-| `/vholo brightness <nome> <block> [sky]` | Luce 0–15 | `*_brightness` |
-| `/vholo distance <nome> <blocchi>` | Vista (`-1` = unlimited del modulo) | `visibility_distance` |
-| `/vholo updateinterval <nome> <tick>` | Refresh PAPI (`-1` = no) | `update_text_interval` |
-| `/vholo yaw <nome> <gradi>` | Yaw | `location.yaw` |
+| `/vholo create <name>` | Creates it here, new file | `holo/<name>.yml` |
+| `/vholo delete <name>` | Removes file and entity | deletes the YAML |
+| `/vholo list` | List (marks disabled ones) | — |
+| `/vholo info <name>` | World, coords, scale, billboard, lines | — |
+| `/vholo near` | Holograms within `near-range` | — |
+| `/vholo movehere <name>` | Moves it to where you stand | `location` |
+| `/vholo tp <name>` | Teleports you to the hologram | — |
+| `/vholo enable \| disable <name>` | Turns it on or off | `enabled` |
+| `/vholo copy <name> <new>` | Duplicates the YAML | new file |
+| `/vholo reload` | Rereads `holo/` and respawns | — |
+| `/vholo import [file]` | Splits a Fancy dump | see below |
+| `/vholo line add <name> <text>` | Appends a line | `text` |
+| `/vholo line set <name> <i> <text>` | Replaces line `i` (**0**-based) | `text` |
+| `/vholo line insert <name> <i> <text>` | Inserts at index `i` | `text` |
+| `/vholo line remove <name> <i>` | Removes the line | `text` |
+| `/vholo line clear <name>` | Clears the text | `text: []` |
+| `/vholo scale <name> <n>` | Uniform scale on X Y Z | `scale_*` |
+| `/vholo scale <name> <x> <y> [z]` | Per-axis scale | `scale_*` |
+| `/vholo billboard <name> <value>` | `fixed` `center` `horizontal` `vertical` | `billboard` |
+| `/vholo shadow <name> <radius> [strength]` | Ground shadow | `shadow_*` |
+| `/vholo background <name> <value>` | `transparent` or hex | `background` |
+| `/vholo seethrough <name> on\|off` | Sees through blocks | `see_through` |
+| `/vholo textshadow <name> on\|off` | Letter shadow | `text_shadow` |
+| `/vholo alignment <name> left\|center\|right` | Alignment | `text_alignment` |
+| `/vholo brightness <name> <block> [sky]` | Light 0–15 | `*_brightness` |
+| `/vholo distance <name> <blocks>` | View distance (`-1` = module unlimited) | `visibility_distance` |
+| `/vholo updateinterval <name> <ticks>` | PlaceholderAPI refresh (`-1` = off) | `update_text_interval` |
+| `/vholo yaw <name> <degrees>` | Yaw | `location.yaw` |
 
-I comandi che cambiano il YAML **salvano il file e respawnano** subito. Per edit a mano del file serve `/vholo reload`.
+Commands that change the YAML **save the file and respawn immediately**. A hand edit of the file still needs `/vholo reload`.
 
 ---
 
-## Import FancyHolograms
+## FancyHolograms import
 
-1. Metti il dump in `plugins/ValaryRPG-Core/holo/holograms.yml` (struttura `holograms:<id>: ...`).
-2. `/vholo import` — oppure `/vholo import percorso/relativo.yml`.
-3. Ogni id diventa `holo/<id>.yml`. File già esistenti **non** vengono sovrascritti.
-4. Il dump viene rinominato in `holograms.yml.imported`.
+1. Put the dump in `plugins/modernCore/holo/holograms.yml` (shape `holograms:<id>: ...`).
+2. `/vholo import` — or `/vholo import relative/path.yml`.
+3. Each id becomes `holo/<id>.yml`. Existing files are **not** overwritten.
+4. The dump is renamed to `holograms.yml.imported`.
 
-Le chiavi Fancy (`scale_x`, `billboard`, `background`, `&7`, …) restano così come sono. `type` diversi da testo vengono comunque spawnati come TextDisplay.
+Fancy keys (`scale_x`, `billboard`, `background`, `&7`, …) stay as they are. Types other than text are still spawned as TextDisplay.
 
 ---
 
@@ -219,14 +219,14 @@ permissions:
   holo: valary.holo
 ```
 
-Cambio nome comando o permesso: **restart**, non basta il reload.
+Changing the command name or the permission needs a **restart**. Reload is not enough.
 
 ---
 
 ## Checklist
 
-- File in `plugins/ValaryRPG-Core/holo/`, non nel repo.
-- `enabled: true` e mondo caricato.
-- `/vholo delete` non cancella i triggerblock.
-- Testo con `%...%` = copie personali, attenzione al cap.
-- Dopo edit a mano: `/vholo reload`.
+- Files live in `plugins/modernCore/holo/`, not in the repository.
+- `enabled: true` and the world is loaded.
+- `/vholo delete` does not delete triggerblocks.
+- Text with `%...%` means personal copies. Watch the cap.
+- After a hand edit: `/vholo reload`.

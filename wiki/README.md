@@ -1,12 +1,12 @@
-# Wiki ValaryRPG-Core
+# modernCore wiki
 
-Guide dei YAML. I file da editare sono in `plugins/ValaryRPG-Core/` sul server, non nel repo Git.
+YAML guides. Edit the files in `plugins/modernCore/` on the server, not the copies in the Git repository.
 
-| Pagina | Cosa configura |
+| Page | What it configures |
 |---|---|
-| [Holograms](Holograms.md) | `/vholo` — file in `holo/<nome>.yml` |
+| [Holograms](Holograms.md) | `/vholo` — files in `holo/<name>.yml` |
 | [Triggerblocks](Triggerblocks.md) | `/triggerblock` — `modules/mechanics.yml` → `holo-blocks` |
-| [Chat](Chat.md) | `/clearchat`, annunci, filtro |
-| [Webhooks](Webhooks.md) | Discord: log + errori SEVERE |
+| [Chat](Chat.md) | `/clearchat`, announcements, filter |
+| [Webhooks](Webhooks.md) | Discord: logs and SEVERE errors |
 
-Guida generale: [GUIDE.md](../GUIDE.md)
+General guide: [GUIDE.md](../GUIDE.md)

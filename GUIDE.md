@@ -1,241 +1,250 @@
-# Guida modernCore
+# modernCore guide
 
-Plugin Paper **26.2** (Java 25, versione 1.1.3). Comandi nativi: `/kick`, `/ban`, `/vanish`, `/invsee` — **mai** `/cmi`.
+Paper plugin **26.2** (Java 25, version 1.1.3). Native commands: `/kick`, `/ban`, `/vanish`, `/invsee` — **never** `/cmi`.
 
 Repository: https://github.com/Nyxon-com/modernCore
 
 ---
 
-## Installazione
+## Install
 
 1. JDK 25, Paper 26.2
 2. `./gradlew.bat build` → `build/libs/modernCore-1.1.3.jar`
-3. Metti il JAR in `plugins/`
-4. Soft-depend opzionali: Vault, CoinsEngine, MMOItems, MythicLib, Multiverse-Core, PlaceholderAPI
-5. Avvia, poi edita i YAML in `plugins/modernCore/`
-6. `/valary reload` (o `/vcore reload`) dopo le modifiche. Lo **storage SQL non si riconnette**: cambia `storage.yml` e riavvia.
+3. Put the JAR in `plugins/`
+4. Optional soft-depends: Vault, CoinsEngine, MMOItems, MythicLib, Multiverse-Core, PlaceholderAPI
+5. Start the server, then edit the YAML in `plugins/modernCore/`
+6. `/valary reload` (or `/vcore reload`) after edits. **SQL storage does not reconnect**: change `storage.yml` and restart.
 
-Al primo avvio i file vengono creati. Se un YAML è corrotto viene rinominato `*.broken.<timestamp>.yml` e rigenerato. Chiavi nuove si aggiungono da sole senza toccare i tuoi valori.
+Files are created on first start. A broken YAML is renamed `*.broken.<timestamp>.yml` and regenerated. New keys are added on their own and do not touch your values.
 
-Il reload legge e valida prima tutti i YAML: non esegue migrazioni né riscrive i file. Se anche un solo YAML è invalido, mantiene la configurazione precedente e mostra il path errato in console. Coordinate, testo e stile di hologram/triggerblock vengono respawnati dai nuovi valori. Nomi/alias dei comandi e connessione `storage.yml` richiedono ancora il riavvio.
+Reload reads and validates every YAML first. It does not run migrations and it does not rewrite files. If a single YAML is invalid, the previous configuration stays and the bad path is printed to the console. Hologram and triggerblock coordinates, text, and style are respawned from the new values. Command names, aliases, and the `storage.yml` connection still need a restart.
 
-Disattiva un modulo in `config.yml` → `modules.<id>: false`.
+Turn a module off in `config.yml` → `modules.<id>: false`.
 
 ---
 
-## File
+## Files
 
-I YAML stanno in cartelle, non tutti in root. Al primo avvio (o al reload) i file vecchi in root vengono spostati da soli.
+YAML is grouped in folders, not dumped in the root. On first start (or on reload) old root files are moved on their own.
 
-| Path | Contenuto |
+| Path | Contents |
 |---|---|
-| `config.yml` | moduli, nomi comandi, alias, permessi, HUD teleport |
+| `config.yml` | modules, command names, aliases, permissions, teleport HUD |
 | `storage.yml` | SQLITE / MYSQL / MARIADB |
-| `lang/messages.yml` | tutti i testi MiniMessage |
-| `sounds/sounds.yml` | suoni (ID namespaced, volume, pitch) |
-| `modules/worlds.yml` | spawn, meteo lock, ora lock, catalogo mondi |
-| `modules/homes.yml` | limiti home, warmup/cooldown |
-| `modules/warps.yml` | elenco warp, warmup/cooldown |
+| `lang/messages.yml` | every MiniMessage string |
+| `sounds/sounds.yml` | sounds (namespaced id, volume, pitch) |
+| `modules/worlds.yml` | spawn, weather lock, time lock, world catalog |
+| `modules/homes.yml` | home limits, warmup/cooldown |
+| `modules/warps.yml` | warp list, warmup/cooldown |
 | `modules/players.yml` | join/quit, nick, msg, fly, heal/feed |
-| `modules/moderation.yml` | motivi default, mute, vanish, layout invsee |
-| `modules/mechanics.yml` | LimitY, hologram drop, morti, long-jump, portali, triggerblock |
-| `modules/holograms.yml` | Impostazioni `/vholo` |
-| `holo/<nome>.yml` | Un hologram testo (Fancy-style) |
-| `modules/kits.yml` | GUI kit + contenuto kit |
-| `modules/prices.yml` | GUI sell, prezzi vanilla/MMOItems, reward custom |
-| `modules/chat.yml` | `/clearchat`, annunci ciclici, filtro chat |
-| `modules/webhooks.yml` | Webhook Discord (log staff + errori SEVERE) |
+| `modules/moderation.yml` | default reasons, mute, vanish, invsee layout |
+| `modules/mechanics.yml` | LimitY, drop holograms, deaths, long-jump, portals, triggerblocks |
+| `modules/holograms.yml` | `/vholo` settings |
+| `holo/<name>.yml` | One text hologram (Fancy style) |
+| `modules/kits.yml` | kit GUI and kit contents |
+| `modules/prices.yml` | sell GUI, vanilla/MMOItems prices, custom rewards |
+| `modules/chat.yml` | `/clearchat`, rotating announcements, chat filter |
+| `modules/webhooks.yml` | Discord webhooks (staff log and SEVERE errors) |
 
-Permessi: cambia il nodo in `config.yml` → `permissions.*`, non nel Java. Default in `plugin.yml`.
+Permissions: change the node in `config.yml` → `permissions.*`, not in Java. Defaults live in `plugin.yml`.
 
 MiniMessage: `<red>`, `<gradient:#8B5CF6:#EC4899>`, `&#FF00AA`, `<lang:item.minecraft.diamond>`.
 
 ---
 
-## Mondi e spawn
+## Worlds and spawn
 
-- `/setspawn` — imposta **lo** spawn (un solo punto, nel mondo in cui sei)
-- `/spawn` — ti porta lì da qualsiasi mondo. `/spawn <player>` con `valary.spawn.others`
-- A ogni login il player viene portato allo spawn globale (`modules/worlds.yml` → `settings.spawn-on-join`).
-- `/weatherlock <clear|rain|thunder|unlock> [mondo]` — meteo mondo + client (serve anche negli spawn void)
-- `/timelock <day|noon|night|midnight|unlock> [mondo]` — ferma il ciclo; `/time add` viene riportato indietro
-- `/falldamage <true|false> [mondo]` — danno da caduta per mondo (`/falldamage false spawn`). Resta in `worlds.yml` (`fall-damage`)
+- `/setspawn` — sets **the** spawn (one point, in the world you are standing in)
+- `/spawn` — takes you there from any world. `/spawn <player>` with `valary.spawn.others`
+- On every login the player is sent to the global spawn (`modules/worlds.yml` → `settings.spawn-on-join`).
+- `/weatherlock <clear|rain|thunder|unlock> [world]` — world and client weather (also needed in void spawns)
+- `/timelock <day|noon|night|midnight|unlock> [world]` — stops the cycle; `/time add` is rolled back
+- `/falldamage <true|false> [world]` — fall damage per world (`/falldamage false spawn`). Stored in `worlds.yml` (`fall-damage`)
 
-Se **Multiverse-Core** è presente, pvp, difficulty, gamemode, hunger e flight restano quelli di MV: non serve rifarli in `worlds.yml`. Valary usa `/setspawn`, weatherlock, timelock e `/falldamage`. Senza MV, il catalogo in `worlds.yml` viene applicato come prima.
+If **Multiverse-Core** is present, pvp, difficulty, gamemode, hunger, and flight stay on Multiverse. Do not duplicate them in `worlds.yml`. Valary still owns `/setspawn`, weatherlock, timelock, and `/falldamage`. Without Multiverse, the catalog in `worlds.yml` is applied as before.
 
 PlaceholderAPI: `%valary_world%` `%valary_world_alias%` `%valary_nick%` `%valary_nick_mm%` `%valary_god%` `%valary_vanished%` `%valary_fly%`
 
 ---
 
-## Home e warp
+## Homes and warps
 
-- `/sethome [nome]` `/home [nome]` `/delhome [nome]` `/homes`
-- Limite: permesso `valary.home.limit.<gruppo>` (vedi `modules/homes.yml`). `valary.home.unlimited` = infinito
-- Warmup/cooldown in YAML; countdown in action bar (`config.yml` → `teleport.hud`). Bypass cooldown: `valary.teleport.cooldown.bypass`
-- Suoni in `sounds/sounds.yml` (volume/pitch/ID pack)
-- Niente virgolette nei nomi: messaggio `general.quotes` in `lang/messages.yml`
-- `/setwarp <nome>` `/warp <nome>` `/warp <nome> <player>` `/delwarp` `/warps`
-- Da console: `/warp <nome> <player>` (nick, non `@p`)
+- `/sethome [name]` `/home [name]` `/delhome [name]` `/homes`
+- Limit: permission `valary.home.limit.<group>` (see `modules/homes.yml`). `valary.home.unlimited` = no cap
+- Warmup and cooldown in YAML; the countdown is an action bar (`config.yml` → `teleport.hud`). Bypass cooldown: `valary.teleport.cooldown.bypass`
+- Sounds in `sounds/sounds.yml` (volume, pitch, pack id)
+- No quotes in names: message `general.quotes` in `lang/messages.yml`
+- `/setwarp <name>` `/warp <name>` `/warp <name> <player>` `/delwarp` `/warps`
+- From console: `/warp <name> <player>` (a nick, not `@p`)
 
 ---
 
-## Player
+## Players
 
-- Join/quit in `lang/messages.yml` → `join-quit.*`. Stringa vuota = nessun messaggio
-- `/nick <testo|off>` MiniMessage. Colori: `valary.nick.color`. Altri: `valary.nick.others`
+- Join and quit in `lang/messages.yml` → `join-quit.*`. An empty string means no message
+- `/nick <text|off>` MiniMessage. Colors: `valary.nick.color`. Other players: `valary.nick.others`
   - Chat: `modules/players.yml` → `chat.format` (`{displayname}` `{message}` `%luckperms_prefix%`)
-  - Tab vanilla: `playerListName`. Se usi **TAB** (NEZNAMY), Valary imposta il nome via API; in config TAB puoi anche usare `%valary_nick%` / `%valary_nick_mm%`
-- `/clearchat` (`/cc`) — solo admin, pulisce la chat di **tutti** i player online
-- Annunci automatici ogni N secondi in `modules/chat.yml` → `announcements`
-- Filtro chat (parole, regex, IP, link) anche su `/msg` se `filter.private-messages: true`. Bypass: `valary.chat.filter.bypass`
-- `/msg` `/tell` `/w` `/whisper` `/m` `/r` — testi in `lang/messages.yml` → `msg.*` (`to-sender`, `to-target`, `spy`)
-- `/socialspy` (`/ss`): vedi i privati in `[SS]`. `msg.spy-self: true` mostra anche i tuoi (test a 2 account). `false` = solo gli altri
-- `/fly` persiste al relog e dopo la morte. `/gamemode` persiste **tra i mondi** e dopo respawn (anche Multiverse), tranne se `worlds.<mondo>.force-gamemode: true`
+  - Vanilla tab: `playerListName`. If you use **TAB** (NEZNAMY), Valary sets the name through the API; the TAB config can also use `%valary_nick%` / `%valary_nick_mm%`
+- `/clearchat` (`/cc`) — admin only, clears chat for **every** online player
+- Automatic announcements every N seconds in `modules/chat.yml` → `announcements`
+- Chat filter (words, regex, IP, links) also covers `/msg` when `filter.private-messages: true`. Bypass: `valary.chat.filter.bypass`
+- `/msg` `/tell` `/w` `/whisper` `/m` `/r` — text in `lang/messages.yml` → `msg.*` (`to-sender`, `to-target`, `spy`)
+- `/socialspy` (`/ss`): private messages show as `[SS]`. `msg.spy-self: true` also shows your own (a two-account test). `false` = other people only
+- `/fly` persists across relog and death. `/gamemode` persists **across worlds** and after respawn (including Multiverse), unless `worlds.<world>.force-gamemode: true`
 - `/god` `/heal` `/feed` `/back`
 
 ---
 
-## Moderazione (override vanilla)
+## Moderation (vanilla overrides)
 
-`/kick` `/ban [durata] [motivo]` `/banlist` `/pardon` `/pardon-ip` `/unban` `/unbanip` `/ipban` `/mute` `/unmute` `/warn` `/warnings` `/history` `/dupeip` `/vanish` `/vanishedit` `/invsee`
+`/kick` `/ban [duration] [reason]` `/banlist` `/pardon` `/pardon-ip` `/unban` `/unbanip` `/ipban` `/mute` `/unmute` `/warn` `/warnings` `/history` `/dupeip` `/vanish` `/vanishedit` `/invsee`
 
-Durate: `10s` `5m` `2h` `7d` `2w` `1mo` `1y` `perm`. Vuoto = permanente.
+Durations: `10s` `5m` `2h` `7d` `2w` `1mo` `1y` `perm`. Empty means permanent.
 
-**Togliere un IP ban:** `/unbanip <player|ip>` oppure `/unban <player> <motivo>` (toglie anche l’IP ban) o `/pardon-ip <ip> <motivo>`.
+**Remove an IP ban:** `/unbanip <player|ip>`, or `/unban <player> <reason>` (also clears the IP ban), or `/pardon-ip <ip> <reason>`.
 
-`/history <player>` — kick, ban, ipban, mute, warn. **REVOCATO** (pardon) ≠ **SCADUTO**. `/pardon <player> <motivo>` obbligatorio. `/pardon list` elenco pardon.
+`/history <player>` — kick, ban, ipban, mute, warn. **REVOKED** (pardon) is not **EXPIRED**. `/pardon <player> <reason>` requires a reason. `/pardon list` lists pardons.
 
-`/dupeip <player|ip>` — account sullo stesso IP, online/ban/mute/warn. Testi in `moderation.dupeip*`.
+`/dupeip <player|ip>` — accounts on the same IP, online, banned, muted, or warned. Text in `moderation.dupeip*`.
 
-Schermata ban a tempo: dialog nativo col countdown (`screen.live-countdown`). Layout: `lang/messages.yml` → `moderation.ban-dialog-*`.
+A timed ban screen is a native dialog with a countdown (`screen.live-countdown`). Layout: `lang/messages.yml` → `moderation.ban-dialog-*`.
 
 `/vanishedit nightvision|pickup`
 
 ---
 
-## Kit
+## Kits
 
-`/kit` `/kits` apre la GUI. **Sinistro** ritira, **destro** anteprima del contenuto (niente bottone libro a parte). Dall’anteprima: **Indietro** torna alla pagina, **Ritira** prende il kit. `/kit <id> [player]` da comando/console.
+`/kit` `/kits` opens the GUI. **Left click** claims, **right click** previews the contents (there is no separate book button). From the preview: **Back** returns to the page, **Claim** takes the kit. `/kit <id> [player]` from command or console.
 
-- Cooldown e one-time su SQL (`kit_claims`), cache in RAM (niente SQL in chat/click)
-- In GUI: disponibile (glow) / cooldown leggibile / bloccato / già ritirato + elenco item
-- `settings.first-join-kit: starter` — dato al **primo join** (`hasPlayedBefore() == false`)
-- Click in `kits.yml` (`claim-clicks` / `preview-clicks`). Suoni in `sounds.yml` (`kits-claim`, `kits-preview`, `kits-deny`)
-- Item MMOItems: `mmoitem-type` + `mmoitem-id`
-- Staff `/kit <id> <player>` ignora permesso e cooldown del target
-- Comandi del kit al claim: `[console]` `[player]` `[sound]` `[message]`
+- Cooldown and one-time claims live in SQL (`kit_claims`), cached in RAM (no SQL on chat or click)
+- In the GUI: available (glow) / readable cooldown / locked / already claimed, plus the item list
+- `settings.first-join-kit: starter` — given on the **first join** (`hasPlayedBefore() == false`)
+- Clicks in `kits.yml` (`claim-clicks` / `preview-clicks`). Sounds in `sounds.yml` (`kits-claim`, `kits-preview`, `kits-deny`)
+- MMOItems: `mmoitem-type` + `mmoitem-id`
+- Staff `/kit <id> <player>` ignores the target's permission and cooldown
+- Kit commands on claim: `[console]` `[player]` `[sound]` `[message]`
 
 ---
 
 ## Sell
 
-`/sell` GUI. `/sellall` vende lo zaino.
+`/sell` opens the GUI. `/sellall` sells the inventory.
 
-Prezzi in `prices.yml` (file esterno a `config.yml`):
+Prices in `prices.yml` (a file outside `config.yml`):
 
 - `worth.DIAMOND: 25.0`
 - `mmoitems.SWORD.STEEL_SWORD: 40.0`
-- `custom.<id>` — money, xp, commands, items extra
+- `custom.<id>` — money, xp, commands, extra items
 
-Senza Vault il comando avvisa `sell.no-economy`.
+Without Vault the command reports `sell.no-economy`.
 
 ---
 
-## Meccaniche
+## Mechanics
 
 ### LimitY
-`/limity` mostra range e comando del mondo in cui sei.
-`/limity <min> <max>` imposta il range **solo** in quel mondo (in game ignora un eventuale terzo argomento). Da console: `/limity <min> <max> <mondo>`.
-`/limity command <comando>` imposta il comando sul mondo in cui sei. Esempi:
+
+`/limity` shows the range and the command of the world you are in.
+`/limity <min> <max>` sets the range **only** in that world (in game, a third argument is ignored). From console: `/limity <min> <max> <world>`.
+`/limity command <command>` sets the command for the world you are in. Examples:
+
 - `/limity command [player] spawn`
 - `/limity command [console] warp netherhub {player}`
-`/limity clearcommand [mondo]` toglie il comando. Mondi senza sezione in `mechanics.yml` = nessun limite.
 
-`teleport-spawn` viene spento quando setti un comando, così non conflitto col comando.
+`/limity clearcommand [world]` removes the command. Worlds with no section in `mechanics.yml` have no limit.
 
-### Item a terra
-Hologram piccolo (`font` + `scale`). `show-lore: false` nasconde la lore dell'item. Countdown despawn in `despawn-format` (`despawn-seconds: 300` = 5 minuti).
+`teleport-spawn` turns off when you set a command, so it does not fight the command.
 
-### Morti
-Messaggi in `mechanics.yml` → `deaths.messages.<CAUSE>`.
-`/checkdeath [player]` — coords (click = copia), causa, killer, GUI inventario al momento della morte.
-`/checkdeath restore [player]` — ripristina quell'inventario sul player (online). Permesso `valary.checkdeath.restore`.
+### Ground items
 
-### Coordinate
-`/copycoord [player]` — click sul messaggio = Ctrl+C del **blocco mirato** (`world x y z`). Raggio in `mechanics.yml` → `copycoord.range`.
+A small hologram (`font` + `scale`). `show-lore: false` hides the item lore. Despawn countdown in `despawn-format` (`despawn-seconds: 300` = 5 minutes).
 
-### Pressure plate long-jump
-Piastre per materiale in `long-jump.plates`.
-- Step sulla plate → jump
-- **Non** salta mirando. `/pressureplayerjump` serve solo a vedere/associare il blocco che miri
-- `/pressureplayerjump set <gold|iron>` associa **quel** blocco al preset
-- `/pressureplayerjump remove` toglie l'associazione
+### Deaths
 
-### Portali
-1. `/portal wand` — prendi la wand
-2. Destro su un blocco = pos1, Shift+destro = pos2 (i **blocchi** sono il cubo, anche camminandoci sopra)
-3. Shift+sinistro = dest (la tua posizione + sguardo), oppure `/portal dest`
-4. `/portal create <nome>`
-5. `/portal command <nome> [player] spawn` — oppure `[message] <green>ok</green>`, `[console] say {player}`
-6. `/portal item <nome>` con l'oggetto in mano (mano vuota = niente item). MMOItems riconosciuto
-7. `/portal enable|disable|delete|list`  `/portal clearcommands <nome>`
+Messages in `mechanics.yml` → `deaths.messages.<CAUSE>`.
+`/checkdeath [player]` — coords (click to copy), cause, killer, and a GUI of the inventory at death.
+`/checkdeath restore [player]` — restores that inventory onto the player (they must be online). Permission `valary.checkdeath.restore`.
 
-Senza dest il portale esegue solo i comandi. I comandi partono **dopo** il tick di movimento, altrimenti Paper li ignora. `portal-settings.y-padding` in `mechanics.yml` (default 1) fa sì che resti attivo anche in piedi sul pavimento selezionato.
+### Coordinates
 
-### Hologram (`/vholo`) e triggerblock
+`/copycoord [player]` — clicking the message copies the **targeted block** (`world x y z`). Range in `mechanics.yml` → `copycoord.range`.
 
-Due sistemi diversi:
+### Pressure-plate long jump
+
+Plates per material in `long-jump.plates`.
+
+- Step on the plate → jump
+- Looking at it does **not** jump. `/pressureplayerjump` only inspects or binds the block you are looking at
+- `/pressureplayerjump set <gold|iron>` binds **that** block to the preset
+- `/pressureplayerjump remove` clears the binding
+
+### Portals
+
+1. `/portal wand` — take the wand
+2. Right-click a block = pos1, Shift+right-click = pos2 (the **blocks** are the cuboid, including walking on top of them)
+3. Shift+left-click = destination (your position and look), or `/portal dest`
+4. `/portal create <name>`
+5. `/portal command <name> [player] spawn` — or `[message] <green>ok</green>`, `[console] say {player}`
+6. `/portal item <name>` with the item in hand (empty hand = no item). MMOItems is recognized
+7. `/portal enable|disable|delete|list` and `/portal clearcommands <name>`
+
+Without a destination the portal only runs commands. Commands run **after** the movement tick, otherwise Paper drops them. `portal-settings.y-padding` in `mechanics.yml` (default 1) keeps the portal active when you stand on the selected floor.
+
+### Holograms (`/vholo`) and triggerblocks
+
+Two different systems:
 
 | | Hologram | Triggerblock |
 |---|---|---|
-| Comando | `/vholo` | `/triggerblock` (`/tblock`) |
-| File | `holo/<nome>.yml` | `modules/mechanics.yml` → `holo-blocks.holos` |
-| Reload | `/vholo reload` o `/valary reload` | solo `/valary reload` |
-| Click | no, solo testo | sì, esegue ActionCommands |
+| Command | `/vholo` | `/triggerblock` (`/tblock`) |
+| File | `holo/<name>.yml` | `modules/mechanics.yml` → `holo-blocks.holos` |
+| Reload | `/vholo reload` or `/valary reload` | `/valary reload` only |
+| Click | no, text only | yes, runs ActionCommands |
 
-Wiki completa delle chiavi YAML: [wiki/Holograms.md](wiki/Holograms.md) e [wiki/Triggerblocks.md](wiki/Triggerblocks.md).
+Full YAML keys: [wiki/Holograms.md](wiki/Holograms.md) and [wiki/Triggerblocks.md](wiki/Triggerblocks.md).
 
-Edita sempre `plugins/modernCore/`, non i YAML del repo. `/vholo delete` non cancella i triggerblock.
+Always edit `plugins/modernCore/`, not the YAML in the repository. `/vholo delete` does not delete triggerblocks.
 
 ---
 
-## ActionCommands (GUI, kit, sell, LimitY, portali, triggerblock)
+## ActionCommands (GUI, kits, sell, LimitY, portals, triggerblocks)
 
 ```
 - "[close]"
 - "[console] say {player} ..."
 - "[player] spawn"
 - "[sound] UI_BUTTON_CLICK"
-- "[message] <green>Fatto"
-- "[msg] <gray>alias di message"
-- "eco give {player} 10"   # senza tag = console (nei triggerblock / portali senza tag = player)
+- "[message] <green>Done"
+- "[msg] <gray>alias of message"
+- "eco give {player} 10"   # no tag = console (on triggerblocks / portals, no tag = player)
 ```
 
-Placeholder: `{player}` `{world}` `{x}` `{y}` `{z}` e quelli extra del contesto (`{portal}` `{holo}` `{amount}` `{min}` `{max}`). `{player}` / `%player_name%` nei trigger.
+Placeholders: `{player}` `{world}` `{x}` `{y}` `{z}` and the extras for that context (`{portal}` `{holo}` `{amount}` `{min}` `{max}`). `{player}` / `%player_name%` on triggers.
 
 ---
 
-## Permessi rapidi
+## Permissions, short list
 
-Gruppo default: `valary.spawn`, `valary.home*`, `valary.warp`, `valary.msg`, `valary.nick`, `valary.kit`, `valary.sell`, `valary.checkdeath`, `valary.copycoord`, `valary.back`
+Default group: `valary.spawn`, `valary.home*`, `valary.warp`, `valary.msg`, `valary.nick`, `valary.kit`, `valary.sell`, `valary.checkdeath`, `valary.copycoord`, `valary.back`
 
-Staff: `valary.admin` (tutti i figli) oppure i singoli `valary.kick`, `valary.ban`, `valary.vanish`, `valary.invsee`, `valary.portal`, `valary.holo`, `valary.triggerblock`, `valary.limity`, `valary.time.lock`, `valary.pressureplayerjump`, `valary.clearchat`, ...
+Staff: `valary.admin` (every child) or the individual nodes `valary.kick`, `valary.ban`, `valary.vanish`, `valary.invsee`, `valary.portal`, `valary.holo`, `valary.triggerblock`, `valary.limity`, `valary.time.lock`, `valary.pressureplayerjump`, `valary.clearchat`, ...
 
 ---
 
-## Webhook Discord
+## Discord webhooks
 
-URL in `modules/webhooks.yml`. HTTP async, un thread `valary-webhook`.
+URL in `modules/webhooks.yml`. Async HTTP, one `valary-webhook` thread.
 
-- `logs`: kick/ban/mute/warn, filtro, clearchat, reload. Chat intera solo se `logs.categories.chat: true`
-- `errors`: solo **SEVERE** della console. Niente warning, niente OOM/heap/GC/memory
+- `logs`: kick/ban/mute/warn, filter, clearchat, reload. The full chat log only if `logs.categories.chat: true`
+- `errors`: console **SEVERE** only. No warnings, no OOM/heap/GC/memory
 
-Wiki: [wiki/Chat.md](wiki/Chat.md) e [wiki/Webhooks.md](wiki/Webhooks.md).
+Wiki: [wiki/Chat.md](wiki/Chat.md) and [wiki/Webhooks.md](wiki/Webhooks.md).
 
 ---
 
 ## Storage
 
-Default SQLite `plugins/modernCore/data.db`. Per MySQL/MariaDB imposta `storage.type` e le credenziali, poi **riavvia**.
+Default SQLite at `plugins/modernCore/data.db`. For MySQL or MariaDB set `storage.type` and the credentials, then **restart**.
 
-Tabelle (prefisso `valary_`): `homes`, `players` (nick, fly, vanish, god, ultima morte, IP), `punishments`, `kit_claims`.
+Tables (prefix `valary_`): `homes`, `players` (nick, fly, vanish, god, last death, IP), `punishments`, `kit_claims`.

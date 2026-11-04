@@ -1,18 +1,18 @@
-# Wiki webhook Discord
+# Discord webhook wiki
 
-File sul server: `plugins/ValaryRPG-Core/modules/webhooks.yml`.
+Server file: `plugins/modernCore/modules/webhooks.yml`.
 
-Due canali, entrambi **async** (un thread `valary-webhook`, niente HTTP sul main):
+Two channels, both **async** (one `valary-webhook` thread, no HTTP on the main thread):
 
-| Canale | Cosa arriva | Cosa non arriva |
+| Channel | What is sent | What is not sent |
 |---|---|---|
-| `logs` | azioni staff, filtro chat, clearchat, reload, chat se abilitata | warning, info di routine |
-| `errors` | solo log **SEVERE** della console | warning, OOM / heap / GC / memory |
+| `logs` | staff actions, chat filter, clearchat, reload, chat if enabled | warnings, routine info |
+| `errors` | console **SEVERE** logs only | warnings, OOM / heap / GC / memory |
 
-`url` è il fallback. Puoi mettere URL diversi in `logs.url` e `errors.url`. URL vuoto = canale spento.
+`url` is the fallback. `logs.url` and `errors.url` can point at different endpoints. An empty URL turns that channel off.
 
-`logs.categories.chat: false` di default: la chat intera su Discord è rumorosa.
+`logs.categories.chat` defaults to `false`: the full chat log is noisy on Discord.
 
-`errors.same-message-cooldown-millis` evita di ripostare lo stesso SEVERE in loop.
+`errors.same-message-cooldown-millis` stops the same SEVERE line from being posted in a loop.
 
-Disattiva tutto con `config.yml` → `modules.webhooks: false` oppure `enabled: false` nel YAML.
+Turn everything off with `config.yml` → `modules.webhooks: false`, or `enabled: false` in the YAML.
